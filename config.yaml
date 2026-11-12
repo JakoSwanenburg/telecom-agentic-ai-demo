@@ -1,0 +1,63 @@
+# ============================================================================
+# Centralized Configuration — Telecom Agentic AI Demo (UC-001)
+# Compliant with AGENTS.md Part 2.5, Part 3.1, and Part 5
+# ============================================================================
+
+project:
+  name: "telecom-agentic-ai-demo"
+  prefix: "telco-agent"
+  use_case_id: "UC-001"
+  use_case_title: "Enterprise L2 Fiber Packet-Loss Triage & Automated Optical DDM Recalibration"
+  environment: "local"
+
+gcp:
+  project_id: "telecom-agentic-ai-demo"
+  region: "europe-west4"
+  artifact_bucket_name: "telecom-agentic-ai-demo-bkt-artifacts"
+  runtime_service_account: "telco-agent-sa-runtime"
+
+logging:
+  level: "INFO"
+  log_dir: "logs"
+  log_filename: "telco_agent.log"
+  max_bytes: 5242880
+  backup_count: 3
+
+paths:
+  raw_sources_dir: "data/raw_sources"
+  sql_subdir: "sql"
+  excel_subdir: "excel"
+  pdf_subdir: "pdf"
+  sop_subdir: "sop"
+  manifest_filename: "STAGE0_ARTIFACT_MANIFEST.md"
+
+stage0:
+  seed: 42
+  sql_db_filename: "cmdb_installed_base.db"
+  sql_dump_filename: "cmdb_dump.sql"
+  excel_catalog_filename: "Telco_Master_Product_SLA_Catalog_2026.xlsx"
+  hw_manual_pdf_filename: "Vendor_Optical_Hardware_Manual_v4.pdf"
+  msa_contract_pdf_filename: "MSA_Contract_A_Corporate_Enterprise_2026.pdf"
+  sop_runbook_docx_filename: "SOP_NOC_Master_Assurance_Runbook_v2026.docx"
+  sop_runbook_md_filename: "SOP_NOC_Master_Assurance_Runbook_v2026.md"
+  target_customer_id: "CUST-ENT-409"
+  target_customer_legal_name: "A Corporate Enterprise"
+  target_customer_bv_name: "A Corporate Enterprise B.V."
+  target_customer_kvk: "NL-8841209"
+  target_circuit_id: "CIR-994821"
+  target_product_sku: "ETH-10G-GOLD"
+  target_upgrade_sku: "ETH-100G-PLATINUM"
+  target_pe_router: "NLD-HAG-PE02"
+  target_olt_port: "OLT04-P12"
+  target_rfs_id: "RFS-OLT04-P12"
+  target_cpe_asset_id: "CPE-ASN-7741"
+  target_cpe_model_sku: "NOK-7210-SAS-Mxp"
+  target_sop_id: "SOP-ASSUR-402"
+
+ai:
+  model_name: "gemini-2.5-pro"
+  location: "europe-west4"
+  temperature: 0.0
+  max_output_tokens: 4096
+  thinking_budget: 1024
+

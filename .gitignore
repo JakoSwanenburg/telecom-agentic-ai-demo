@@ -1,0 +1,40 @@
+# ============================================================================
+# .gitignore — Telecom Agentic AI Demo (Compliant with AGENTS.md Part 4.4)
+# ============================================================================
+
+# 1. Log files and folders
+logs/
+*.log
+
+# 2. Secrets and environment files
+.env
+.env.*
+*.pem
+*.key
+*credentials*.json
+
+# 3. Python bytecode & packaging artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# 4. Virtual environments
+.venv/
+venv/
+ENV/
+
+# 5. Temporary test, coverage, and scratch outputs
+.pytest_cache/
+.coverage
+htmlcov/
+tmp/
+.mypy_cache/
+.ruff_cache/
+
+# 6. Large Terraform provider binaries (NOTE: *.tf, *.tfvars, .terraform.lock.hcl, and terraform.tfstate ARE tracked)
+.terraform/
+terraform/.terraform/
+

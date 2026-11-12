@@ -1,0 +1,190 @@
+@prefix rr: <http://www.w3.org/ns/r2rml#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix tmf: <http://tmforum.org/sid/> .
+@prefix telco: <http://telco.enterprise.org/ontology/> .
+@base <urn:telco:r2rml:cmdb:> .
+
+# ============================================================================
+# TriplesMap 1: T_OSS_CUST_PARTY -> tmf:Customer
+# Excludes internal/legacy columns: PARTY_SURR_ID, LEGACY_CRM_ID, CREATED_TS
+# ============================================================================
+<#CustomerTriplesMap> a rr:TriplesMap ;
+    rdfs:label "OSS Customer Party to TMF SID Customer Virtual Mapping"@en ;
+    rr:logicalTable [
+        rr:sqlQuery """
+            SELECT
+                CUST_EXT_REF,
+                LEGAL_NAME,
+                SEGMENT_CD,
+                ACCT_MGR_ID
+            FROM T_OSS_CUST_PARTY
+        """
+    ] ;
+    rr:subjectMap [
+        rr:template "urn:telco:party:customer:{CUST_EXT_REF}" ;
+        rr:class tmf:Customer ;
+        rr:graph <urn:telco:graph:virtual:ib>
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:customerId ;
+        rr:objectMap [ rr:column "CUST_EXT_REF" ; rr:datatype xsd:string ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:partyLegalName ;
+        rr:objectMap [ rr:column "LEGAL_NAME" ; rr:datatype xsd:string ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:marketSegment ;
+        rr:objectMap [ rr:column "SEGMENT_CD" ; rr:datatype xsd:string ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate telco:accountManagerCode ;
+        rr:objectMap [ rr:column "ACCT_MGR_ID" ; rr:datatype xsd:string ]
+    ] .
+
+# ============================================================================
+# TriplesMap 2: T_CMDB_CFS_CIRCUIT -> tmf:CustomerFacingService
+# Enforces:
+#   1. SCD Type 2 active filter: WHERE VALID_TO_TS IS NULL
+#      (retains active row CFS_ROW_ID=2001 [ETH-10G-GOLD] and filters out
+#       expired row CFS_ROW_ID=2000 [ETH-1G-SILVER] for CIR-994821)
+#   2. Shadow enum translation: '10'->'ACTIVE', '20'->'MAINTENANCE', '99'->'DECOMMISSIONED'
+#   3. QUDT bandwidth normalization: Kbps / Mbps / Gbps -> canonical Gbps
+# Excludes: LEGACY_BILL_TAG; keeps CFS_ROW_ID, VALID_FROM_TS, VALID_TO_TS as SQL control only
+# ============================================================================
+<#CfsCircuitTriplesMap> a rr:TriplesMap ;
+    rdfs:label "CMDB CFS Circuit to TMF SID CustomerFacingService Virtual Mapping"@en ;
+    rr:logicalTable [
+        rr:sqlQuery """
+            SELECT
+                CIRCUIT_ID,
+                CUST_REF_ID,
+                PROD_SPEC_CODE,
+                INSTALL_DT,
+                CASE OPER_STATUS_CD
+                    WHEN '10' THEN 'ACTIVE'
+                    WHEN '20' THEN 'MAINTENANCE'
+                    WHEN '99' THEN 'DECOMMISSIONED'
+                    ELSE 'UNKNOWN'
+                END AS CANONICAL_OPER_STATUS,
+                CASE BW_UNIT_CD
+                    WHEN 'Gbps' THEN CAST(BW_VAL AS REAL)
+                    WHEN 'Mbps' THEN CAST(BW_VAL AS REAL) / 1000.0
+                    WHEN 'Kbps' THEN CAST(BW_VAL AS REAL) / 1000000.0
+                    ELSE CAST(BW_VAL AS REAL)
+                END AS BANDWIDTH_GBPS
+            FROM T_CMDB_CFS_CIRCUIT
+            WHERE VALID_TO_TS IS NULL
+        """
+    ] ;
+    rr:subjectMap [
+        rr:template "urn:telco:service:cfs:{CIRCUIT_ID}" ;
+        rr:class tmf:CustomerFacingService ;
+        rr:graph <urn:telco:graph:virtual:ib>
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:serviceId ;
+        rr:objectMap [ rr:column "CIRCUIT_ID" ; rr:datatype xsd:string ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:hasCustomer ;
+        rr:objectMap [
+            rr:template "urn:telco:party:customer:{CUST_REF_ID}" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:isDescribedBy ;
+        rr:objectMap [
+            rr:template "urn:telco:catalog:sku:{PROD_SPEC_CODE}" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:operationalStatus ;
+        rr:objectMap [ rr:column "CANONICAL_OPER_STATUS" ; rr:datatype xsd:string ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate telco:bandwidthGbps ;
+        rr:objectMap [ rr:column "BANDWIDTH_GBPS" ; rr:datatype xsd:decimal ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate telco:installationDate ;
+        rr:objectMap [ rr:column "INSTALL_DT" ; rr:datatype xsd:date ]
+    ] .
+
+# ============================================================================
+# TriplesMap 3: T_CMDB_RFS_RESOURCE -> tmf:ResourceFacingService & PhysicalResource
+# Excludes internal sync column: LAST_SYNC_UTC
+# Note: T_BILLING_AUDIT_NOISE (25 rows) is intentionally unmapped (EXCLUDED_NOISE).
+# ============================================================================
+<#RfsResourceTriplesMap> a rr:TriplesMap ;
+    rdfs:label "CMDB RFS Resource to TMF SID ResourceFacingService & PhysicalResource Mapping"@en ;
+    rr:logicalTable [
+        rr:sqlQuery """
+            SELECT
+                RFS_ID,
+                PARENT_CFS_ID,
+                PE_ROUTER_HOSTNAME,
+                OLT_PORT_ID,
+                CPE_ASSET_ID,
+                CPE_MODEL_SKU,
+                VLAN_TAG,
+                FIBER_SPAN_ID
+            FROM T_CMDB_RFS_RESOURCE
+        """
+    ] ;
+    rr:subjectMap [
+        rr:template "urn:telco:service:rfs:{RFS_ID}" ;
+        rr:class tmf:ResourceFacingService ;
+        rr:graph <urn:telco:graph:virtual:ib>
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:rfsId ;
+        rr:objectMap [ rr:column "RFS_ID" ; rr:datatype xsd:string ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:supportsService ;
+        rr:objectMap [
+            rr:template "urn:telco:service:cfs:{PARENT_CFS_ID}" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate telco:terminatesOnRouter ;
+        rr:objectMap [
+            rr:template "urn:telco:resource:router:{PE_ROUTER_HOSTNAME}" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate telco:usesOltPort ;
+        rr:objectMap [
+            rr:template "urn:telco:resource:port:{OLT_PORT_ID}" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate telco:demarcatesAtCpe ;
+        rr:objectMap [
+            rr:template "urn:telco:resource:cpe:{CPE_ASSET_ID}" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate tmf:hasResourceSpecification ;
+        rr:objectMap [
+            rr:template "urn:telco:resource:spec:{CPE_MODEL_SKU}" ;
+            rr:termType rr:IRI
+        ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate telco:vlanTag ;
+        rr:objectMap [ rr:column "VLAN_TAG" ; rr:datatype xsd:integer ]
+    ] ;
+    rr:predicateObjectMap [
+        rr:predicate telco:fiberSpanId ;
+        rr:objectMap [ rr:column "FIBER_SPAN_ID" ; rr:datatype xsd:string ]
+    ] .

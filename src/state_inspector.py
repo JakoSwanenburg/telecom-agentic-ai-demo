@@ -81,21 +81,25 @@ def _inspect_element_1_tbox(
                 f"{config.layer4_compiler_federation.r2rml_path}"
             ),
             state="EMPTY",
-            metrics_summary="Classes: 0 | skos:altLabel: 0 | HITL Gate 1: NOT_RUN",
+            metrics_summary="Classes: 0 | Properties: 0 | skos:altLabel: 0 | HITL Gate 1: NOT_RUN",
         )
 
     class_count = 0
+    prop_count = 0
     alt_label_count = 0
     if tbox_path.exists():
         g = Graph()
         g.parse(str(tbox_path), format="turtle")
         class_count = len(set(g.subjects(RDF.type, OWL.Class)))
+        prop_count = len(set(g.subjects(RDF.type, OWL.ObjectProperty))) + len(
+            set(g.subjects(RDF.type, OWL.DatatypeProperty))
+        )
         alt_label_count = len(list(g.triples((None, SKOS.altLabel, None))))
 
     gate1_approved = False
     if gate1_path.exists():
         gate1_txt = gate1_path.read_text(encoding="utf-8")
-        gate1_approved = "LOCKED_APPROVED" in gate1_txt or "APPROVED" in gate1_txt
+        gate1_approved = "LOCKED_APPROVED" in gate1_txt
 
     if tbox_path.exists() and r2rml_path.exists() and gate1_approved:
         state = "LOCKED_APPROVED"
@@ -113,8 +117,8 @@ def _inspect_element_1_tbox(
         ),
         state=state,
         metrics_summary=(
-            f"Classes: {class_count} | skos:altLabel: {alt_label_count} | "
-            f"HITL Gate 1: {gate1_status}"
+            f"Classes: {class_count} | Properties: {prop_count} | "
+            f"skos:altLabel: {alt_label_count} | HITL Gate 1: {gate1_status}"
         ),
     )
 

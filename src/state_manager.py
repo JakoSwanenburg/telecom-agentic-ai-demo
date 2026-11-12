@@ -107,8 +107,11 @@ def reset_to_clean_slate(
         Path(config.layer2_worker_and_sop.missing_primitive_spec_path),
         Path(config.layer2_worker_and_sop.hitl_sop_review_report_path),
         Path(config.track_b_ingestion_and_er.hitl_gate1_report_path),
+        Path(config.track_b_ingestion_and_er.hitl_gate1_report_path).with_suffix(".md"),
         Path(config.track_b_ingestion_and_er.hitl_gate2_report_path),
+        Path(config.track_b_ingestion_and_er.hitl_gate2_report_path).with_suffix(".md"),
         Path(config.track_b_ingestion_and_er.shacl_quarantine_report_path),
+        Path(config.track_b_ingestion_and_er.shacl_quarantine_report_path).with_suffix(".md"),
         Path(config.layer1_orchestrator.export_ai_studio_schema_path),
     ]
 

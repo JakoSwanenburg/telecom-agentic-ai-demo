@@ -44,22 +44,27 @@ Enterprise Reference Implementation demonstrating the **5-Layer Telecom Agentic 
 ├── reports/                             # Generated HTML/Markdown dashboards & HITL review reports
 ├── src/
 │   ├── __init__.py
-│   ├── models.py                        # Pydantic v2 schemas for config, catalog, CQRS state, DT-00 & SYS-01
+│   ├── models.py                        # Pydantic v2 schemas for config, catalog, CQRS state, DT-00, SYS-01 & DT-01a
 │   ├── config.py                        # YAML configuration loader with env var overrides
 │   ├── config_loader.py                 # Step 1 configuration loader interface
 │   ├── catalog_manager.py               # Southbound MCP Platform Primitive Catalog manager & gap toggle
 │   ├── state_manager.py                 # Scenario DT-00 clean-slate wipe & CQRS runtime state reset
 │   ├── state_inspector.py               # SYS-01 Live System State Inspector (7 architectural elements)
 │   ├── logger.py                        # Dual logger (local rotating file + stdout vs. cloud stdout)
-│   └── stage0_generator.py              # Modular Stage 0 raw sources generator & verifier
+│   ├── stage0_generator.py              # Modular Stage 0 raw sources generator & verifier
+│   └── track_b/
+│       ├── __init__.py
+│       └── s1_cmdb_tbox_profiler.py     # Scenario DT-01a: Prong 1 SQL CMDB Profiler, TBox, SHACL & R2RML
 ├── scripts/
 │   ├── generate_stage0_raw_sources.py   # CLI entrypoint for Stage 0 raw sources generation
 │   ├── reset_demo_state.py              # CLI entrypoint for Scenario DT-00 (Wipe & Reset to Clean Slate)
-│   └── inspect_demo_state.py            # CLI entrypoint for SYS-01 (Live System State Inspector)
+│   ├── inspect_demo_state.py            # CLI entrypoint for SYS-01 (Live System State Inspector)
+│   └── run_dt01a_cmdb_gate1.py          # CLI entrypoint for Scenario DT-01a (Prong 1 CMDB & HITL Gate 1)
 ├── tests/
 │   ├── test_config_and_logger.py        # Unit tests for config, env overrides & dual logging
 │   ├── test_stage0_generator.py         # Unit tests for Stage 0 generation & fail-fast checks
-│   └── test_step1_state_and_config.py   # Unit tests for Step 1 config lock, MCP catalog, DT-00 & SYS-01
+│   ├── test_step1_state_and_config.py   # Unit tests for Step 1 config lock, MCP catalog, DT-00 & SYS-01
+│   └── test_step2_dt01a_cmdb_gate1.py   # Unit tests for Step 2 (DT-01a) CMDB profiler, TBox, R2RML & Gate 1
 └── terraform/                           # 100% Terraform-managed GCP infrastructure (europe-west4)
     ├── providers.tf
     ├── variables.tf
@@ -129,6 +134,23 @@ All non-secret settings and relative paths are stored in [`config.yaml`](file://
 Outputs a rich console table and writes:
 - `reports/system_state_dashboard.html`
 - `reports/system_state_dashboard.md`
+
+### Execute Scenario `DT-01a` (Prong 1 SQL CMDB Profiler, TMF SID/eTOM TBox, R2RML & HITL Gate 1)
+```powershell
+# Run in candidate proposal mode (HITL Gate 1 = CANDIDATE_PROPOSED):
+.\.venv\Scripts\python.exe scripts\run_dt01a_cmdb_gate1.py --mode candidate
+
+# Run with architect approval (HITL Gate 1 = LOCKED_APPROVED, default):
+.\.venv\Scripts\python.exe scripts\run_dt01a_cmdb_gate1.py --mode approve
+
+# Optional: Promote approved Step 2 artifacts into data/golden_reference/:
+.\.venv\Scripts\python.exe scripts\run_dt01a_cmdb_gate1.py --mode approve --update-golden-ref
+```
+Generates:
+- `data/semantic_store/tbox_sid_etom.ttl` & `<urn:telco:graph:tbox:sid-etom>` in `data/semantic_store/knowledge_graph.trig` (`0` persisted triples in `<urn:telco:graph:virtual:ib>`)
+- `mappings/cmdb_r2rml.ttl`
+- `shapes/service_spec_shape.ttl` & `shapes/trouble_ticket_shape.ttl`
+- `reports/hitl_gate1_ontology_mapping_review.html` & `.md`
 
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell

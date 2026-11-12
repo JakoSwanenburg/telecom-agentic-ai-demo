@@ -444,3 +444,111 @@ class Stage0GenerationSummary(BaseModel):
     verified_eth_gold_loss_pct: float
     verified_eth_gold_upgrade_sku: str
     verified_eth_gold_auto_remediation: str
+
+
+# ============================================================================
+# Step 2 (`DT-01a`) Prong 1 SQL CMDB Profiler, TBox, R2RML & HITL Gate 1 Models
+# ============================================================================
+ColumnDisposition = Literal[
+    "MAPPED_TO_TBOX",
+    "PHYSICAL_SCD2_CONTROL_ONLY",
+    "EXCLUDED_INTERNAL_OR_LEGACY",
+    "EXCLUDED_LEGACY",
+    "EXCLUDED_SYNC_METADATA",
+    "EXCLUDED_NOISE",
+]
+
+
+class ColumnProfileEntry(BaseModel):
+    """Dynamic SQLite column profile entry with TMF SID/eTOM mapping or exclusion rationale."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    table_name: str = Field(..., min_length=1)
+    column_name: str = Field(..., min_length=1)
+    sql_type: str = Field(..., min_length=1)
+    not_null: bool
+    is_primary_key: bool
+    disposition: ColumnDisposition
+    mapped_tbox_target: str = Field(..., min_length=1)
+    transformation_rule: str = Field(..., min_length=1)
+    audit_rationale: str = Field(..., min_length=1)
+
+
+class TableProfileEntry(BaseModel):
+    """Dynamic SQLite table profile entry across the 4 CMDB tables."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    table_name: str = Field(..., min_length=1)
+    total_rows: int = Field(..., ge=0)
+    active_rows: int = Field(..., ge=0)
+    table_disposition: Literal["BOUND_VIRTUAL_GRAPH", "EXCLUDED_NOISE"]
+    target_tmf_classes: List[str] = Field(default_factory=list)
+    canonical_iri_templates: List[str] = Field(default_factory=list)
+    r2rml_triples_map_id: str = Field(..., min_length=1)
+    columns: List[ColumnProfileEntry] = Field(..., min_length=1)
+
+
+class Scd2CircuitVerification(BaseModel):
+    """Ground-truth verification of SCD Type 2, shadow enum & QUDT math for CIR-994821."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    circuit_id: str = Field(..., min_length=1)
+    expired_row_id: int = Field(..., ge=1)
+    expired_product_sku: str = Field(..., min_length=1)
+    expired_valid_to_ts: str = Field(..., min_length=1)
+    active_row_id: int = Field(..., ge=1)
+    active_product_sku: str = Field(..., min_length=1)
+    raw_oper_status_cd: str = Field(..., min_length=1)
+    canonical_oper_status: str = Field(..., min_length=1)
+    raw_bandwidth_val: float = Field(..., gt=0.0)
+    raw_bandwidth_unit: str = Field(..., min_length=1)
+    normalized_bandwidth_gbps: float = Field(..., gt=0.0)
+
+
+class EvaluatorOntologyCritique(BaseModel):
+    """Automated Evaluator Agent critique of the candidate TBox and R2RML mapping."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    zero_sql_leakage_in_tbox: bool
+    leaked_sql_tokens: List[str] = Field(default_factory=list)
+    billing_noise_table_excluded: bool
+    scd2_active_filter_present: bool
+    shadow_enum_translation_present: bool
+    qudt_bandwidth_normalization_present: bool
+    virtual_graph_zero_persisted_triples: bool
+    tbox_class_count: int = Field(..., ge=12)
+    tbox_property_count: int = Field(..., ge=10)
+    tbox_skos_alt_label_count: int = Field(..., ge=24)
+    overall_passed: bool
+    critique_summary: str = Field(..., min_length=1)
+
+
+class Dt01aExecutionResult(BaseModel):
+    """Complete validated summary returned by Scenario `DT-01a` (`run_dt01a_cmdb_profiler`)."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    scenario_id: Literal["DT-01a"] = "DT-01a"
+    gate1_mode: Literal["candidate", "approve"]
+    gate1_status: Literal["CANDIDATE_PROPOSED", "LOCKED_APPROVED"]
+    executed_at_utc: str = Field(..., min_length=1)
+    total_tables_inspected: int = Field(..., ge=4)
+    total_rows_inspected: int = Field(..., ge=104)
+    bound_tables_count: int = Field(..., ge=3)
+    excluded_noise_tables_count: int = Field(..., ge=1)
+    table_profiles: List[TableProfileEntry] = Field(..., min_length=4, max_length=4)
+    scd2_verification: Scd2CircuitVerification
+    evaluator_critique: EvaluatorOntologyCritique
+    tbox_path: Path
+    trig_dataset_path: Path
+    r2rml_path: Path
+    service_spec_shape_path: Path
+    trouble_ticket_shape_path: Path
+    hitl_html_report_path: Path
+    hitl_markdown_report_path: Path
+    golden_ref_updated: bool
+

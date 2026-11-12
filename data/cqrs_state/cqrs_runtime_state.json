@@ -1,0 +1,8 @@
+{
+  "active_telemetry_preset": "branch_a_soft_degradation",
+  "active_mutex_locks": {},
+  "rate_limit_remaining_tokens": 3,
+  "rate_limit_max_tokens": 3,
+  "rate_limit_window_seconds": 300,
+  "last_reset_utc": "2026-11-12T14:25:02Z"
+}

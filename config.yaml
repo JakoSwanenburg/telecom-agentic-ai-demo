@@ -1,6 +1,6 @@
 # ============================================================================
-# Centralized Configuration — Telecom Agentic AI Demo (UC-001)
-# Compliant with AGENTS.md Part 2.5, Part 3.1, and Part 5
+# Centralized Master Configuration — Telecom Agentic AI Demo (UC-001)
+# Compliant with AGENTS.md Part 2.5, Part 3.1, Part 5, and ADR-TELCO-UC001-ACT03-V1
 # ============================================================================
 
 project:
@@ -61,3 +61,68 @@ ai:
   max_output_tokens: 4096
   thinking_budget: 1024
 
+# ============================================================================
+# Activity 0.3 Locked Component Architecture Settings (Step 1)
+# ============================================================================
+
+use_case:
+  use_case_id: "UC-001"
+  title: "Enterprise L2 Fiber Packet-Loss Triage & Automated Optical DDM Recalibration"
+  customer_name: "A Corporate Enterprise"
+  customer_id: "CUST-ENT-409"
+  customer_bv_name: "A Corporate Enterprise B.V."
+  customer_registration_kvk: "NL-8841209"
+  circuit_id: "CIR-994821"
+  active_product_sku: "ETH-10G-GOLD"
+  expired_product_sku: "ETH-1G-SILVER"
+  cfs_expired_row_id: 2000
+  cfs_active_row_id: 2001
+  pe_router_hostname: "NLD-HAG-PE02"
+  olt_port_id: "OLT04-P12"
+  rfs_id: "RFS-OLT04-P12"
+  cpe_asset_id: "CPE-ASN-7741"
+  cpe_model_sku: "NOK-7210-SAS-Mxp"
+  sop_id: "SOP-ASSUR-402"
+
+layer1_orchestrator:
+  option_id: "1D"
+  transport_mode: "in_process"
+  sse_port: 8000
+  llm_model: "gemini-2.5-flash"
+  export_ai_studio_schema_path: "reports/ai_studio_tool_declarations.json"
+
+layer2_worker_and_sop:
+  compiler_option_id: "2.1D-Catalog"
+  runtime_option_id: "2.2A"
+  active_skill_path: "skills/skill_sop_402.yaml"
+  active_guardrails_path: "skills/guardrails_sop_402.json"
+  missing_primitive_spec_path: "reports/missing_primitive_spec.json"
+  hitl_sop_review_report_path: "reports/hitl_sop_skill_review.html"
+  mcp_catalog_path: "config/mcp_primitives_catalog.json"
+
+layer3_nl2semantics:
+  option_id: "3C-Dual"
+  execution_mode: "dual_comparison"
+
+layer4_compiler_federation:
+  option_id: "4A"
+  dataset_trig_path: "data/semantic_store/knowledge_graph.trig"
+  tbox_path: "data/semantic_store/tbox_sid_etom.ttl"
+  r2rml_path: "mappings/cmdb_r2rml.ttl"
+  excel_rml_path: "mappings/excel_catalog_rml.yaml"
+  shapes_dir: "shapes"
+  sqlite_db_path: "data/raw_sources/sql/cmdb_installed_base.db"
+
+track_b_ingestion_and_er:
+  option_id: "5A-HITL"
+  hitl_gate1_report_path: "reports/hitl_gate1_ontology_mapping_review.html"
+  hitl_gate2_report_path: "reports/hitl_gate2_ingestion_er_curation.html"
+  shacl_quarantine_report_path: "reports/shacl_quarantine_report.html"
+
+cqrs_action_plane:
+  option_id: "6A-Generic"
+  state_file_path: "data/cqrs_state/cqrs_runtime_state.json"
+  active_telemetry_preset: "branch_a_soft_degradation"
+  rate_limit_max_tokens: 3
+  rate_limit_window_seconds: 300
+  mutex_ttl_seconds: 60

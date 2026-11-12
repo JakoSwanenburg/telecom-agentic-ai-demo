@@ -1,0 +1,75 @@
+{
+  "catalog_version": "1.0.0",
+  "enable_tmf621_dispatch_primitive": true,
+  "primitives": [
+    {
+      "primitive_uri": "mcp://semantic-read/query_knowledge_fabric",
+      "server_id": "semantic-read-mcp",
+      "plane": "semantic_read_plane",
+      "description": "Executes read-only federated semantic queries across Layer 3 NL2Semantics and Layer 4 R2RML/Named Graphs.",
+      "supported_protocols": [
+        "SPARQL_1_1_FEDERATED_READ"
+      ],
+      "required_args": [
+        "intent_query",
+        "circuit_id",
+        "obo_jwt"
+      ],
+      "enabled": true
+    },
+    {
+      "primitive_uri": "cqrs://singleton-check/probe_resource_state",
+      "server_id": "singleton-check-mcp",
+      "plane": "cqrs_action_plane",
+      "description": "Executes real-time non-cached singleton hardware telemetry probes and acquires short-lived port mutex locks.",
+      "supported_protocols": [
+        "gNMI_OPTICAL_TELEMETRY"
+      ],
+      "required_args": [
+        "resource_iri",
+        "requested_metrics",
+        "bypass_cache",
+        "acquire_mutex_ttl_sec",
+        "obo_jwt"
+      ],
+      "enabled": true
+    },
+    {
+      "primitive_uri": "cqrs://transactional-write/execute_governed_mutation",
+      "server_id": "transactional-write-mcp",
+      "plane": "cqrs_action_plane",
+      "description": "Executes OBO-authenticated, mutex-locked, token-bucket-governed southbound OSS/NMS state mutations.",
+      "supported_protocols": [
+        "TMF640_SERVICE_ACTIVATION",
+        "TMF621_TROUBLE_TICKET"
+      ],
+      "required_args": [
+        "protocol",
+        "operation",
+        "params",
+        "resource_iri",
+        "singleton_lock_token",
+        "obo_jwt"
+      ],
+      "enabled": true
+    },
+    {
+      "primitive_uri": "cqrs://transactional-write/commit_validated_graph_triples",
+      "server_id": "transactional-write-mcp",
+      "plane": "cqrs_action_plane",
+      "description": "Validates candidate RDF triples against pySHACL shapes and atomically commits them to a curated Named Graph.",
+      "supported_protocols": [
+        "SHACL_VALIDATED_RDF_COMMIT"
+      ],
+      "required_args": [
+        "candidate_turtle",
+        "target_graph",
+        "shacl_shape",
+        "singleton_lock_token",
+        "obo_jwt"
+      ],
+      "enabled": true
+    }
+  ]
+}
+

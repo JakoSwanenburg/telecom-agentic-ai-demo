@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SYS-01 Live System State Dashboard — UC-001</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+      margin: 24px;
+    }
+    .header-card {
+      background: linear-gradient(135deg, #1E3A8A, #0F172A);
+      color: #FFFFFF;
+      padding: 20px 24px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+    }
+    .header-card h1 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+    }
+    .header-card p {
+      margin: 4px 0;
+      font-size: 13px;
+      color: #E2E8F0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #FFFFFF;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+    }
+    th {
+      background-color: #1E293B;
+      color: #FFFFFF;
+      text-align: left;
+      padding: 12px 14px;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #E2E8F0;
+      font-size: 13.5px;
+      vertical-align: middle;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    code {
+      background-color: #F1F5F9;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      color: #0F172A;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-card">
+    <h1>SYS-01 Live System State Inspector — UC-001</h1>
+    <p><strong>Use Case:</strong> Enterprise L2 Fiber Packet-Loss Triage &amp; Automated Optical DDM Recalibration | <strong>Circuit:</strong> CIR-994821 (ETH-10G-GOLD)</p>
+    <p><strong>Inspected At (UTC):</strong> 2026-11-12T14:26:01Z</p>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th style="width:4%;text-align:center;">#</th>
+        <th style="width:22%;">Inspected Element</th>
+        <th style="width:24%;">Underlying Artifact / Endpoint</th>
+        <th style="width:16%;text-align:center;">Live State</th>
+        <th style="width:34%;">Key Metrics &amp; Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+            <tr>
+              <td style="text-align:center;font-weight:700;">1</td>
+              <td style="font-weight:600;color:#0F172A;">1. Conceptual TBox &amp; Mappings</td>
+              <td><code>data/semantic_store/tbox_sid_etom.ttl &amp; mappings/cmdb_r2rml.ttl</code></td>
+              <td style="text-align:center;">
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#D97706;">
+                  EMPTY
+                </span>
+              </td>
+              <td style="color:#334155;">Classes: 0 | skos:altLabel: 0 | HITL Gate 1: NOT_RUN</td>
+            </tr>
+            
+            <tr>
+              <td style="text-align:center;font-weight:700;">2</td>
+              <td style="font-weight:600;color:#0F172A;">2. Prong 1: SQL CMDB Virtual Graph</td>
+              <td><code>urn:telco:graph:virtual:ib</code></td>
+              <td style="text-align:center;">
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#D97706;">
+                  UNBOUND
+                </span>
+              </td>
+              <td style="color:#334155;">Persisted triples on disk: 0 | Bound SQLite tables: 0 | R2RML virtual mapping unbound</td>
+            </tr>
+            
+            <tr>
+              <td style="text-align:center;font-weight:700;">3</td>
+              <td style="font-weight:600;color:#0F172A;">3. Prong 2: Excel Reference Graph</td>
+              <td><code>urn:telco:graph:ref:catalog</code></td>
+              <td style="text-align:center;">
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#D97706;">
+                  EMPTY
+                </span>
+              </td>
+              <td style="color:#334155;">Materialized triples: 0 | Valid B2B SKUs loaded: 0 | pySHACL quarantined rows: 0</td>
+            </tr>
+            
+            <tr>
+              <td style="text-align:center;font-weight:700;">4</td>
+              <td style="font-weight:600;color:#0F172A;">4. Prong 3: PDF BITES &amp; ER Bridge</td>
+              <td><code>&lt;urn:telco:graph:bites:docs&gt; &amp; &lt;urn:telco:graph:bridge:er&gt;</code></td>
+              <td style="text-align:center;">
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#D97706;">
+                  EMPTY
+                </span>
+              </td>
+              <td style="color:#334155;">GLOBAL_SCOPE triples: 0 | DOCUMENT_SCOPE triples: 0 | Active PDFs: 0 | ER links: 0 | HITL Gate 2: NOT_RUN</td>
+            </tr>
+            
+            <tr>
+              <td style="text-align:center;font-weight:700;">5</td>
+              <td style="font-weight:600;color:#0F172A;">5. Southbound MCP Primitive Catalog</td>
+              <td><code>config/mcp_primitives_catalog.json</code></td>
+              <td style="text-align:center;">
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#059669;">
+                  COMPLETE
+                </span>
+              </td>
+              <td style="color:#334155;">Registered primitives: 4/4 | TMF640_SERVICE_ACTIVATION: BOUND | TMF621_TROUBLE_TICKET: BOUND</td>
+            </tr>
+            
+            <tr>
+              <td style="text-align:center;font-weight:700;">6</td>
+              <td style="font-weight:600;color:#0F172A;">6. Layer 2 Worker Agent &amp; Skill</td>
+              <td><code>skills/skill_sop_402.yaml</code></td>
+              <td style="text-align:center;">
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#D97706;">
+                  REMOVED
+                </span>
+              </td>
+              <td style="color:#334155;">Compiled states: 0 | Active guardrails: 0 | Northbound MCP Tool: NOT_DEPLOYED</td>
+            </tr>
+            
+            <tr>
+              <td style="text-align:center;font-weight:700;">7</td>
+              <td style="font-weight:600;color:#0F172A;">7. Layer 3 &amp; CQRS Runtime Settings</td>
+              <td><code>config.yaml &amp; data/cqrs_state/cqrs_runtime_state.json</code></td>
+              <td style="text-align:center;">
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#059669;">
+                  ACTIVE_PRESET
+                </span>
+              </td>
+              <td style="color:#334155;">Layer 3 Mode: dual_comparison | Telemetry Preset: branch_a_soft_degradation | Active Mutex Locks: 0 | Token Bucket: 3/3</td>
+            </tr>
+            
+    </tbody>
+  </table>
+</body>
+</html>

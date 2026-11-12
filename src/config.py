@@ -37,6 +37,8 @@ def _apply_env_overrides(raw_data: Dict[str, Any]) -> Dict[str, Any]:
       - `STAGE0_RAW_DIR`: Overrides `paths.raw_sources_dir`
       - `STAGE0_SEED`: Overrides `stage0.seed`
       - `AI_MODEL_NAME`: Overrides `ai.model_name`
+      - `LAYER3_EXECUTION_MODE`: Overrides `layer3_nl2semantics.execution_mode`
+      - `CQRS_TELEMETRY_PRESET`: Overrides `cqrs_action_plane.active_telemetry_preset`
     """
     env_val = os.getenv("ENV")
     if env_val:
@@ -75,6 +77,22 @@ def _apply_env_overrides(raw_data: Dict[str, Any]) -> Dict[str, Any]:
     if ai_model:
         raw_data.setdefault("ai", {})["model_name"] = ai_model.strip()
 
+    layer1_mode = os.getenv("LAYER1_TRANSPORT_MODE")
+    if layer1_mode:
+        raw_data.setdefault("layer1_orchestrator", {})[
+            "transport_mode"
+        ] = layer1_mode.strip()
+
+    layer3_mode = os.getenv("LAYER3_EXECUTION_MODE")
+    if layer3_mode:
+        raw_data.setdefault("layer3_nl2semantics", {})["execution_mode"] = layer3_mode.strip()
+
+    telemetry_preset = os.getenv("CQRS_TELEMETRY_PRESET")
+    if telemetry_preset:
+        raw_data.setdefault("cqrs_action_plane", {})[
+            "active_telemetry_preset"
+        ] = telemetry_preset.strip()
+
     return raw_data
 
 
@@ -105,4 +123,3 @@ def load_config(config_path: Optional[Path] = None) -> AppConfig:
 
     merged = _apply_env_overrides(parsed)
     return AppConfig.model_validate(merged)
-

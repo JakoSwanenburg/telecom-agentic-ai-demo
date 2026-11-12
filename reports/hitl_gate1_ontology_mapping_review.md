@@ -1,18 +1,18 @@
 # Mandatory HITL Gate 1 Review — Prong 1 SQL CMDB AI Schema Profiler, TMF SID/eTOM TBox & R2RML Mapping (`DT-01a`)
 
-- **Gate 1 Sign-Off Status:** **`CANDIDATE_PROPOSED`**
+- **Gate 1 Sign-Off Status:** **`LOCKED_APPROVED`**
 - **Proposal ID:** `PROP-UC-001-GATE1` (`gemini-3.8-flash`)
-- **Executed At (UTC):** `2026-11-12T16:56:24Z`
+- **Executed At (UTC):** `2026-11-12T17:07:53Z`
 - **Evaluator Critique Result:** `PASS: 0/40 physical SQL tokens leaked into TBox; 14 OWL classes, 37 properties, and 120 skos:altLabel synonyms verified; 1 noise table(s) (T_BILLING_AUDIT_NOISE) excluded; SCD2 active-window filter, shadow enum translation, and QUDT Gbps normalization verified; <urn:telco:graph:virtual:ib> has 0 persisted triples on disk.`
 
 ---
 
 ## 1. HITL Gate 1 Lead Architect Verification Questions
 
-1. [ ] Does the Lead Ontologist approve the retention of exactly 14 TM Forum SID and telecom domain classes, confirming that financial billing and marketing classes are strictly pruned from the operational assurance TBox?
-2. [ ] Does the Lead Architect approve excluding T_BILLING_AUDIT_NOISE and stripping internal surrogate keys, legacy CRM identifiers, and NMS synchronization watermarks to prevent physical database plumbing leakage into the Knowledge Graph?
-3. [ ] Is the R2RML SQL pushdown filter WHERE VALID_TO_TS IS NULL confirmed as the authoritative mechanism to resolve active SCD Type 2 circuit state (such as retaining row 2001 and suppressing expired row 2000 for circuit CIR-994821)?
-4. [ ] Does the Lead Architect validate the status mapping rules (10 to ACTIVE, 20 to MAINTENANCE, 99 to DECOMMISSIONED) and the QUDT conversion arithmetic transforming mixed Kbps, Mbps, and Gbps values into canonical Gigabits per second?
+1. [x] Does the Lead Ontologist approve the retention of exactly 14 TM Forum SID and telecom domain classes, confirming that financial billing and marketing classes are strictly pruned from the operational assurance TBox?
+2. [x] Does the Lead Architect approve excluding T_BILLING_AUDIT_NOISE and stripping internal surrogate keys, legacy CRM identifiers, and NMS synchronization watermarks to prevent physical database plumbing leakage into the Knowledge Graph?
+3. [x] Is the R2RML SQL pushdown filter WHERE VALID_TO_TS IS NULL confirmed as the authoritative mechanism to resolve active SCD Type 2 circuit state (such as retaining row 2001 and suppressing expired row 2000 for circuit CIR-994821)?
+4. [x] Does the Lead Architect validate the status mapping rules (10 to ACTIVE, 20 to MAINTENANCE, 99 to DECOMMISSIONED) and the QUDT conversion arithmetic transforming mixed Kbps, Mbps, and Gbps values into canonical Gigabits per second?
 
 ---
 

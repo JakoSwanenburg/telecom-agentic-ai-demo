@@ -1,0 +1,41 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix tmf: <http://tmforum.org/sid/> .
+@prefix telco: <http://telco.enterprise.org/ontology/> .
+
+telco:ServiceSpecificationShape a sh:NodeShape ;
+    sh:targetClass tmf:ServiceSpecification ;
+    rdfs:label "Service Specification SHACL Validation Shape"@en ;
+    rdfs:comment "Enforces required catalog SKU code, valid packet loss and availability percentages, and lifecycle status."@en ;
+    sh:property [
+        sh:path tmf:skuCode ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:maxCount 1 ;
+        sh:message "A ServiceSpecification must have exactly one string SKU code."@en ;
+    ] ;
+    sh:property [
+        sh:path telco:maxPacketLossPct ;
+        sh:datatype xsd:double ;
+        sh:minCount 1 ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 100.0 ;
+        sh:message "A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0."@en ;
+    ] ;
+    sh:property [
+        sh:path telco:availabilityTargetPct ;
+        sh:datatype xsd:double ;
+        sh:minCount 1 ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 100.0 ;
+        sh:message "A ServiceSpecification must define availability target percentage between 0.0 and 100.0."@en ;
+    ] ;
+    sh:property [
+        sh:path telco:lifecycleStatus ;
+        sh:datatype xsd:string ;
+        sh:minCount 1 ;
+        sh:in ( "ACTIVE" "DEPRECATED" ) ;
+        sh:message "A ServiceSpecification must have lifecycle status of either ACTIVE or DEPRECATED."@en ;
+    ] .

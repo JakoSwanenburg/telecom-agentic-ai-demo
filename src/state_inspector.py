@@ -28,7 +28,12 @@ import yaml
 
 from src.catalog_manager import load_catalog
 from src.config import get_workspace_root
-from src.models import AppConfig, InspectedElementStatus, SystemStateReport
+from src.models import (
+    AppConfig,
+    CandidateOntologyAndMappingProposal,
+    InspectedElementStatus,
+    SystemStateReport,
+)
 from src.state_manager import load_cqrs_state
 
 
@@ -71,8 +76,15 @@ def _inspect_element_1_tbox(
     tbox_path = root_dir / Path(config.layer4_compiler_federation.tbox_path)
     r2rml_path = root_dir / Path(config.layer4_compiler_federation.r2rml_path)
     gate1_path = root_dir / Path(config.track_b_ingestion_and_er.hitl_gate1_report_path)
+    proposal_path = root_dir / Path(
+        config.track_b_ingestion_and_er.gate1_candidate_proposal_path
+    )
 
-    if not tbox_path.exists() and not r2rml_path.exists():
+    if (
+        not tbox_path.exists()
+        and not r2rml_path.exists()
+        and not proposal_path.exists()
+    ):
         return InspectedElementStatus(
             element_number=1,
             element_name="1. Conceptual TBox & Mappings",
@@ -95,6 +107,15 @@ def _inspect_element_1_tbox(
             set(g.subjects(RDF.type, OWL.DatatypeProperty))
         )
         alt_label_count = len(list(g.triples((None, SKOS.altLabel, None))))
+    elif proposal_path.exists():
+        proposal = CandidateOntologyAndMappingProposal.model_validate_json(
+            proposal_path.read_text(encoding="utf-8")
+        )
+        class_count = len(proposal.proposed_classes)
+        prop_count = len(proposal.proposed_properties)
+        alt_label_count = sum(
+            len(c.skos_alt_labels) for c in proposal.proposed_classes
+        ) + sum(len(p.skos_alt_labels) for p in proposal.proposed_properties)
 
     gate1_approved = False
     if gate1_path.exists():
@@ -104,22 +125,36 @@ def _inspect_element_1_tbox(
     if tbox_path.exists() and r2rml_path.exists() and gate1_approved:
         state = "LOCKED_APPROVED"
         gate1_status = "APPROVED"
+        artifact_label = (
+            f"{config.layer4_compiler_federation.tbox_path} & "
+            f"{config.layer4_compiler_federation.r2rml_path}"
+        )
+        metrics_str = (
+            f"Classes: {class_count} | Properties: {prop_count} | "
+            f"skos:altLabel: {alt_label_count} | HITL Gate 1: {gate1_status}"
+        )
     else:
         state = "CANDIDATE_PROPOSED"
-        gate1_status = "PENDING_REVIEW"
+        gate1_status = "Awaiting HITL Approval"
+        artifact_label = (
+            config.track_b_ingestion_and_er.gate1_candidate_proposal_path
+            if not tbox_path.exists()
+            else (
+                f"{config.layer4_compiler_federation.tbox_path} & "
+                f"{config.layer4_compiler_federation.r2rml_path}"
+            )
+        )
+        metrics_str = (
+            f"Proposed Classes: {class_count} | Properties: {prop_count} | "
+            f"skos:altLabel: {alt_label_count} | HITL Gate 1: {gate1_status}"
+        )
 
     return InspectedElementStatus(
         element_number=1,
         element_name="1. Conceptual TBox & Mappings",
-        underlying_artifact=(
-            f"{config.layer4_compiler_federation.tbox_path} & "
-            f"{config.layer4_compiler_federation.r2rml_path}"
-        ),
+        underlying_artifact=artifact_label,
         state=state,
-        metrics_summary=(
-            f"Classes: {class_count} | Properties: {prop_count} | "
-            f"skos:altLabel: {alt_label_count} | HITL Gate 1: {gate1_status}"
-        ),
+        metrics_summary=metrics_str,
     )
 
 
@@ -129,13 +164,22 @@ def _inspect_element_2_virtual_sql(
     """Inspect Element 2: Prong 1 SQL CMDB Virtual Graph (`UNBOUND` | `BOUND_ZERO_COPY`)."""
     r2rml_path = root_dir / Path(config.layer4_compiler_federation.r2rml_path)
     sqlite_path = root_dir / Path(config.layer4_compiler_federation.sqlite_db_path)
+    proposal_path = root_dir / Path(
+        config.track_b_ingestion_and_er.gate1_candidate_proposal_path
+    )
     persisted_virtual_triples = graph_counts.get(str(GRAPH_VIRTUAL_IB), 0)
 
     if r2rml_path.exists() and sqlite_path.exists():
         state = "BOUND_ZERO_COPY"
         metrics = (
             f"Persisted triples on disk: {persisted_virtual_triples} | "
-            "Bound SQLite tables: 3 | Excluded noise tables: 1 (T_BILLING_AUDIT_NOISE)"
+            "Bound SQLite tables: 3 | Excluded noise tables: 1"
+        )
+    elif proposal_path.exists():
+        state = "UNBOUND"
+        metrics = (
+            f"Persisted triples on disk: {persisted_virtual_triples} | "
+            "Bound SQLite tables: 0 | Pending Gate 1 Lock (CANDIDATE_PROPOSED)"
         )
     else:
         state = "UNBOUND"

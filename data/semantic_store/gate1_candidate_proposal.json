@@ -1,0 +1,1451 @@
+{
+  "proposal_id": "PROP-UC-001-GATE1",
+  "use_case_id": "UC-001",
+  "generated_at_utc": "2026-11-12T16:56:24Z",
+  "llm_model_used": "gemini-3.8-flash",
+  "ontology_iri": "urn:telco:graph:tbox:sid-etom",
+  "virtual_graph_iri": "urn:telco:graph:virtual:ib",
+  "ontology_label": "Enterprise L2 Fiber Assurance & Network Inventory Ontology",
+  "ontology_comment": "Conceptual semantic model aligning Enterprise Layer 2 Carrier Ethernet customer service inventory, optical transport topology, and automated trouble triage with TM Forum SID GB922 and eTOM GB921 business processes.",
+  "etom_processes": [
+    {
+      "process_iri": "etom:Process_1_3_7_ProblemHandling",
+      "process_id": "1.3.7",
+      "label": "eTOM 1.3.7 Problem Handling",
+      "comment": "Customer-facing service problem reception, SLA triage, root-cause correlation, and customer status notification.",
+      "skos_alt_labels": [
+        "Customer Problem Handling",
+        "CFS SLA Assurance Triage"
+      ]
+    },
+    {
+      "process_iri": "etom:Process_1_4_5_ResourceTroubleManagement",
+      "process_id": "1.4.5",
+      "label": "eTOM 1.4.5 Resource Trouble Management",
+      "comment": "Network resource fault localization, optical transceiver DDM diagnostics, autonomous self-healing, and field technician dispatch.",
+      "skos_alt_labels": [
+        "Resource Trouble Management",
+        "Network Fault Isolation & Remediation"
+      ]
+    }
+  ],
+  "proposed_classes": [
+    {
+      "class_iri": "tmf:Customer",
+      "sub_class_of_iri": null,
+      "label": "Customer",
+      "comment": "An enterprise party or organization that subscribes to commercial telecom products and holds an active Master Service Agreement.",
+      "skos_alt_labels": [
+        "Enterprise Subscriber",
+        "B2B Account",
+        "Corporate Client"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_3_7_ProblemHandling"
+      ]
+    },
+    {
+      "class_iri": "tmf:Product",
+      "sub_class_of_iri": null,
+      "label": "Product",
+      "comment": "A procured commercial telecom offering binding a customer agreement to one or more CustomerFacingServices.",
+      "skos_alt_labels": [
+        "Commercial Product Instance",
+        "Subscribed Telecom Offering",
+        "Enterprise Connectivity Subscription"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_3_7_ProblemHandling"
+      ]
+    },
+    {
+      "class_iri": "tmf:CustomerFacingService",
+      "sub_class_of_iri": null,
+      "label": "Customer Facing Service",
+      "comment": "An active Layer 2 Ethernet or wavelength connectivity circuit directly visible to and contracted by an enterprise customer.",
+      "skos_alt_labels": [
+        "CFS Circuit",
+        "Enterprise L2 Fiber Circuit",
+        "Carrier Ethernet Service"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_3_7_ProblemHandling"
+      ]
+    },
+    {
+      "class_iri": "tmf:ServiceSpecification",
+      "sub_class_of_iri": null,
+      "label": "Service Specification",
+      "comment": "Standardized commercial catalog SKU defining bandwidth tier, SLA packet-loss ceiling, availability target, and autonomous remediation eligibility.",
+      "skos_alt_labels": [
+        "Commercial Product SKU",
+        "Catalog Service Tier",
+        "SLA Service Specification"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_3_7_ProblemHandling"
+      ]
+    },
+    {
+      "class_iri": "tmf:ResourceFacingService",
+      "sub_class_of_iri": null,
+      "label": "Resource Facing Service",
+      "comment": "Internal network transport and access bearer service realizing a CustomerFacingService across PE routers, OLT ports, fiber spans, and CPE devices.",
+      "skos_alt_labels": [
+        "RFS Access Bearer",
+        "Network Transport Bearer",
+        "L2 Optical Bearer Service"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    },
+    {
+      "class_iri": "tmf:PhysicalResource",
+      "sub_class_of_iri": null,
+      "label": "Physical Resource",
+      "comment": "A physical network equipment asset deployed in the provider core, access plant, or customer demarcation point.",
+      "skos_alt_labels": [
+        "Network Inventory Element",
+        "Physical Hardware Asset",
+        "Telecom Network Device"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    },
+    {
+      "class_iri": "telco:OltPortResource",
+      "sub_class_of_iri": "tmf:PhysicalResource",
+      "label": "OLT Optical Port Resource",
+      "comment": "Optical Line Terminal transceiver port terminating the access fiber span and providing real-time gNMI DDM optical telemetry.",
+      "skos_alt_labels": [
+        "OLT Port",
+        "Optical Access Line Card Port",
+        "PON Optical Interface"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    },
+    {
+      "class_iri": "telco:CpeDeviceResource",
+      "sub_class_of_iri": "tmf:PhysicalResource",
+      "label": "Customer Premises Equipment Resource",
+      "comment": "Physical demarcation switch or router installed at the enterprise customer site.",
+      "skos_alt_labels": [
+        "CPE Device",
+        "Enterprise NTE Demarcation Chassis",
+        "On-Premises Optical Access Switch"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    },
+    {
+      "class_iri": "telco:PeRouterResource",
+      "sub_class_of_iri": "tmf:PhysicalResource",
+      "label": "Provider Edge Router Resource",
+      "comment": "Metro or core Provider Edge router aggregating L2 Ethernet access bearers.",
+      "skos_alt_labels": [
+        "PE Router",
+        "Metro Aggregation Router",
+        "Edge Routing Node"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    },
+    {
+      "class_iri": "tmf:PhysicalResourceSpec",
+      "sub_class_of_iri": null,
+      "label": "Physical Resource Specification",
+      "comment": "Vendor equipment model specification defining hardware capabilities, supported optical transceivers, and DDM calibration thresholds.",
+      "skos_alt_labels": [
+        "Hardware Model SKU",
+        "Vendor Equipment Specification",
+        "Chassis Hardware Model"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    },
+    {
+      "class_iri": "tmf:TroubleTicket",
+      "sub_class_of_iri": null,
+      "label": "Trouble Ticket",
+      "comment": "TMF621 operational assurance ticket tracking network incidents, automated remediations, or field fiber splicing dispatches.",
+      "skos_alt_labels": [
+        "NOC Assurance Ticket",
+        "TMF621 Incident Record",
+        "Field Dispatch Trouble Ticket"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_3_7_ProblemHandling",
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    },
+    {
+      "class_iri": "telco:SlaClause",
+      "sub_class_of_iri": null,
+      "label": "Service Level Agreement Clause",
+      "comment": "Contractual or catalog SLA clause specifying packet-loss thresholds, mean time to repair, service credit penalties, and VIP escalation rules.",
+      "skos_alt_labels": [
+        "SLA Guarantee Clause",
+        "MSA Contractual Penalty Policy",
+        "Quality of Service Commitment"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_3_7_ProblemHandling"
+      ]
+    },
+    {
+      "class_iri": "telco:OpticalCalibrationProfile",
+      "sub_class_of_iri": null,
+      "label": "Optical Calibration Profile",
+      "comment": "Vendor hardware manual optical Digital Diagnostic Monitoring power envelope and autonomous laser bias recalibration specification.",
+      "skos_alt_labels": [
+        "DDM Optical Power Envelope",
+        "SFP+ Tx/Rx Calibration Spec",
+        "Optical Attenuation Threshold Profile"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    },
+    {
+      "class_iri": "etom:BusinessProcess",
+      "sub_class_of_iri": null,
+      "label": "Business Process",
+      "comment": "An operational activity defined within the TM Forum eTOM business process framework governing service assurance and resource triage.",
+      "skos_alt_labels": [
+        "eTOM Process Definition",
+        "Operational Workflow Task",
+        "Standard Operating Procedure"
+      ],
+      "aligned_etom_process_iris": [
+        "etom:Process_1_3_7_ProblemHandling",
+        "etom:Process_1_4_5_ResourceTroubleManagement"
+      ]
+    }
+  ],
+  "proposed_properties": [
+    {
+      "property_iri": "tmf:hasCustomer",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:CustomerFacingService",
+      "range_iri": "tmf:Customer",
+      "qudt_applicable_unit_iri": null,
+      "label": "has customer",
+      "comment": "Associates an active Customer Facing Service with the contracted enterprise subscriber.",
+      "skos_alt_labels": [
+        "subscriber relationship",
+        "service owner"
+      ]
+    },
+    {
+      "property_iri": "tmf:isDescribedBy",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:CustomerFacingService",
+      "range_iri": "tmf:ServiceSpecification",
+      "qudt_applicable_unit_iri": null,
+      "label": "is described by",
+      "comment": "Associates a Customer Facing Service instance with its commercial service specification catalog tier.",
+      "skos_alt_labels": [
+        "service catalog specification",
+        "product tier specification"
+      ]
+    },
+    {
+      "property_iri": "tmf:supportsService",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:ResourceFacingService",
+      "range_iri": "tmf:CustomerFacingService",
+      "qudt_applicable_unit_iri": null,
+      "label": "supports service",
+      "comment": "Links an underlying Resource Facing Service transport bearer to the Customer Facing Service circuit it realizes.",
+      "skos_alt_labels": [
+        "realizes customer service",
+        "underlying transport bearer"
+      ]
+    },
+    {
+      "property_iri": "telco:usesOltPort",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:ResourceFacingService",
+      "range_iri": "telco:OltPortResource",
+      "qudt_applicable_unit_iri": null,
+      "label": "uses OLT port",
+      "comment": "Identifies the physical Optical Line Terminal transceiver port providing access connectivity for the resource service.",
+      "skos_alt_labels": [
+        "terminates on OLT port",
+        "optical line interface"
+      ]
+    },
+    {
+      "property_iri": "telco:terminatesOnRouter",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:ResourceFacingService",
+      "range_iri": "telco:PeRouterResource",
+      "qudt_applicable_unit_iri": null,
+      "label": "terminates on router",
+      "comment": "Identifies the Provider Edge aggregation router hosting the L2 circuit endpoint.",
+      "skos_alt_labels": [
+        "aggregating PE router",
+        "edge router host"
+      ]
+    },
+    {
+      "property_iri": "telco:demarcatesAtCpe",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:ResourceFacingService",
+      "range_iri": "telco:CpeDeviceResource",
+      "qudt_applicable_unit_iri": null,
+      "label": "demarcates at CPE",
+      "comment": "Identifies the Customer Premises Equipment device serving as the on-site network demarcation endpoint.",
+      "skos_alt_labels": [
+        "customer demarcation chassis",
+        "on-premises CPE asset"
+      ]
+    },
+    {
+      "property_iri": "tmf:hasResourceSpecification",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:PhysicalResource",
+      "range_iri": "tmf:PhysicalResourceSpec",
+      "qudt_applicable_unit_iri": null,
+      "label": "has resource specification",
+      "comment": "Links a physical hardware asset to its vendor model hardware specification.",
+      "skos_alt_labels": [
+        "equipment model specification",
+        "hardware spec"
+      ]
+    },
+    {
+      "property_iri": "telco:hasOpticalCalibrationProfile",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:PhysicalResourceSpec",
+      "range_iri": "telco:OpticalCalibrationProfile",
+      "qudt_applicable_unit_iri": null,
+      "label": "has optical calibration profile",
+      "comment": "Associates an equipment model specification with its vendor DDM optical power thresholds and recalibration limits.",
+      "skos_alt_labels": [
+        "DDM calibration profile",
+        "optical power envelope"
+      ]
+    },
+    {
+      "property_iri": "telco:hasSlaClause",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:ServiceSpecification",
+      "range_iri": "telco:SlaClause",
+      "qudt_applicable_unit_iri": null,
+      "label": "has SLA clause",
+      "comment": "Associates a commercial service specification tier with contractually binding SLA guarantees and penalty clauses.",
+      "skos_alt_labels": [
+        "service SLA guarantee",
+        "contractual clause"
+      ]
+    },
+    {
+      "property_iri": "telco:recommendedUpgradeSpec",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:ServiceSpecification",
+      "range_iri": "tmf:ServiceSpecification",
+      "qudt_applicable_unit_iri": null,
+      "label": "recommended upgrade specification",
+      "comment": "Points to the next tier commercial service specification recommended when bandwidth or packet loss thresholds are exceeded.",
+      "skos_alt_labels": [
+        "upgrade catalog path",
+        "higher tier SKU"
+      ]
+    },
+    {
+      "property_iri": "telco:affectedCircuit",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:TroubleTicket",
+      "range_iri": "tmf:CustomerFacingService",
+      "qudt_applicable_unit_iri": null,
+      "label": "affected circuit",
+      "comment": "References the Customer Facing Service circuit impacted by an assurance incident.",
+      "skos_alt_labels": [
+        "impacted CFS circuit",
+        "trouble ticket circuit"
+      ]
+    },
+    {
+      "property_iri": "telco:affectedResource",
+      "property_type": "owl:ObjectProperty",
+      "domain_iri": "tmf:TroubleTicket",
+      "range_iri": "tmf:PhysicalResource",
+      "qudt_applicable_unit_iri": null,
+      "label": "affected resource",
+      "comment": "References the physical network resource identified as the root cause of an assurance fault.",
+      "skos_alt_labels": [
+        "faulty hardware resource",
+        "root cause asset"
+      ]
+    },
+    {
+      "property_iri": "tmf:customerId",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:Customer",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "customer identifier",
+      "comment": "Canonical business identifier for an enterprise customer account.",
+      "skos_alt_labels": [
+        "customer account reference",
+        "external customer ID"
+      ]
+    },
+    {
+      "property_iri": "tmf:partyLegalName",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:Customer",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "party legal name",
+      "comment": "Officially registered legal entity name of the enterprise customer.",
+      "skos_alt_labels": [
+        "registered company name",
+        "corporate legal name"
+      ]
+    },
+    {
+      "property_iri": "tmf:marketSegment",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:Customer",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "market segment",
+      "comment": "Commercial market classification tier such as enterprise VIP or public sector.",
+      "skos_alt_labels": [
+        "customer tier classification",
+        "commercial segment"
+      ]
+    },
+    {
+      "property_iri": "telco:accountManagerCode",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:Customer",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "account manager code",
+      "comment": "Unique employee or desk identifier of the designated enterprise account manager.",
+      "skos_alt_labels": [
+        "assigned sales representative",
+        "account executive ID"
+      ]
+    },
+    {
+      "property_iri": "telco:chamberOfCommerceReg",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:Customer",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "chamber of commerce registration",
+      "comment": "Official commercial trade registry or chamber of commerce number for the enterprise.",
+      "skos_alt_labels": [
+        "trade registry number",
+        "KvK registration"
+      ]
+    },
+    {
+      "property_iri": "tmf:serviceId",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:CustomerFacingService",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "service identifier",
+      "comment": "Unique telecom circuit reference code assigned to a customer-facing service.",
+      "skos_alt_labels": [
+        "circuit identifier",
+        "service instance ID"
+      ]
+    },
+    {
+      "property_iri": "tmf:operationalStatus",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:CustomerFacingService",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "operational status",
+      "comment": "Normalized lifecycle state of the connectivity service, such as ACTIVE or MAINTENANCE.",
+      "skos_alt_labels": [
+        "canonical service state",
+        "circuit operational status"
+      ]
+    },
+    {
+      "property_iri": "telco:bandwidthGbps",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:CustomerFacingService",
+      "range_iri": "xsd:double",
+      "qudt_applicable_unit_iri": "unit:GigaBIT-PER-SEC",
+      "label": "bandwidth in gigabits per second",
+      "comment": "Contracted symmetrical bandwidth normalized to Gigabits per second.",
+      "skos_alt_labels": [
+        "circuit throughput Gbps",
+        "normalized capacity"
+      ]
+    },
+    {
+      "property_iri": "telco:installationDate",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:CustomerFacingService",
+      "range_iri": "xsd:date",
+      "qudt_applicable_unit_iri": null,
+      "label": "installation date",
+      "comment": "Calendar date when the customer connectivity circuit was physically handed over and activated.",
+      "skos_alt_labels": [
+        "service activation date",
+        "handover date"
+      ]
+    },
+    {
+      "property_iri": "tmf:rfsId",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:ResourceFacingService",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "resource facing service identifier",
+      "comment": "Internal system identifier for the underlying network transport bearer.",
+      "skos_alt_labels": [
+        "bearer service identifier",
+        "RFS instance ID"
+      ]
+    },
+    {
+      "property_iri": "telco:vlanTag",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:ResourceFacingService",
+      "range_iri": "xsd:integer",
+      "qudt_applicable_unit_iri": null,
+      "label": "VLAN tag",
+      "comment": "IEEE 802.1Q Ethernet encapsulation identifier assigned to the Layer 2 bearer.",
+      "skos_alt_labels": [
+        "dot1q VLAN ID",
+        "outer VLAN tag"
+      ]
+    },
+    {
+      "property_iri": "telco:fiberSpanId",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:ResourceFacingService",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "fiber span identifier",
+      "comment": "Outside plant optical fiber segment identifier connecting the OLT to the customer premises.",
+      "skos_alt_labels": [
+        "optical cable route ID",
+        "fiber span reference"
+      ]
+    },
+    {
+      "property_iri": "tmf:resourceId",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:PhysicalResource",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "resource identifier",
+      "comment": "Unique hardware inventory asset tag or management identifier.",
+      "skos_alt_labels": [
+        "network element asset tag",
+        "device identifier"
+      ]
+    },
+    {
+      "property_iri": "tmf:resourceName",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:PhysicalResource",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "resource name",
+      "comment": "DNS hostname or network management label for the physical hardware asset.",
+      "skos_alt_labels": [
+        "equipment hostname",
+        "system network label"
+      ]
+    },
+    {
+      "property_iri": "telco:portIdentifier",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "telco:OltPortResource",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "port identifier",
+      "comment": "Physical port name or slot designation on an optical network device.",
+      "skos_alt_labels": [
+        "optical interface name",
+        "chassis port index"
+      ]
+    },
+    {
+      "property_iri": "tmf:skuCode",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:ServiceSpecification",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "SKU code",
+      "comment": "Commercial catalog product code identifying the service level tier.",
+      "skos_alt_labels": [
+        "catalog product SKU",
+        "service tier code"
+      ]
+    },
+    {
+      "property_iri": "telco:maxPacketLossPct",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:ServiceSpecification",
+      "range_iri": "xsd:double",
+      "qudt_applicable_unit_iri": "unit:PERCENT",
+      "label": "maximum packet loss percentage",
+      "comment": "Contractual frame loss ratio ceiling allowed before SLA violation occurs.",
+      "skos_alt_labels": [
+        "frame loss ceiling",
+        "packet loss threshold"
+      ]
+    },
+    {
+      "property_iri": "telco:availabilityTargetPct",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:ServiceSpecification",
+      "range_iri": "xsd:double",
+      "qudt_applicable_unit_iri": "unit:PERCENT",
+      "label": "availability target percentage",
+      "comment": "Annual uptime percentage guaranteed under the commercial service tier.",
+      "skos_alt_labels": [
+        "uptime commitment percentage",
+        "SLA availability target"
+      ]
+    },
+    {
+      "property_iri": "telco:lifecycleStatus",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:ServiceSpecification",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "lifecycle status",
+      "comment": "Catalog publication state of the service specification such as ACTIVE or DEPRECATED.",
+      "skos_alt_labels": [
+        "catalog tier status",
+        "specification lifecycle state"
+      ]
+    },
+    {
+      "property_iri": "telco:autoRemediationAllowed",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:ServiceSpecification",
+      "range_iri": "xsd:boolean",
+      "qudt_applicable_unit_iri": null,
+      "label": "auto-remediation allowed",
+      "comment": "Indicates whether autonomous optical recalibration is legally and technically permitted.",
+      "skos_alt_labels": [
+        "self-healing authorization flag",
+        "automated triage allowed"
+      ]
+    },
+    {
+      "property_iri": "telco:rxOpticalPowerMinDbm",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "telco:OpticalCalibrationProfile",
+      "range_iri": "xsd:double",
+      "qudt_applicable_unit_iri": "unit:MilliWATT-DeciBEL",
+      "label": "minimum Rx optical power in dBm",
+      "comment": "Minimum acceptable optical receive power level in dBm before soft attenuation alerts trigger.",
+      "skos_alt_labels": [
+        "low optical Rx boundary",
+        "minimum receive sensitivity"
+      ]
+    },
+    {
+      "property_iri": "telco:rxLosCutThresholdDbm",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "telco:OpticalCalibrationProfile",
+      "range_iri": "xsd:double",
+      "qudt_applicable_unit_iri": "unit:MilliWATT-DeciBEL",
+      "label": "loss of signal threshold in dBm",
+      "comment": "Optical power level in dBm indicating a physical fiber break and complete loss of signal.",
+      "skos_alt_labels": [
+        "LOS cut threshold",
+        "hard fiber break power level"
+      ]
+    },
+    {
+      "property_iri": "tmf:ticketId",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:TroubleTicket",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "ticket identifier",
+      "comment": "Unique reference number assigned to an operational trouble ticket.",
+      "skos_alt_labels": [
+        "incident number",
+        "trouble ticket reference"
+      ]
+    },
+    {
+      "property_iri": "tmf:severity",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:TroubleTicket",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "severity",
+      "comment": "Impact severity classification of the assurance incident such as CRITICAL or MAJOR.",
+      "skos_alt_labels": [
+        "ticket severity level",
+        "incident urgency"
+      ]
+    },
+    {
+      "property_iri": "tmf:status",
+      "property_type": "owl:DatatypeProperty",
+      "domain_iri": "tmf:TroubleTicket",
+      "range_iri": "xsd:string",
+      "qudt_applicable_unit_iri": null,
+      "label": "status",
+      "comment": "Operational resolution state of the trouble ticket such as OPEN, IN_PROGRESS, or RESOLVED.",
+      "skos_alt_labels": [
+        "incident workflow status",
+        "ticket resolution state"
+      ]
+    }
+  ],
+  "table_mappings": [
+    {
+      "table_name": "T_BILLING_AUDIT_NOISE",
+      "total_rows": 25,
+      "active_rows": 0,
+      "table_disposition": "EXCLUDED_NOISE",
+      "target_tmf_classes": [],
+      "canonical_iri_templates": [],
+      "r2rml_triples_map_id": "NONE (Excluded Noise Table)",
+      "r2rml_label": null,
+      "sql_query": null,
+      "subject_iri_template": null,
+      "subject_class_iri": null,
+      "predicate_object_mappings": [],
+      "columns": [
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "INV_ID",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": true,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Billing invoice identifier INV_ID is out of scope for L2 fiber service assurance and network topology."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "CUST_REF_ID",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Customer reference on billing invoice record is out of scope for network assurance."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "BILL_CYCLE_CD",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Billing cycle code is out of scope for network fault triage."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "GROSS_AMT_EUR",
+          "sql_type": "NUMERIC",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Financial billing gross monetary amount is out of scope for network assurance."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "TAX_CD",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Tax regime identifier is out of scope for network assurance."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "VAT_PCT",
+          "sql_type": "NUMERIC",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Value added tax percentage is out of scope for network assurance."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "GL_POST_DT",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "General ledger posting timestamp is out of scope for network assurance."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "DUNNING_LVL",
+          "sql_type": "INTEGER",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Customer dunning credit risk level is out of scope for network assurance."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "ERP_BATCH_REF",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "The column ERP_BATCH_REF represents batch audit metadata and is excluded from the virtual graph."
+        },
+        {
+          "table_name": "T_BILLING_AUDIT_NOISE",
+          "column_name": "AUDIT_HASH",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_NOISE",
+          "mapped_tbox_target": "NONE (Excluded Billing Noise Table)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "The column AUDIT_HASH represents cryptographic hash audit metadata and is excluded from the virtual graph."
+        }
+      ]
+    },
+    {
+      "table_name": "T_OSS_CUST_PARTY",
+      "total_rows": 15,
+      "active_rows": 15,
+      "table_disposition": "BOUND_VIRTUAL_GRAPH",
+      "target_tmf_classes": [
+        "tmf:Customer"
+      ],
+      "canonical_iri_templates": [
+        "urn:telco:party:customer:{CUST_EXT_REF}"
+      ],
+      "r2rml_triples_map_id": "<#CustomerTriplesMap>",
+      "r2rml_label": "Mapping for Enterprise Customer Party Records",
+      "sql_query": "SELECT CUST_EXT_REF, LEGAL_NAME, SEGMENT_CD, ACCT_MGR_ID FROM T_OSS_CUST_PARTY",
+      "subject_iri_template": "urn:telco:party:customer:{CUST_EXT_REF}",
+      "subject_class_iri": "tmf:Customer",
+      "predicate_object_mappings": [
+        {
+          "predicate_iri": "tmf:customerId",
+          "mapping_kind": "column_literal",
+          "column_or_template": "CUST_EXT_REF",
+          "datatype_iri": "xsd:string"
+        },
+        {
+          "predicate_iri": "tmf:partyLegalName",
+          "mapping_kind": "column_literal",
+          "column_or_template": "LEGAL_NAME",
+          "datatype_iri": "xsd:string"
+        },
+        {
+          "predicate_iri": "tmf:marketSegment",
+          "mapping_kind": "column_literal",
+          "column_or_template": "SEGMENT_CD",
+          "datatype_iri": "xsd:string"
+        },
+        {
+          "predicate_iri": "telco:accountManagerCode",
+          "mapping_kind": "column_literal",
+          "column_or_template": "ACCT_MGR_ID",
+          "datatype_iri": "xsd:string"
+        }
+      ],
+      "columns": [
+        {
+          "table_name": "T_OSS_CUST_PARTY",
+          "column_name": "PARTY_SURR_ID",
+          "sql_type": "INTEGER",
+          "not_null": false,
+          "is_primary_key": true,
+          "disposition": "EXCLUDED_INTERNAL_OR_LEGACY",
+          "mapped_tbox_target": "NONE (Internal Surrogate Key)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Internal database surrogate key has no business meaning in the TMF SID conceptual model."
+        },
+        {
+          "table_name": "T_OSS_CUST_PARTY",
+          "column_name": "CUST_EXT_REF",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:customerId",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "Canonical customer account reference mapped to tmf:customerId and used as URI template key."
+        },
+        {
+          "table_name": "T_OSS_CUST_PARTY",
+          "column_name": "LEGAL_NAME",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:partyLegalName",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "Corporate legal entity name mapped to tmf:partyLegalName."
+        },
+        {
+          "table_name": "T_OSS_CUST_PARTY",
+          "column_name": "SEGMENT_CD",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:marketSegment",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "Market segment classification mapped to tmf:marketSegment."
+        },
+        {
+          "table_name": "T_OSS_CUST_PARTY",
+          "column_name": "ACCT_MGR_ID",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:accountManagerCode",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "Assigned enterprise account manager code mapped to telco:accountManagerCode."
+        },
+        {
+          "table_name": "T_OSS_CUST_PARTY",
+          "column_name": "LEGACY_CRM_ID",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_INTERNAL_OR_LEGACY",
+          "mapped_tbox_target": "NONE (Legacy CRM Identifier)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Legacy CRM foreign key is deprecated and excluded from the enterprise semantic model."
+        },
+        {
+          "table_name": "T_OSS_CUST_PARTY",
+          "column_name": "CREATED_TS",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_INTERNAL_OR_LEGACY",
+          "mapped_tbox_target": "NONE (Database Audit Timestamp)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Physical database record creation timestamp is excluded to prevent internal plumbing leakage."
+        }
+      ]
+    },
+    {
+      "table_name": "T_CMDB_CFS_CIRCUIT",
+      "total_rows": 32,
+      "active_rows": 25,
+      "table_disposition": "BOUND_VIRTUAL_GRAPH",
+      "target_tmf_classes": [
+        "tmf:CustomerFacingService"
+      ],
+      "canonical_iri_templates": [
+        "urn:telco:service:cfs:{CIRCUIT_ID}"
+      ],
+      "r2rml_triples_map_id": "<#CfsCircuitTriplesMap>",
+      "r2rml_label": "Mapping for Active Customer Facing Service Circuits",
+      "sql_query": "/* SCD2 Filter: Select active CFS rows (WHERE VALID_TO_TS IS NULL). Note: for circuit CIR-994821, expired row CFS_ROW_ID=2000 is filtered out and active row CFS_ROW_ID=2001 is retained */ SELECT CIRCUIT_ID, CUST_REF_ID, PROD_SPEC_CODE, INSTALL_DT, CASE OPER_STATUS_CD WHEN '10' THEN 'ACTIVE' WHEN '20' THEN 'MAINTENANCE' WHEN '99' THEN 'DECOMMISSIONED' ELSE 'UNKNOWN' END AS CANONICAL_OPER_STATUS, CASE BW_UNIT_CD WHEN 'Gbps' THEN CAST(BW_VAL AS REAL) WHEN 'Mbps' THEN CAST(BW_VAL AS REAL) / 1000.0 WHEN 'Kbps' THEN CAST(BW_VAL AS REAL) / 1000000.0 ELSE CAST(BW_VAL AS REAL) END AS BANDWIDTH_GBPS FROM T_CMDB_CFS_CIRCUIT WHERE VALID_TO_TS IS NULL",
+      "subject_iri_template": "urn:telco:service:cfs:{CIRCUIT_ID}",
+      "subject_class_iri": "tmf:CustomerFacingService",
+      "predicate_object_mappings": [
+        {
+          "predicate_iri": "tmf:serviceId",
+          "mapping_kind": "column_literal",
+          "column_or_template": "CIRCUIT_ID",
+          "datatype_iri": "xsd:string"
+        },
+        {
+          "predicate_iri": "tmf:hasCustomer",
+          "mapping_kind": "iri_template",
+          "column_or_template": "urn:telco:party:customer:{CUST_REF_ID}",
+          "datatype_iri": null
+        },
+        {
+          "predicate_iri": "tmf:isDescribedBy",
+          "mapping_kind": "iri_template",
+          "column_or_template": "urn:telco:spec:service:{PROD_SPEC_CODE}",
+          "datatype_iri": null
+        },
+        {
+          "predicate_iri": "tmf:operationalStatus",
+          "mapping_kind": "column_literal",
+          "column_or_template": "CANONICAL_OPER_STATUS",
+          "datatype_iri": "xsd:string"
+        },
+        {
+          "predicate_iri": "telco:bandwidthGbps",
+          "mapping_kind": "column_literal",
+          "column_or_template": "BANDWIDTH_GBPS",
+          "datatype_iri": "xsd:double"
+        },
+        {
+          "predicate_iri": "telco:installationDate",
+          "mapping_kind": "column_literal",
+          "column_or_template": "INSTALL_DT",
+          "datatype_iri": "xsd:date"
+        }
+      ],
+      "columns": [
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "CFS_ROW_ID",
+          "sql_type": "INTEGER",
+          "not_null": false,
+          "is_primary_key": true,
+          "disposition": "PHYSICAL_SCD2_CONTROL_ONLY",
+          "mapped_tbox_target": "NONE (SCD2 Surrogate Primary Key)",
+          "transformation_rule": "EXCLUDE_FROM_TBOX",
+          "audit_rationale": "Physical SCD Type 2 surrogate primary key used for temporal versioning control only."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "CIRCUIT_ID",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:serviceId",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "Business key for the connectivity circuit mapped to tmf:serviceId and used as subject template."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "CUST_REF_ID",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:hasCustomer",
+          "transformation_rule": "FOREIGN_KEY_TO_IRI",
+          "audit_rationale": "Foreign key linking the circuit to the enterprise customer URI via tmf:hasCustomer."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "PROD_SPEC_CODE",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:isDescribedBy",
+          "transformation_rule": "FOREIGN_KEY_TO_IRI",
+          "audit_rationale": "Commercial product catalog code linking the circuit to its service specification via tmf:isDescribedBy."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "OPER_STATUS_CD",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:operationalStatus",
+          "transformation_rule": "ENUM_TRANSLATION_SQL",
+          "audit_rationale": "Legacy numeric status code translated into canonical operational status literals in SQL."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "BW_VAL",
+          "sql_type": "NUMERIC",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:bandwidthGbps",
+          "transformation_rule": "QUDT_NORMALIZATION_SQL",
+          "audit_rationale": "Raw numerical bandwidth value normalized to Gbps using BW_UNIT_CD in SQL pushdown."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "BW_UNIT_CD",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:bandwidthGbps",
+          "transformation_rule": "QUDT_NORMALIZATION_SQL",
+          "audit_rationale": "Bandwidth unit code used for normalization calculation to unit:GigaBIT-PER-SEC."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "INSTALL_DT",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:installationDate",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "Handover installation date mapped to telco:installationDate with xsd:date datatype."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "VALID_FROM_TS",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "PHYSICAL_SCD2_CONTROL_ONLY",
+          "mapped_tbox_target": "NONE (SCD2 Valid From Timestamp)",
+          "transformation_rule": "EXCLUDE_FROM_TBOX",
+          "audit_rationale": "SCD Type 2 record effective start timestamp used strictly for physical temporal control."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "VALID_TO_TS",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "PHYSICAL_SCD2_CONTROL_ONLY",
+          "mapped_tbox_target": "NONE (SCD2 Valid To Filter)",
+          "transformation_rule": "SQL_WHERE_NULL_PUSHDOWN",
+          "audit_rationale": "SCD Type 2 expiration timestamp used in R2RML WHERE VALID_TO_TS IS NULL to select active inventory."
+        },
+        {
+          "table_name": "T_CMDB_CFS_CIRCUIT",
+          "column_name": "LEGACY_BILL_TAG",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_LEGACY",
+          "mapped_tbox_target": "NONE (Legacy Billing Tag)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Obsolete billing system routing tag excluded from the enterprise assurance ontology."
+        }
+      ]
+    },
+    {
+      "table_name": "T_CMDB_RFS_RESOURCE",
+      "total_rows": 32,
+      "active_rows": 32,
+      "table_disposition": "BOUND_VIRTUAL_GRAPH",
+      "target_tmf_classes": [
+        "tmf:ResourceFacingService"
+      ],
+      "canonical_iri_templates": [
+        "urn:telco:service:rfs:{RFS_ID}"
+      ],
+      "r2rml_triples_map_id": "<#RfsResourceTriplesMap>",
+      "r2rml_label": "Mapping for Resource Facing Service and Physical Topology",
+      "sql_query": "SELECT RFS_ID, PARENT_CFS_ID, PE_ROUTER_HOSTNAME, OLT_PORT_ID, CPE_ASSET_ID, CPE_MODEL_SKU, VLAN_TAG, FIBER_SPAN_ID FROM T_CMDB_RFS_RESOURCE",
+      "subject_iri_template": "urn:telco:service:rfs:{RFS_ID}",
+      "subject_class_iri": "tmf:ResourceFacingService",
+      "predicate_object_mappings": [
+        {
+          "predicate_iri": "tmf:rfsId",
+          "mapping_kind": "column_literal",
+          "column_or_template": "RFS_ID",
+          "datatype_iri": "xsd:string"
+        },
+        {
+          "predicate_iri": "tmf:supportsService",
+          "mapping_kind": "iri_template",
+          "column_or_template": "urn:telco:service:cfs:{PARENT_CFS_ID}",
+          "datatype_iri": null
+        },
+        {
+          "predicate_iri": "telco:terminatesOnRouter",
+          "mapping_kind": "iri_template",
+          "column_or_template": "urn:telco:resource:router:{PE_ROUTER_HOSTNAME}",
+          "datatype_iri": null
+        },
+        {
+          "predicate_iri": "telco:usesOltPort",
+          "mapping_kind": "iri_template",
+          "column_or_template": "urn:telco:resource:olt-port:{OLT_PORT_ID}",
+          "datatype_iri": null
+        },
+        {
+          "predicate_iri": "telco:demarcatesAtCpe",
+          "mapping_kind": "iri_template",
+          "column_or_template": "urn:telco:resource:cpe:{CPE_ASSET_ID}",
+          "datatype_iri": null
+        },
+        {
+          "predicate_iri": "telco:vlanTag",
+          "mapping_kind": "column_literal",
+          "column_or_template": "VLAN_TAG",
+          "datatype_iri": "xsd:integer"
+        },
+        {
+          "predicate_iri": "telco:fiberSpanId",
+          "mapping_kind": "column_literal",
+          "column_or_template": "FIBER_SPAN_ID",
+          "datatype_iri": "xsd:string"
+        }
+      ],
+      "columns": [
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "RFS_ID",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": true,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:rfsId",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "Primary identifier for the Resource Facing Service mapped to tmf:rfsId."
+        },
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "PARENT_CFS_ID",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:supportsService",
+          "transformation_rule": "FOREIGN_KEY_TO_IRI",
+          "audit_rationale": "Reference to realizing Customer Facing Service mapped via tmf:supportsService."
+        },
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "PE_ROUTER_HOSTNAME",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:terminatesOnRouter",
+          "transformation_rule": "FOREIGN_KEY_TO_IRI",
+          "audit_rationale": "Provider Edge router hostname mapped to telco:terminatesOnRouter."
+        },
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "OLT_PORT_ID",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:usesOltPort",
+          "transformation_rule": "FOREIGN_KEY_TO_IRI",
+          "audit_rationale": "Optical Line Terminal port mapped to telco:usesOltPort."
+        },
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "CPE_ASSET_ID",
+          "sql_type": "TEXT",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:demarcatesAtCpe",
+          "transformation_rule": "FOREIGN_KEY_TO_IRI",
+          "audit_rationale": "Customer Premises Equipment asset identifier mapped to telco:demarcatesAtCpe."
+        },
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "CPE_MODEL_SKU",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "tmf:hasResourceSpecification",
+          "transformation_rule": "FOREIGN_KEY_TO_IRI",
+          "audit_rationale": "Vendor hardware model SKU linking the CPE device to its resource specification."
+        },
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "VLAN_TAG",
+          "sql_type": "INTEGER",
+          "not_null": false,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:vlanTag",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "L2 transport encapsulation VLAN tag mapped to telco:vlanTag."
+        },
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "FIBER_SPAN_ID",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "MAPPED_TO_TBOX",
+          "mapped_tbox_target": "telco:fiberSpanId",
+          "transformation_rule": "DIRECT_LITERAL",
+          "audit_rationale": "Physical outside plant fiber span identifier mapped to telco:fiberSpanId."
+        },
+        {
+          "table_name": "T_CMDB_RFS_RESOURCE",
+          "column_name": "LAST_SYNC_UTC",
+          "sql_type": "TEXT",
+          "not_null": true,
+          "is_primary_key": false,
+          "disposition": "EXCLUDED_SYNC_METADATA",
+          "mapped_tbox_target": "NONE (Sync Watermark)",
+          "transformation_rule": "EXCLUDE",
+          "audit_rationale": "Network management system polling synchronization timestamp excluded from conceptual ontology."
+        }
+      ]
+    }
+  ],
+  "scd2_verification": {
+    "circuit_id": "CIR-994821",
+    "expired_row_id": 2000,
+    "expired_product_sku": "ETH-1G-SILVER",
+    "expired_valid_to_ts": "2025-06-01T00:00:00Z",
+    "active_row_id": 2001,
+    "active_product_sku": "ETH-10G-GOLD",
+    "raw_oper_status_cd": "10",
+    "canonical_oper_status": "ACTIVE",
+    "raw_bandwidth_val": 10.0,
+    "raw_bandwidth_unit": "Gbps",
+    "normalized_bandwidth_gbps": 10.0
+  },
+  "shacl_shapes": [
+    {
+      "output_filename": "service_spec_shape.ttl",
+      "shape_iri": "telco:ServiceSpecificationShape",
+      "target_class_iri": "tmf:ServiceSpecification",
+      "label": "Service Specification SHACL Validation Shape",
+      "comment": "Enforces required catalog SKU code, valid packet loss and availability percentages, and lifecycle status.",
+      "property_constraints": [
+        {
+          "path_iri": "tmf:skuCode",
+          "datatype_iri": "xsd:string",
+          "node_kind_iri": null,
+          "min_count": 1,
+          "max_count": 1,
+          "min_inclusive": null,
+          "max_inclusive": null,
+          "allowed_values": [],
+          "message": "A ServiceSpecification must have exactly one string SKU code."
+        },
+        {
+          "path_iri": "telco:maxPacketLossPct",
+          "datatype_iri": "xsd:double",
+          "node_kind_iri": null,
+          "min_count": 1,
+          "max_count": null,
+          "min_inclusive": 0.0,
+          "max_inclusive": 100.0,
+          "allowed_values": [],
+          "message": "A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0."
+        },
+        {
+          "path_iri": "telco:availabilityTargetPct",
+          "datatype_iri": "xsd:double",
+          "node_kind_iri": null,
+          "min_count": 1,
+          "max_count": null,
+          "min_inclusive": 0.0,
+          "max_inclusive": 100.0,
+          "allowed_values": [],
+          "message": "A ServiceSpecification must define availability target percentage between 0.0 and 100.0."
+        },
+        {
+          "path_iri": "telco:lifecycleStatus",
+          "datatype_iri": "xsd:string",
+          "node_kind_iri": null,
+          "min_count": 1,
+          "max_count": null,
+          "min_inclusive": null,
+          "max_inclusive": null,
+          "allowed_values": [
+            "ACTIVE",
+            "DEPRECATED"
+          ],
+          "message": "A ServiceSpecification must have lifecycle status of either ACTIVE or DEPRECATED."
+        }
+      ]
+    },
+    {
+      "output_filename": "trouble_ticket_shape.ttl",
+      "shape_iri": "telco:TroubleTicketShape",
+      "target_class_iri": "tmf:TroubleTicket",
+      "label": "Trouble Ticket SHACL Validation Shape",
+      "comment": "Validates operational assurance trouble tickets created for optical triage and field dispatches.",
+      "property_constraints": [
+        {
+          "path_iri": "tmf:ticketId",
+          "datatype_iri": "xsd:string",
+          "node_kind_iri": null,
+          "min_count": 1,
+          "max_count": 1,
+          "min_inclusive": null,
+          "max_inclusive": null,
+          "allowed_values": [],
+          "message": "A TroubleTicket must have exactly one string ticket identifier."
+        },
+        {
+          "path_iri": "tmf:severity",
+          "datatype_iri": "xsd:string",
+          "node_kind_iri": null,
+          "min_count": 1,
+          "max_count": null,
+          "min_inclusive": null,
+          "max_inclusive": null,
+          "allowed_values": [
+            "CRITICAL",
+            "MAJOR",
+            "MINOR",
+            "WARNING"
+          ],
+          "message": "TroubleTicket severity must be one of CRITICAL, MAJOR, MINOR, or WARNING."
+        },
+        {
+          "path_iri": "tmf:status",
+          "datatype_iri": "xsd:string",
+          "node_kind_iri": null,
+          "min_count": 1,
+          "max_count": null,
+          "min_inclusive": null,
+          "max_inclusive": null,
+          "allowed_values": [],
+          "message": "A TroubleTicket must specify its current operational workflow status."
+        },
+        {
+          "path_iri": "telco:affectedCircuit",
+          "datatype_iri": null,
+          "node_kind_iri": "sh:IRI",
+          "min_count": 1,
+          "max_count": null,
+          "min_inclusive": null,
+          "max_inclusive": null,
+          "allowed_values": [],
+          "message": "A TroubleTicket must reference at least one affected CustomerFacingService circuit IRI."
+        },
+        {
+          "path_iri": "telco:affectedResource",
+          "datatype_iri": null,
+          "node_kind_iri": "sh:IRI",
+          "min_count": 1,
+          "max_count": null,
+          "min_inclusive": null,
+          "max_inclusive": null,
+          "allowed_values": [],
+          "message": "A TroubleTicket must reference at least one affected physical network resource IRI."
+        }
+      ]
+    }
+  ],
+  "architect_verification_questions": [
+    "Does the Lead Ontologist approve the retention of exactly 14 TM Forum SID and telecom domain classes, confirming that financial billing and marketing classes are strictly pruned from the operational assurance TBox?",
+    "Does the Lead Architect approve excluding T_BILLING_AUDIT_NOISE and stripping internal surrogate keys, legacy CRM identifiers, and NMS synchronization watermarks to prevent physical database plumbing leakage into the Knowledge Graph?",
+    "Is the R2RML SQL pushdown filter WHERE VALID_TO_TS IS NULL confirmed as the authoritative mechanism to resolve active SCD Type 2 circuit state (such as retaining row 2001 and suppressing expired row 2000 for circuit CIR-994821)?",
+    "Does the Lead Architect validate the status mapping rules (10 to ACTIVE, 20 to MAINTENANCE, 99 to DECOMMISSIONED) and the QUDT conversion arithmetic transforming mixed Kbps, Mbps, and Gbps values into canonical Gigabits per second?"
+  ]
+}

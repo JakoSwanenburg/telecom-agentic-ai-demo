@@ -66,7 +66,7 @@
   <div class="header-card">
     <h1>SYS-01 Live System State Inspector — UC-001</h1>
     <p><strong>Use Case:</strong> Enterprise L2 Fiber Packet-Loss Triage &amp; Automated Optical DDM Recalibration | <strong>Circuit:</strong> CIR-994821 (ETH-10G-GOLD)</p>
-    <p><strong>Inspected At (UTC):</strong> 2026-11-12T15:07:30Z</p>
+    <p><strong>Inspected At (UTC):</strong> 2026-11-12T16:57:01Z</p>
   </div>
   <table>
     <thead>
@@ -83,13 +83,13 @@
             <tr>
               <td style="text-align:center;font-weight:700;">1</td>
               <td style="font-weight:600;color:#0F172A;">1. Conceptual TBox &amp; Mappings</td>
-              <td><code>data/semantic_store/tbox_sid_etom.ttl &amp; mappings/cmdb_r2rml.ttl</code></td>
+              <td><code>data/semantic_store/gate1_candidate_proposal.json</code></td>
               <td style="text-align:center;">
-                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#059669;">
-                  LOCKED_APPROVED
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#DC2626;">
+                  CANDIDATE_PROPOSED
                 </span>
               </td>
-              <td style="color:#334155;">Classes: 14 | Properties: 37 | skos:altLabel: 122 | HITL Gate 1: APPROVED</td>
+              <td style="color:#334155;">Proposed Classes: 14 | Properties: 37 | skos:altLabel: 116 | HITL Gate 1: Awaiting HITL Approval</td>
             </tr>
             
             <tr>
@@ -97,11 +97,11 @@
               <td style="font-weight:600;color:#0F172A;">2. Prong 1: SQL CMDB Virtual Graph</td>
               <td><code>urn:telco:graph:virtual:ib</code></td>
               <td style="text-align:center;">
-                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#059669;">
-                  BOUND_ZERO_COPY
+                <span style="display:inline-block;padding:4px 10px;border-radius:9999px;font-size:12px;font-weight:700;color:#FFFFFF;background-color:#D97706;">
+                  UNBOUND
                 </span>
               </td>
-              <td style="color:#334155;">Persisted triples on disk: 0 | Bound SQLite tables: 3 | Excluded noise tables: 1 (T_BILLING_AUDIT_NOISE)</td>
+              <td style="color:#334155;">Persisted triples on disk: 0 | Bound SQLite tables: 0 | Pending Gate 1 Lock (CANDIDATE_PROPOSED)</td>
             </tr>
             
             <tr>

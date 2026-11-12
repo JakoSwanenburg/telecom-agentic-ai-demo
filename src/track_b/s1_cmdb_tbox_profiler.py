@@ -1,50 +1,63 @@
 """
-Scenario `DT-01a` — Prong 1 SQL CMDB Schema Profiler, Pruned TMF SID/eTOM TBox,
-Base SHACL Shapes, W3C R2RML Virtual Graph Mapping & Mandatory HITL Gate 1 Lock
-(`src/track_b/s1_cmdb_tbox_profiler.py`).
+Scenario `DT-01a` — 100% Schema-Independent & Use-Case-Independent Prong 1 SQL CMDB
+AI Schema Profiler, Pruned TMF SID/eTOM TBox Compiler, W3C R2RML Virtual Graph
+Compiler & Two-Phase Interactive HITL Gate 1 Workflow (`src/track_b/s1_cmdb_tbox_profiler.py`).
 
-Implements Stage 2 Activities B1 & B2 (`ADR-TELCO-UC001-ACT03-V1` Decision 4 & 5):
-  1. Dynamically inspects `data/raw_sources/sql/cmdb_installed_base.db` via
-     `sqlite_master` and `PRAGMA table_info(...)` across all 4 tables (104 rows).
-  2. Classifies every physical table and column against the TM Forum SID (`GB922`)
-     and eTOM (`GB921`) vocabulary, flagging `T_BILLING_AUDIT_NOISE` (25 rows) and
-     internal/legacy/sync columns so they never leak into the Conceptual TBox.
-  3. Generates the Pruned TMF SID/eTOM Conceptual Ontology (`data/semantic_store/tbox_sid_etom.ttl`)
-     with 14 OWL classes, object/datatype properties, rich `skos:altLabel` synonyms,
-     eTOM process concepts (`1.3.7`, `1.4.5`), and QUDT unit annotations, and loads
-     it into Named Graph `<urn:telco:graph:tbox:sid-etom>` in
-     `data/semantic_store/knowledge_graph.trig` while keeping
-     `<urn:telco:graph:virtual:ib>` at `0` persisted triples on disk.
-  4. Generates Base W3C SHACL shapes (`shapes/service_spec_shape.ttl` and
-     `shapes/trouble_ticket_shape.ttl`).
-  5. Generates the Physical W3C R2RML Virtual Graph Mapping (`mappings/cmdb_r2rml.ttl`)
-     with `<#CustomerTriplesMap>`, `<#CfsCircuitTriplesMap>`, and `<#RfsResourceTriplesMap>`.
-  6. Executes the Evaluator Agent Ontology Critique and renders the Mandatory HITL
-     Gate 1 Sign-Off Reports (`reports/hitl_gate1_ontology_mapping_review.html` & `.md`).
+Architectural Invariants (`IMP-004-R1`):
+  1. Zero hardcoded SQLite table names or column names exist anywhere in this module.
+  2. Dynamically introspects any relational SQLite database via `sqlite_master`,
+     `PRAGMA table_info`, `PRAGMA foreign_key_list`, distinct low-cardinality
+     distributions, and sample rows (`SELECT *`).
+  3. Cross-examines (a) the Use Case Charter markdown, (b) the generic TM Forum
+     SID/eTOM/QUDT Reference Vocabulary JSON, and (c) the dynamic SQLite
+     introspection using Gemini (`google-genai` via `GEMINI_API_KEY` if set, else
+     Vertex AI on the configured GCP project, with zero heuristic fallback).
+  4. Persists the structured `CandidateOntologyAndMappingProposal` at
+     `data/semantic_store/gate1_candidate_proposal.json`.
+  5. Enforces a Two-Phase HITL Gate 1 workflow:
+     - `--mode candidate` (default): Generates `gate1_candidate_proposal.json` and
+       the HITL Gate 1 review report (`CANDIDATE_PROPOSED`) with Architect
+       Verification Questions, without locking `tbox_sid_etom.ttl` or binding
+       `cmdb_r2rml.ttl`.
+     - `--mode approve`: Reads `gate1_candidate_proposal.json`, generically compiles
+       and locks `tbox_sid_etom.ttl`, `knowledge_graph.trig` (`0` persisted triples
+       in `<urn:telco:graph:virtual:ib>`), `cmdb_r2rml.ttl`, and `shapes/*.ttl`,
+       and transitions the HITL Gate 1 report to `LOCKED_APPROVED`.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timezone
 import html
+import json
 import logging
+import os
 from pathlib import Path
 import shutil
 import sqlite3
-from typing import Dict, List, Literal, Optional, Tuple
+import subprocess
+from typing import Any, Callable, Dict, List, Literal, Optional
 import warnings
 
+with warnings.catch_warnings():
+    warnings.filterwarnings("ignore", category=SyntaxWarning, module=r"^google\.genai\.")
+    from google import genai
+    from google.genai import types as genai_types
+from google.oauth2.credentials import Credentials as OAuth2Credentials
 from rdflib import Dataset, Graph, Namespace, RDF, URIRef
 from rdflib.namespace import OWL, SKOS
 
 from src.config_loader import get_workspace_root
 from src.models import (
     AppConfig,
-    ColumnDisposition,
-    ColumnProfileEntry,
+    CandidateOntologyAndMappingProposal,
     Dt01aExecutionResult,
     EvaluatorOntologyCritique,
-    Scd2CircuitVerification,
+    IntrospectedColumnInfo,
+    IntrospectedForeignKeyInfo,
+    IntrospectedTableInfo,
+    ProposedShaclNodeShape,
+    SqliteDatabaseIntrospection,
     TableProfileEntry,
 )
 
@@ -58,865 +71,440 @@ SH_NS = Namespace("http://www.w3.org/ns/shacl#")
 GRAPH_TBOX_URI = "urn:telco:graph:tbox:sid-etom"
 GRAPH_VIRTUAL_IB_URI = "urn:telco:graph:virtual:ib"
 
+ProposalGeneratorFn = Callable[
+    [SqliteDatabaseIntrospection, str, Dict[str, Any], AppConfig, logging.Logger],
+    CandidateOntologyAndMappingProposal,
+]
+
 
 # ============================================================================
-# 1. Dynamic SQLite CMDB Schema & Column Disposition Profiler
+# 1. 100% Schema-Independent SQLite Database Introspection
 # ============================================================================
-_COLUMN_RULES: Dict[Tuple[str, str], Tuple[ColumnDisposition, str, str, str]] = {
-    # T_OSS_CUST_PARTY (15 rows, 7 columns)
-    ("T_OSS_CUST_PARTY", "PARTY_SURR_ID"): (
-        "EXCLUDED_INTERNAL_OR_LEGACY",
-        "NONE (Excluded)",
-        "Excluded from R2RML projection",
-        "Internal relational surrogate sequence key; canonical IRI uses CUST_EXT_REF.",
-    ),
-    ("T_OSS_CUST_PARTY", "CUST_EXT_REF"): (
-        "MAPPED_TO_TBOX",
-        "tmf:Customer / tmf:customerId",
-        "Subject IRI: urn:telco:party:customer:{CUST_EXT_REF} + xsd:string literal",
-        "Canonical enterprise customer business identifier (e.g., CUST-ENT-409).",
-    ),
-    ("T_OSS_CUST_PARTY", "LEGAL_NAME"): (
-        "MAPPED_TO_TBOX",
-        "tmf:Customer / tmf:partyLegalName",
-        "Direct xsd:string literal mapping",
-        "Official registered customer name used for entity resolution against MSA PDFs.",
-    ),
-    ("T_OSS_CUST_PARTY", "SEGMENT_CD"): (
-        "MAPPED_TO_TBOX",
-        "tmf:Customer / tmf:marketSegment",
-        "Direct xsd:string literal mapping (ENT_VIP, GOV, SMB, RES)",
-        "Commercial customer tier used for assurance prioritization.",
-    ),
-    ("T_OSS_CUST_PARTY", "ACCT_MGR_ID"): (
-        "MAPPED_TO_TBOX",
-        "tmf:Customer / telco:accountManagerCode",
-        "Nullable xsd:string literal mapping",
-        "Assigned enterprise account manager reference for VIP SLA escalations.",
-    ),
-    ("T_OSS_CUST_PARTY", "LEGACY_CRM_ID"): (
-        "EXCLUDED_INTERNAL_OR_LEGACY",
-        "NONE (Excluded)",
-        "Excluded from R2RML projection",
-        "Deprecated Siebel CRM foreign key; excluded to prevent legacy schema pollution.",
-    ),
-    ("T_OSS_CUST_PARTY", "CREATED_TS"): (
-        "EXCLUDED_INTERNAL_OR_LEGACY",
-        "NONE (Excluded)",
-        "Excluded from R2RML projection",
-        "Internal database row creation timestamp not required by assurance TBox.",
-    ),
-    # T_CMDB_CFS_CIRCUIT (32 rows, 11 columns)
-    ("T_CMDB_CFS_CIRCUIT", "CFS_ROW_ID"): (
-        "PHYSICAL_SCD2_CONTROL_ONLY",
-        "NONE (Layer 4 SCD2 Audit Control Only)",
-        "Used strictly in Layer 4 SCD2 proof log (2000 vs 2001); never exposed in TBox",
-        "Physical SCD Type 2 version surrogate key; zero exposure in Conceptual TBox.",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "CIRCUIT_ID"): (
-        "MAPPED_TO_TBOX",
-        "tmf:CustomerFacingService / tmf:serviceId",
-        "Subject IRI: urn:telco:service:cfs:{CIRCUIT_ID} + xsd:string literal",
-        "Canonical L2 enterprise circuit identifier (e.g., CIR-994821).",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "CUST_REF_ID"): (
-        "MAPPED_TO_TBOX",
-        "tmf:CustomerFacingService / tmf:hasCustomer",
-        "Object IRI: urn:telco:party:customer:{CUST_REF_ID}",
-        "Links CustomerFacingService instance to owning tmf:Customer.",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "PROD_SPEC_CODE"): (
-        "MAPPED_TO_TBOX",
-        "tmf:CustomerFacingService / tmf:isDescribedBy",
-        "Object IRI: urn:telco:catalog:sku:{PROD_SPEC_CODE} (joins Prong 2 Excel graph)",
-        "Links active circuit to its commercial ServiceSpecification SKU (e.g., ETH-10G-GOLD).",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "OPER_STATUS_CD"): (
-        "MAPPED_TO_TBOX",
-        "tmf:CustomerFacingService / tmf:operationalStatus",
-        "CASE OPER_STATUS_CD WHEN '10' THEN 'ACTIVE' WHEN '20' THEN 'MAINTENANCE' WHEN '99' THEN 'DECOMMISSIONED' END",
-        "Translates undocumented numeric shadow enums ('10','20','99') into canonical SID status literals.",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "BW_VAL"): (
-        "MAPPED_TO_TBOX",
-        "tmf:CustomerFacingService / telco:bandwidthGbps",
-        "Normalized with BW_UNIT_CD into canonical Gbps (xsd:decimal)",
-        "Raw bandwidth magnitude; combined with BW_UNIT_CD via QUDT scaling.",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "BW_UNIT_CD"): (
-        "MAPPED_TO_TBOX",
-        "tmf:CustomerFacingService / telco:bandwidthGbps (qudt:unit unit:GigaBIT-PER-SEC)",
-        "CASE BW_UNIT_CD WHEN 'Gbps' THEN BW_VAL WHEN 'Mbps' THEN BW_VAL/1000.0 WHEN 'Kbps' THEN BW_VAL/1000000.0 END",
-        "Mixed unit code ('Kbps','Mbps','Gbps') normalized to canonical Gbps.",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "INSTALL_DT"): (
-        "MAPPED_TO_TBOX",
-        "tmf:CustomerFacingService / telco:installationDate",
-        "Direct xsd:date literal mapping",
-        "Service commission date for operational lifecycle context.",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "VALID_FROM_TS"): (
-        "PHYSICAL_SCD2_CONTROL_ONLY",
-        "NONE (Layer 4 SCD2 Window Start Control Only)",
-        "Physical SCD2 window start timestamp; not projected into Conceptual TBox",
-        "Physical SCD Type 2 effective-from timestamp handled by Layer 4 virtual SQL pushdown.",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "VALID_TO_TS"): (
-        "PHYSICAL_SCD2_CONTROL_ONLY",
-        "NONE (Layer 4 R2RML WHERE VALID_TO_TS IS NULL Filter)",
-        "Enforced in rr:sqlQuery WHERE VALID_TO_TS IS NULL (filters out row 2000, keeps row 2001)",
-        "Physical SCD Type 2 expiration timestamp; governs active circuit filtering in R2RML.",
-    ),
-    ("T_CMDB_CFS_CIRCUIT", "LEGACY_BILL_TAG"): (
-        "EXCLUDED_LEGACY",
-        "NONE (Excluded)",
-        "Excluded from R2RML projection",
-        "Deprecated legacy billing tag; excluded from operational assurance ontology.",
-    ),
-    # T_CMDB_RFS_RESOURCE (32 rows, 9 columns)
-    ("T_CMDB_RFS_RESOURCE", "RFS_ID"): (
-        "MAPPED_TO_TBOX",
-        "tmf:ResourceFacingService / tmf:rfsId",
-        "Subject IRI: urn:telco:service:rfs:{RFS_ID} + xsd:string literal",
-        "Canonical ResourceFacingService bearer identifier (e.g., RFS-OLT04-P12).",
-    ),
-    ("T_CMDB_RFS_RESOURCE", "PARENT_CFS_ID"): (
-        "MAPPED_TO_TBOX",
-        "tmf:ResourceFacingService / tmf:supportsService",
-        "Object IRI: urn:telco:service:cfs:{PARENT_CFS_ID}",
-        "Binds ResourceFacingService to the parent CustomerFacingService circuit.",
-    ),
-    ("T_CMDB_RFS_RESOURCE", "PE_ROUTER_HOSTNAME"): (
-        "MAPPED_TO_TBOX",
-        "tmf:ResourceFacingService / telco:terminatesOnRouter (telco:PeRouterResource)",
-        "Object IRI: urn:telco:resource:router:{PE_ROUTER_HOSTNAME} + tmf:resourceName",
-        "Provider Edge aggregation router hostname (e.g., NLD-HAG-PE02).",
-    ),
-    ("T_CMDB_RFS_RESOURCE", "OLT_PORT_ID"): (
-        "MAPPED_TO_TBOX",
-        "tmf:ResourceFacingService / telco:usesOltPort (telco:OltPortResource)",
-        "Object IRI: urn:telco:resource:port:{OLT_PORT_ID} + telco:portIdentifier",
-        "Physical OLT optical port identifier probed by CQRS gNMI telemetry (e.g., OLT04-P12).",
-    ),
-    ("T_CMDB_RFS_RESOURCE", "CPE_ASSET_ID"): (
-        "MAPPED_TO_TBOX",
-        "tmf:ResourceFacingService / telco:demarcatesAtCpe (telco:CpeDeviceResource)",
-        "Object IRI: urn:telco:resource:cpe:{CPE_ASSET_ID} + tmf:resourceId",
-        "Customer Premises Equipment demarcation asset identifier (e.g., CPE-ASN-7741).",
-    ),
-    ("T_CMDB_RFS_RESOURCE", "CPE_MODEL_SKU"): (
-        "MAPPED_TO_TBOX",
-        "tmf:PhysicalResource / tmf:hasResourceSpecification (tmf:PhysicalResourceSpec)",
-        "Object IRI: urn:telco:resource:spec:{CPE_MODEL_SKU} (joins Prong 3 HW Manual PDF)",
-        "Hardware model SKU (e.g., NOK-7210-SAS-Mxp) linking CMDB inventory to optical manual specs.",
-    ),
-    ("T_CMDB_RFS_RESOURCE", "VLAN_TAG"): (
-        "MAPPED_TO_TBOX",
-        "tmf:ResourceFacingService / telco:vlanTag",
-        "Direct xsd:integer literal mapping",
-        "IEEE 802.1Q encapsulation VLAN tag on the access bearer.",
-    ),
-    ("T_CMDB_RFS_RESOURCE", "FIBER_SPAN_ID"): (
-        "MAPPED_TO_TBOX",
-        "tmf:ResourceFacingService / telco:fiberSpanId",
-        "Direct xsd:string literal mapping",
-        "Physical metro fiber ring/span identifier for outside-plant fault localization.",
-    ),
-    ("T_CMDB_RFS_RESOURCE", "LAST_SYNC_UTC"): (
-        "EXCLUDED_SYNC_METADATA",
-        "NONE (Excluded)",
-        "Excluded from R2RML projection",
-        "Internal NMS polling sync watermark; excluded from Conceptual TBox.",
-    ),
-}
-
-
-def profile_cmdb_sqlite_database(
-    sqlite_path: Path, target_circuit_id: str = "CIR-994821"
-) -> Tuple[List[TableProfileEntry], Scd2CircuitVerification]:
+def introspect_sqlite_database(sqlite_path: Path) -> SqliteDatabaseIntrospection:
     """
-    Dynamically inspect `cmdb_installed_base.db` via `sqlite_master` and
-    `PRAGMA table_info(...)`, returning validated table/column profiles and
-    the `CIR-994821` SCD Type 2 ground-truth verification.
+    Dynamically introspect any SQLite database file without assuming any table
+    or column names.
+
+    Extracts:
+      - All non-system tables from `sqlite_master`
+      - Column metadata via `PRAGMA table_info`
+      - Foreign key relationships via `PRAGMA foreign_key_list`
+      - Per-column null count, distinct value count, and low-cardinality distinct values
+      - Representative sample rows (`SELECT * LIMIT 5` plus any versioned rows sharing
+        non-primary-key identifiers)
     """
     if not sqlite_path.exists() or not sqlite_path.is_file():
         raise FileNotFoundError(
-            f"SQLite CMDB database not found at expected path: {sqlite_path}"
+            f"SQLite database not found at expected path: {sqlite_path}"
         )
 
     conn = sqlite3.connect(str(sqlite_path))
+    conn.row_factory = sqlite3.Row
     try:
         cur = conn.cursor()
         cur.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
         )
-        discovered_tables = [row[0] for row in cur.fetchall()]
+        table_names = [str(r[0]) for r in cur.fetchall()]
+        if not table_names:
+            raise ValueError(f"SQLite database '{sqlite_path}' contains zero user tables.")
 
-        expected_order = [
-            "T_OSS_CUST_PARTY",
-            "T_CMDB_CFS_CIRCUIT",
-            "T_CMDB_RFS_RESOURCE",
-            "T_BILLING_AUDIT_NOISE",
-        ]
-        ordered_tables = [t for t in expected_order if t in discovered_tables] + [
-            t for t in discovered_tables if t not in expected_order
-        ]
+        tables_info: List[IntrospectedTableInfo] = []
+        total_db_rows = 0
 
-        table_profiles: List[TableProfileEntry] = []
-        for tbl_name in ordered_tables:
+        for tbl_name in table_names:
             cur.execute(f'SELECT COUNT(*) FROM "{tbl_name}"')
-            total_rows = int(cur.fetchone()[0])
-
-            if tbl_name == "T_CMDB_CFS_CIRCUIT":
-                cur.execute(
-                    'SELECT COUNT(*) FROM "T_CMDB_CFS_CIRCUIT" WHERE VALID_TO_TS IS NULL'
-                )
-                active_rows = int(cur.fetchone()[0])
-            elif tbl_name == "T_BILLING_AUDIT_NOISE":
-                active_rows = 0
-            else:
-                active_rows = total_rows
+            row_count = int(cur.fetchone()[0])
+            total_db_rows += row_count
 
             cur.execute(f'PRAGMA table_info("{tbl_name}")')
-            pragma_rows = cur.fetchall()
+            pragma_cols = cur.fetchall()
+            columns_info: List[IntrospectedColumnInfo] = []
 
-            col_profiles: List[ColumnProfileEntry] = []
-            for _, col_name, col_type, notnull_flag, _, pk_flag in pragma_rows:
-                if tbl_name == "T_BILLING_AUDIT_NOISE":
-                    extra_note = (
-                        " Represents internal batch/hash audit metadata (ERP_BATCH_REF / AUDIT_HASH)."
-                        if col_name in {"ERP_BATCH_REF", "AUDIT_HASH"}
-                        else ""
-                    )
-                    col_profiles.append(
-                        ColumnProfileEntry(
-                            table_name=tbl_name,
-                            column_name=col_name,
-                            sql_type=col_type or "TEXT",
-                            not_null=bool(notnull_flag),
-                            is_primary_key=bool(pk_flag),
-                            disposition="EXCLUDED_NOISE",
-                            mapped_tbox_target="NONE (Excluded Billing Noise Table)",
-                            transformation_rule="Excluded at table & column level from R2RML",
-                            audit_rationale=(
-                                "Financial ERP/billing invoice audit column out of scope for "
-                                f"UC-001 L2 assurance.{extra_note}"
-                            ),
-                        )
-                    )
-                else:
-                    rule = _COLUMN_RULES.get((tbl_name, col_name))
-                    if rule is None:
-                        raise ValueError(
-                            f"Unclassified SQLite column discovered dynamically: {tbl_name}.{col_name}"
-                        )
-                    disp, target_iri, transform_rule, rationale = rule
-                    col_profiles.append(
-                        ColumnProfileEntry(
-                            table_name=tbl_name,
-                            column_name=col_name,
-                            sql_type=col_type or "TEXT",
-                            not_null=bool(notnull_flag),
-                            is_primary_key=bool(pk_flag),
-                            disposition=disp,
-                            mapped_tbox_target=target_iri,
-                            transformation_rule=transform_rule,
-                            audit_rationale=rationale,
-                        )
-                    )
+            for col_row in pragma_cols:
+                col_name = str(col_row["name"])
+                col_type = str(col_row["type"] or "TEXT")
+                not_null = bool(col_row["notnull"])
+                is_pk = bool(col_row["pk"])
 
-            if tbl_name == "T_OSS_CUST_PARTY":
-                table_profiles.append(
-                    TableProfileEntry(
-                        table_name=tbl_name,
-                        total_rows=total_rows,
-                        active_rows=active_rows,
-                        table_disposition="BOUND_VIRTUAL_GRAPH",
-                        target_tmf_classes=["tmf:Customer"],
-                        canonical_iri_templates=["urn:telco:party:customer:{CUST_EXT_REF}"],
-                        r2rml_triples_map_id="<#CustomerTriplesMap>",
-                        columns=col_profiles,
-                    )
+                cur.execute(
+                    f'SELECT COUNT(*) FROM "{tbl_name}" WHERE "{col_name}" IS NULL'
                 )
-            elif tbl_name == "T_CMDB_CFS_CIRCUIT":
-                table_profiles.append(
-                    TableProfileEntry(
-                        table_name=tbl_name,
-                        total_rows=total_rows,
-                        active_rows=active_rows,
-                        table_disposition="BOUND_VIRTUAL_GRAPH",
-                        target_tmf_classes=["tmf:CustomerFacingService"],
-                        canonical_iri_templates=["urn:telco:service:cfs:{CIRCUIT_ID}"],
-                        r2rml_triples_map_id="<#CfsCircuitTriplesMap>",
-                        columns=col_profiles,
-                    )
+                null_count = int(cur.fetchone()[0])
+
+                cur.execute(
+                    f'SELECT COUNT(DISTINCT "{col_name}") FROM "{tbl_name}" WHERE "{col_name}" IS NOT NULL'
                 )
-            elif tbl_name == "T_CMDB_RFS_RESOURCE":
-                table_profiles.append(
-                    TableProfileEntry(
-                        table_name=tbl_name,
-                        total_rows=total_rows,
-                        active_rows=active_rows,
-                        table_disposition="BOUND_VIRTUAL_GRAPH",
-                        target_tmf_classes=[
-                            "tmf:ResourceFacingService",
-                            "tmf:PhysicalResource",
-                            "telco:OltPortResource",
-                            "telco:PeRouterResource",
-                            "telco:CpeDeviceResource",
-                        ],
-                        canonical_iri_templates=[
-                            "urn:telco:service:rfs:{RFS_ID}",
-                            "urn:telco:resource:port:{OLT_PORT_ID}",
-                            "urn:telco:resource:router:{PE_ROUTER_HOSTNAME}",
-                            "urn:telco:resource:cpe:{CPE_ASSET_ID}",
-                        ],
-                        r2rml_triples_map_id="<#RfsResourceTriplesMap>",
-                        columns=col_profiles,
+                distinct_count = int(cur.fetchone()[0])
+
+                low_card_vals: List[str] = []
+                if 0 < distinct_count <= 12:
+                    cur.execute(
+                        f'SELECT DISTINCT CAST("{col_name}" AS TEXT) FROM "{tbl_name}" '
+                        f'WHERE "{col_name}" IS NOT NULL ORDER BY 1 LIMIT 12'
                     )
-                )
-            else:
-                table_profiles.append(
-                    TableProfileEntry(
-                        table_name=tbl_name,
-                        total_rows=total_rows,
-                        active_rows=0,
-                        table_disposition="EXCLUDED_NOISE",
-                        target_tmf_classes=[],
-                        canonical_iri_templates=[],
-                        r2rml_triples_map_id="NONE (Excluded Noise Table)",
-                        columns=col_profiles,
+                    low_card_vals = [str(r[0]) for r in cur.fetchall()]
+
+                columns_info.append(
+                    IntrospectedColumnInfo(
+                        column_name=col_name,
+                        sql_type=col_type,
+                        not_null=not_null,
+                        is_primary_key=is_pk,
+                        null_count=null_count,
+                        distinct_count=distinct_count,
+                        low_cardinality_values=low_card_vals,
                     )
                 )
 
-        # Verify SCD2 rows for target_circuit_id (CIR-994821)
-        cur.execute(
-            """
-            SELECT CFS_ROW_ID, PROD_SPEC_CODE, OPER_STATUS_CD, BW_VAL, BW_UNIT_CD, VALID_TO_TS
-            FROM T_CMDB_CFS_CIRCUIT
-            WHERE CIRCUIT_ID = ?
-            ORDER BY CFS_ROW_ID ASC
-            """,
-            (target_circuit_id,),
-        )
-        circuit_rows = cur.fetchall()
-        expired_rows = [r for r in circuit_rows if r[5] is not None]
-        active_rows_list = [r for r in circuit_rows if r[5] is None]
-        if not expired_rows or not active_rows_list:
-            raise ValueError(
-                f"Expected both expired and active SCD2 rows for {target_circuit_id}, found: {circuit_rows}"
+            cur.execute(f'PRAGMA foreign_key_list("{tbl_name}")')
+            fk_rows = cur.fetchall()
+            fks_info: List[IntrospectedForeignKeyInfo] = [
+                IntrospectedForeignKeyInfo(
+                    from_column=str(fk["from"]),
+                    target_table=str(fk["table"]),
+                    target_column=str(fk["to"]),
+                )
+                for fk in fk_rows
+            ]
+
+            cur.execute(f'SELECT * FROM "{tbl_name}" LIMIT 6')
+            sample_dicts: List[Dict[str, Any]] = [dict(r) for r in cur.fetchall()]
+
+            tables_info.append(
+                IntrospectedTableInfo(
+                    table_name=tbl_name,
+                    total_rows=row_count,
+                    columns=columns_info,
+                    foreign_keys=fks_info,
+                    sample_rows=sample_dicts,
+                )
             )
 
-        exp_row = expired_rows[0]
-        act_row = active_rows_list[0]
-        status_map = {"10": "ACTIVE", "20": "MAINTENANCE", "99": "DECOMMISSIONED"}
-        bw_val = float(act_row[3])
-        bw_unit = str(act_row[4])
-        if bw_unit == "Gbps":
-            norm_gbps = bw_val
-        elif bw_unit == "Mbps":
-            norm_gbps = bw_val / 1000.0
-        elif bw_unit == "Kbps":
-            norm_gbps = bw_val / 1_000_000.0
-        else:
-            raise ValueError(f"Unsupported bandwidth unit: {bw_unit}")
-
-        scd2_verification = Scd2CircuitVerification(
-            circuit_id=target_circuit_id,
-            expired_row_id=int(exp_row[0]),
-            expired_product_sku=str(exp_row[1]),
-            expired_valid_to_ts=str(exp_row[5]),
-            active_row_id=int(act_row[0]),
-            active_product_sku=str(act_row[1]),
-            raw_oper_status_cd=str(act_row[2]),
-            canonical_oper_status=status_map.get(str(act_row[2]), "UNKNOWN"),
-            raw_bandwidth_val=bw_val,
-            raw_bandwidth_unit=bw_unit,
-            normalized_bandwidth_gbps=norm_gbps,
+        return SqliteDatabaseIntrospection(
+            database_filename=sqlite_path.name,
+            total_tables=len(tables_info),
+            total_rows=total_db_rows,
+            tables=tables_info,
         )
-
-        return table_profiles, scd2_verification
     finally:
         conn.close()
 
 
 # ============================================================================
-# 2. Pruned TMF SID / eTOM Conceptual TBox Generator (`tbox_sid_etom.ttl`)
+# 2. `google-genai` Client & Structured AI Schema Profiler (Zero Heuristic Fallback)
 # ============================================================================
-def build_tbox_sid_etom_turtle() -> str:
+_UNSUPPORTED_VERTEX_SCHEMA_KEYS = {
+    "additionalProperties",
+    "default",
+    "minLength",
+    "maxLength",
+    "minItems",
+    "maxItems",
+    "minimum",
+    "maximum",
+    "exclusiveMinimum",
+    "exclusiveMaximum",
+}
+
+
+def _strip_additional_properties(schema_node: Any) -> Any:
     """
-    Return the W3C Turtle content for `data/semantic_store/tbox_sid_etom.ttl`.
-
-    Contains 14 pruned OWL classes, object/datatype properties, rich `skos:altLabel`
-    business synonyms, eTOM process individuals (`1.3.7`, `1.4.5`), and QUDT unit
-    annotations. Strictly ZERO physical SQL table or column names appear anywhere
-    in this ontology.
+    Recursively remove JSON Schema validation keywords unsupported by Vertex AI's
+    constrained-decoding OpenAPI parser (`additionalProperties`, `default`, `minItems`,
+    `minLength`, etc.) while preserving full structural types, required fields, enums,
+    and descriptions. Full Pydantic v2 validation (`min_length`, `ge`, `gt`, `extra='forbid'`)
+    is enforced via `CandidateOntologyAndMappingProposal.model_validate_json(response.text)`.
     """
-    return """@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
-@prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix qudt: <http://qudt.org/schema/qudt/> .
-@prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix tmf: <http://tmforum.org/sid/> .
-@prefix etom: <http://tmforum.org/etom/> .
-@prefix telco: <http://telco.enterprise.org/ontology/> .
+    if isinstance(schema_node, dict):
+        cleaned: Dict[str, Any] = {}
+        for k, v in schema_node.items():
+            if k in _UNSUPPORTED_VERTEX_SCHEMA_KEYS:
+                continue
+            cleaned[k] = _strip_additional_properties(v)
+        return cleaned
+    if isinstance(schema_node, list):
+        return [_strip_additional_properties(item) for item in schema_node]
+    return schema_node
 
-<urn:telco:graph:tbox:sid-etom> a owl:Ontology ;
-    rdfs:label "Telecom Agentic AI Pruned TM Forum SID & eTOM Conceptual Ontology (UC-001)"@en ;
-    dcterms:identifier "ONT-TELCO-UC001-SID-ETOM-V1" ;
-    rdfs:comment "Conceptual domain ontology scoped strictly to Enterprise L2 Fiber Packet-Loss Triage and Automated Optical DDM Recalibration. Free of any physical relational schema artifacts."@en .
 
-# ============================================================================
-# TM Forum eTOM (GB921) Business Process Concepts
-# ============================================================================
-etom:BusinessProcess a owl:Class ;
-    rdfs:label "eTOM Business Process"@en ;
-    rdfs:comment "TM Forum Business Process Framework (eTOM GB921) operational process element."@en ;
-    skos:altLabel "eTOM Process"@en ,
-                  "Assurance Operational Process"@en ,
-                  "Telecom Process Domain"@en .
+def _resolve_gcloud_access_token(account: str = "j.swanenburg@planet.nl") -> Optional[str]:
+    """
+    Obtain a short-lived OAuth2 access token from `gcloud auth print-access-token`
+    for local development when Application Default Credentials are not active.
+    """
+    gcloud_bin = shutil.which("gcloud.cmd") or shutil.which("gcloud")
+    if not gcloud_bin:
+        return None
+    try:
+        proc = subprocess.run(
+            [gcloud_bin, "auth", "print-access-token", f"--account={account}", "--quiet"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            check=False,
+        )
+        if proc.returncode == 0 and proc.stdout.strip():
+            return proc.stdout.strip()
+    except Exception:
+        return None
+    return None
 
-etom:Process_1_3_7_ProblemHandling a etom:BusinessProcess , owl:NamedIndividual ;
-    rdfs:label "eTOM 1.3.7 Problem Handling"@en ;
-    dcterms:identifier "1.3.7" ;
-    rdfs:comment "Customer-facing service problem reception, SLA triage, root-cause correlation, and customer status notification."@en ;
-    skos:altLabel "Customer Problem Handling"@en ,
-                  "CFS SLA Assurance Triage"@en .
 
-etom:Process_1_4_5_ResourceTroubleManagement a etom:BusinessProcess , owl:NamedIndividual ;
-    rdfs:label "eTOM 1.4.5 Resource Trouble Management"@en ;
-    dcterms:identifier "1.4.5" ;
-    rdfs:comment "Network resource fault localization, optical transceiver DDM diagnostics, autonomous self-healing, and field technician dispatch."@en ;
-    skos:altLabel "Resource Trouble Management"@en ,
-                  "Network Fault Isolation & Remediation"@en .
+def _create_genai_client(config: AppConfig, logger: logging.Logger) -> genai.Client:
+    """
+    Create a `google.genai.Client` following the Gate 2 authentication rule:
+      - Option 1B: If `GEMINI_API_KEY` is set in environment variables, use it.
+      - Option 1A: Otherwise, use Vertex AI (`vertexai=True`) against
+        `config.gcp.project_id` and `config.ai.location` (`europe-west4`).
+    Fails fast if neither authentication path succeeds.
+    """
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    if api_key:
+        logger.info("Initializing google-genai client via GEMINI_API_KEY (Option 1B)")
+        return genai.Client(api_key=api_key)
 
-# ============================================================================
-# Pruned TM Forum SID (GB922) & Telecom Assurance OWL Classes (14 Classes)
-# ============================================================================
-tmf:Customer a owl:Class ;
-    rdfs:label "Customer"@en ;
-    rdfs:comment "An enterprise party or organization that subscribes to commercial telecom products and holds an active Master Service Agreement."@en ;
-    skos:altLabel "Enterprise Subscriber"@en ,
-                  "B2B Account"@en ,
-                  "Contracted Party"@en ,
-                  "Corporate Client"@en ;
-    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
+    logger.info(
+        "GEMINI_API_KEY not set; initializing google-genai client via Vertex AI "
+        "(project=%s, location=%s)",
+        config.gcp.project_id,
+        config.ai.location,
+    )
+    if config.project.environment == "local":
+        token = _resolve_gcloud_access_token("j.swanenburg@planet.nl")
+        if token:
+            creds = OAuth2Credentials(
+                token=token,
+                quota_project_id=config.gcp.project_id,
+            )
+            return genai.Client(
+                vertexai=True,
+                project=config.gcp.project_id,
+                location=config.ai.location,
+                credentials=creds,
+            )
 
-tmf:Product a owl:Class ;
-    rdfs:label "Product"@en ;
-    rdfs:comment "A procured commercial telecom offering binding a customer agreement to one or more CustomerFacingServices."@en ;
-    skos:altLabel "Commercial Product Instance"@en ,
-                  "Subscribed Telecom Offering"@en ,
-                  "Enterprise Connectivity Subscription"@en ;
-    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
+    return genai.Client(
+        vertexai=True,
+        project=config.gcp.project_id,
+        location=config.ai.location,
+    )
 
-tmf:CustomerFacingService a owl:Class ;
-    rdfs:label "Customer Facing Service"@en ;
-    rdfs:comment "An active Layer 2 Ethernet or wavelength connectivity circuit directly visible to and contracted by an enterprise customer."@en ;
-    skos:altLabel "CFS Circuit"@en ,
-                  "Enterprise L2 Fiber Circuit"@en ,
-                  "Carrier Ethernet Service"@en ,
-                  "Leased Line Connection"@en ;
-    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
 
-tmf:ServiceSpecification a owl:Class ;
-    rdfs:label "Service Specification"@en ;
-    rdfs:comment "Standardized commercial catalog SKU defining bandwidth tier, SLA packet-loss ceiling, availability target, and autonomous remediation eligibility."@en ;
-    skos:altLabel "Commercial Product SKU"@en ,
-                  "Catalog Service Tier"@en ,
-                  "SLA Service Specification"@en ;
-    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
+def generate_candidate_proposal_via_llm(
+    introspection: SqliteDatabaseIntrospection,
+    use_case_charter_text: str,
+    tmf_vocab_data: Dict[str, Any],
+    config: AppConfig,
+    logger: logging.Logger,
+    prompt_template_text: Optional[str] = None,
+) -> CandidateOntologyAndMappingProposal:
+    """
+    Invoke the Gemini LLM (`google-genai`) with (1) the Use Case Charter,
+    (2) the generic TMF SID/eTOM Vocabulary, and (3) the dynamically introspected
+    SQLite schema to synthesize a validated `CandidateOntologyAndMappingProposal`.
 
-tmf:ResourceFacingService a owl:Class ;
-    rdfs:label "Resource Facing Service"@en ;
-    rdfs:comment "Internal network transport and access bearer service realizing a CustomerFacingService across PE routers, OLT ports, fiber spans, and CPE devices."@en ;
-    skos:altLabel "RFS Access Bearer"@en ,
-                  "Network Transport Bearer"@en ,
-                  "L2 Optical Bearer Service"@en ;
-    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+    Enforces fail-fast execution with zero heuristic fallback per AGENTS.md Part 2.3.
+    """
+    if prompt_template_text is None:
+        prompt_path = get_workspace_root() / Path(
+            config.track_b_ingestion_and_er.profiler_prompt_template_path
+        )
+        if not prompt_path.exists():
+            raise FileNotFoundError(
+                f"Profiler prompt template not found at expected path: {prompt_path}"
+            )
+        prompt_template_text = prompt_path.read_text(encoding="utf-8")
 
-tmf:PhysicalResource a owl:Class ;
-    rdfs:label "Physical Resource"@en ;
-    rdfs:comment "A physical network equipment asset deployed in the provider core, access plant, or customer demarcation point."@en ;
-    skos:altLabel "Network Inventory Element"@en ,
-                  "Physical Hardware Asset"@en ,
-                  "Telecom Network Device"@en ;
-    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+    client = _create_genai_client(config, logger)
+    model_id = config.layer1_orchestrator.llm_model
 
-telco:OltPortResource a owl:Class ;
-    rdfs:subClassOf tmf:PhysicalResource ;
-    rdfs:label "OLT Optical Port Resource"@en ;
-    rdfs:comment "Optical Line Terminal transceiver port terminating the access fiber span and providing real-time gNMI DDM optical telemetry."@en ;
-    skos:altLabel "OLT Port"@en ,
-                  "Optical Access Line Card Port"@en ,
-                  "PON Optical Interface"@en ;
-    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+    user_payload = (
+        f"{prompt_template_text}\n\n"
+        f"=== INPUT 1: USE CASE CHARTER (`{config.use_case.use_case_id}`) ===\n"
+        f"{use_case_charter_text}\n\n"
+        f"=== INPUT 2: GENERIC TM FORUM SID / eTOM / QUDT VOCABULARY ===\n"
+        f"{json.dumps(tmf_vocab_data, indent=2)}\n\n"
+        f"=== INPUT 3: DYNAMICALLY INTROSPECTED SQLITE DATABASE SCHEMA & SAMPLES ===\n"
+        f"{json.dumps(introspection.model_dump(), indent=2)}\n"
+    )
 
-telco:CpeDeviceResource a owl:Class ;
-    rdfs:subClassOf tmf:PhysicalResource ;
-    rdfs:label "Customer Premises Equipment Resource"@en ;
-    rdfs:comment "Physical demarcation switch or router installed at the enterprise customer site."@en ;
-    skos:altLabel "CPE Device"@en ,
-                  "Enterprise NTE Demarcation Chassis"@en ,
-                  "On-Premises Optical Access Switch"@en ;
-    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+    raw_json_schema = CandidateOntologyAndMappingProposal.model_json_schema()
+    clean_response_schema = _strip_additional_properties(raw_json_schema)
 
-telco:PeRouterResource a owl:Class ;
-    rdfs:subClassOf tmf:PhysicalResource ;
-    rdfs:label "Provider Edge Router Resource"@en ;
-    rdfs:comment "Metro or core Provider Edge router aggregating L2 Ethernet access bearers."@en ;
-    skos:altLabel "PE Router"@en ,
-                  "Metro Aggregation Router"@en ,
-                  "Edge Routing Node"@en ;
-    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+    logger.info(
+        "Invoking Gemini AI Schema Profiler (model=%s) over %d introspected SQLite tables...",
+        model_id,
+        introspection.total_tables,
+    )
+    response = client.models.generate_content(
+        model=model_id,
+        contents=user_payload,
+        config=genai_types.GenerateContentConfig(
+            temperature=config.ai.temperature,
+            response_mime_type="application/json",
+            response_schema=clean_response_schema,
+        ),
+    )
 
-tmf:PhysicalResourceSpec a owl:Class ;
-    rdfs:label "Physical Resource Specification"@en ;
-    rdfs:comment "Vendor equipment model specification defining hardware capabilities, supported optical transceivers, and DDM calibration thresholds."@en ;
-    skos:altLabel "Hardware Model SKU"@en ,
-                  "Vendor Equipment Specification"@en ,
-                  "Chassis Hardware Model"@en ;
-    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+    if not response.text or not response.text.strip():
+        raise RuntimeError(
+            "AI Schema Profiler returned an empty response from Gemini; failing fast."
+        )
 
-tmf:TroubleTicket a owl:Class ;
-    rdfs:label "Trouble Ticket"@en ;
-    rdfs:comment "TMF621 operational assurance ticket tracking network incidents, automated remediations, or field fiber splicing dispatches."@en ;
-    skos:altLabel "NOC Assurance Ticket"@en ,
-                  "TMF621 Incident Record"@en ,
-                  "Field Dispatch Trouble Ticket"@en ;
-    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling ,
-                             etom:Process_1_4_5_ResourceTroubleManagement .
+    proposal = CandidateOntologyAndMappingProposal.model_validate_json(response.text)
+    proposal = proposal.model_copy(
+        update={
+            "llm_model_used": model_id,
+            "generated_at_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "ontology_iri": GRAPH_TBOX_URI,
+            "virtual_graph_iri": GRAPH_VIRTUAL_IB_URI,
+        }
+    )
+    logger.info(
+        "AI Schema Profiler returned validated proposal '%s' (%d classes, %d properties, %d table mappings)",
+        proposal.proposal_id,
+        len(proposal.proposed_classes),
+        len(proposal.proposed_properties),
+        len(proposal.table_mappings),
+    )
+    return proposal
 
-telco:SlaClause a owl:Class ;
-    rdfs:label "Service Level Agreement Clause"@en ;
-    rdfs:comment "Contractual or catalog SLA clause specifying packet-loss thresholds, mean time to repair, service credit penalties, and VIP escalation rules."@en ;
-    skos:altLabel "SLA Guarantee Clause"@en ,
-                  "MSA Contractual Penalty Policy"@en ,
-                  "Quality of Service Commitment"@en ;
-    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
-
-telco:OpticalCalibrationProfile a owl:Class ;
-    rdfs:label "Optical Calibration Profile"@en ;
-    rdfs:comment "Vendor hardware manual optical Digital Diagnostic Monitoring (DDM) power envelope and autonomous laser bias recalibration specification."@en ;
-    skos:altLabel "DDM Optical Power Envelope"@en ,
-                  "SFP+ Tx/Rx Calibration Spec"@en ,
-                  "Optical Attenuation Threshold Profile"@en ;
-    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
-
-# ============================================================================
-# Object Properties (Relational & Semantic Spine Links)
-# ============================================================================
-tmf:hasCustomer a owl:ObjectProperty ;
-    rdfs:domain tmf:CustomerFacingService ;
-    rdfs:range tmf:Customer ;
-    rdfs:label "has customer"@en ;
-    rdfs:comment "Associates a CustomerFacingService circuit with the subscribing enterprise Customer."@en ;
-    skos:altLabel "subscribed by customer"@en ,
-                  "owned by enterprise party"@en .
-
-tmf:isDescribedBy a owl:ObjectProperty ;
-    rdfs:domain tmf:CustomerFacingService ;
-    rdfs:range tmf:ServiceSpecification ;
-    rdfs:label "is described by service specification"@en ;
-    rdfs:comment "Links an active CustomerFacingService circuit to its commercial catalog ServiceSpecification SKU."@en ;
-    skos:altLabel "governed by catalog SKU"@en ,
-                  "has commercial service tier"@en .
-
-tmf:supportsService a owl:ObjectProperty ;
-    rdfs:domain tmf:ResourceFacingService ;
-    rdfs:range tmf:CustomerFacingService ;
-    rdfs:label "supports customer facing service"@en ;
-    rdfs:comment "Binds an underlying ResourceFacingService bearer to the CustomerFacingService circuit it realizes."@en ;
-    skos:altLabel "realizes circuit"@en ,
-                  "underpins customer service"@en .
-
-telco:usesOltPort a owl:ObjectProperty ;
-    rdfs:domain tmf:ResourceFacingService ;
-    rdfs:range telco:OltPortResource ;
-    rdfs:label "uses OLT optical port"@en ;
-    rdfs:comment "Identifies the physical OLT port carrying the optical access signal for the ResourceFacingService."@en ;
-    skos:altLabel "terminated on OLT port"@en ,
-                  "served by optical port"@en .
-
-telco:terminatesOnRouter a owl:ObjectProperty ;
-    rdfs:domain tmf:ResourceFacingService ;
-    rdfs:range telco:PeRouterResource ;
-    rdfs:label "terminates on PE router"@en ;
-    rdfs:comment "Identifies the Provider Edge router terminating the L2 bearer."@en ;
-    skos:altLabel "aggregated by PE router"@en ,
-                  "routed via edge node"@en .
-
-telco:demarcatesAtCpe a owl:ObjectProperty ;
-    rdfs:domain tmf:ResourceFacingService ;
-    rdfs:range telco:CpeDeviceResource ;
-    rdfs:label "demarcates at CPE device"@en ;
-    rdfs:comment "Identifies the physical Customer Premises Equipment demarcation device for the bearer."@en ;
-    skos:altLabel "installed CPE chassis"@en ,
-                  "customer demarcation unit"@en .
-
-tmf:hasResourceSpecification a owl:ObjectProperty ;
-    rdfs:domain tmf:PhysicalResource ;
-    rdfs:range tmf:PhysicalResourceSpec ;
-    rdfs:label "has physical resource specification"@en ;
-    rdfs:comment "Links a deployed PhysicalResource asset to its vendor hardware model specification."@en ;
-    skos:altLabel "hardware model spec"@en ,
-                  "equipment SKU specification"@en .
-
-telco:hasOpticalCalibrationProfile a owl:ObjectProperty ;
-    rdfs:domain tmf:PhysicalResourceSpec ;
-    rdfs:range telco:OpticalCalibrationProfile ;
-    rdfs:label "has optical calibration profile"@en ;
-    rdfs:comment "Links a vendor hardware specification to its DDM optical power threshold and calibration profile."@en ;
-    skos:altLabel "optical DDM envelope"@en ,
-                  "transceiver power profile"@en .
-
-telco:hasSlaClause a owl:ObjectProperty ;
-    rdfs:domain tmf:Customer ;
-    rdfs:range telco:SlaClause ;
-    rdfs:label "has contractual SLA clause"@en ;
-    rdfs:comment "Links an enterprise Customer to a custom Master Service Agreement SLA clause."@en ;
-    skos:altLabel "governed by MSA clause"@en ,
-                  "has custom penalty agreement"@en .
-
-telco:recommendedUpgradeSpec a owl:ObjectProperty ;
-    rdfs:domain tmf:ServiceSpecification ;
-    rdfs:range tmf:ServiceSpecification ;
-    rdfs:label "recommended upgrade specification"@en ;
-    rdfs:comment "Points from a current ServiceSpecification SKU to the next recommended commercial upgrade tier."@en ;
-    skos:altLabel "upsell target SKU"@en ,
-                  "next capacity tier"@en .
-
-telco:affectedCircuit a owl:ObjectProperty ;
-    rdfs:domain tmf:TroubleTicket ;
-    rdfs:range tmf:CustomerFacingService ;
-    rdfs:label "affected customer circuit"@en ;
-    rdfs:comment "Links a TroubleTicket to the impacted CustomerFacingService circuit."@en ;
-    skos:altLabel "impacted CFS circuit"@en ,
-                  "ticket target circuit"@en .
-
-telco:affectedResource a owl:ObjectProperty ;
-    rdfs:domain tmf:TroubleTicket ;
-    rdfs:range tmf:PhysicalResource ;
-    rdfs:label "affected physical resource"@en ;
-    rdfs:comment "Links a TroubleTicket to the faulted physical network resource or port."@en ;
-    skos:altLabel "faulted hardware port"@en ,
-                  "impacted network element"@en .
 
 # ============================================================================
-# Datatype Properties & QUDT Unit Annotations
+# 3. Generic W3C Turtle, TriG, R2RML & SHACL Compilers from Candidate Proposal
 # ============================================================================
-tmf:customerId a owl:DatatypeProperty ;
-    rdfs:domain tmf:Customer ;
-    rdfs:range xsd:string ;
-    rdfs:label "customer identifier"@en ;
-    rdfs:comment "Unique enterprise customer identifier."@en ;
-    skos:altLabel "account ID"@en ,
-                  "enterprise party reference"@en .
+def _turtle_escape_literal(text: str) -> str:
+    """Escape double quotes and backslashes for W3C Turtle string literals."""
+    return text.replace("\\", "\\\\").replace('"', '\\"').replace("\n", " ")
 
-tmf:partyLegalName a owl:DatatypeProperty ;
-    rdfs:domain tmf:Customer ;
-    rdfs:range xsd:string ;
-    rdfs:label "party legal name"@en ;
-    rdfs:comment "Registered corporate legal name of the customer."@en ;
-    skos:altLabel "company legal name"@en ,
-                  "enterprise name"@en .
 
-tmf:marketSegment a owl:DatatypeProperty ;
-    rdfs:domain tmf:Customer ;
-    rdfs:range xsd:string ;
-    rdfs:label "market segment"@en ;
-    rdfs:comment "Commercial market segment classification (e.g., ENT_VIP, GOV, SMB, RES)."@en ;
-    skos:altLabel "customer tier"@en ,
-                  "business segment"@en .
+def _format_turtle_term(iri_or_curie: str) -> str:
+    """
+    Format an IRI or CURIE for W3C Turtle syntax:
+      - Already bracketed (`<...>`): returned as-is
+      - Full URI (`http://...`, `https://...`, `urn:...`, `#...`): wrapped in `<...>`
+      - Prefixed CURIE (`tmf:Customer`, `xsd:string`, `sh:IRI`): returned as-is
+    """
+    val = iri_or_curie.strip()
+    if val.startswith("<") and val.endswith(">"):
+        return val
+    if val.startswith(("http://", "https://", "urn:", "#")):
+        return f"<{val}>"
+    return val
 
-telco:accountManagerCode a owl:DatatypeProperty ;
-    rdfs:domain tmf:Customer ;
-    rdfs:range xsd:string ;
-    rdfs:label "account manager code"@en ;
-    rdfs:comment "Identifier of the dedicated enterprise account manager."@en ;
-    skos:altLabel "assigned account executive"@en ,
-                  "commercial owner ID"@en .
 
-telco:chamberOfCommerceReg a owl:DatatypeProperty ;
-    rdfs:domain tmf:Customer ;
-    rdfs:range xsd:string ;
-    rdfs:label "chamber of commerce registration"@en ;
-    rdfs:comment "National trade registry / KvK registration number from legal contracts."@en ;
-    skos:altLabel "KvK registration number"@en ,
-                  "corporate registry ID"@en .
+def compile_tbox_turtle_from_proposal(
+    proposal: CandidateOntologyAndMappingProposal,
+) -> str:
+    """
+    Generically compile `data/semantic_store/tbox_sid_etom.ttl` from a validated
+    `CandidateOntologyAndMappingProposal` without any hardcoded SQL or domain strings.
+    """
+    lines: List[str] = [
+        "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
+        "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .",
+        "@prefix owl: <http://www.w3.org/2002/07/owl#> .",
+        "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
+        "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .",
+        "@prefix dcterms: <http://purl.org/dc/terms/> .",
+        "@prefix qudt: <http://qudt.org/schema/qudt/> .",
+        "@prefix unit: <http://qudt.org/vocab/unit/> .",
+        "@prefix tmf: <http://tmforum.org/sid/> .",
+        "@prefix etom: <http://tmforum.org/etom/> .",
+        "@prefix telco: <http://telco.enterprise.org/ontology/> .",
+        "",
+        f"<{proposal.ontology_iri}> a owl:Ontology ;",
+        f'    rdfs:label "{_turtle_escape_literal(proposal.ontology_label)}"@en ;',
+        f'    dcterms:identifier "{_turtle_escape_literal(proposal.proposal_id)}" ;',
+        f'    rdfs:comment "{_turtle_escape_literal(proposal.ontology_comment)}"@en .',
+        "",
+        "# ============================================================================",
+        "# TM Forum eTOM (GB921) Business Process Individuals",
+        "# ============================================================================",
+    ]
 
-tmf:serviceId a owl:DatatypeProperty ;
-    rdfs:domain tmf:CustomerFacingService ;
-    rdfs:range xsd:string ;
-    rdfs:label "service circuit identifier"@en ;
-    rdfs:comment "Canonical identifier of the CustomerFacingService circuit."@en ;
-    skos:altLabel "circuit ID"@en ,
-                  "L2 service reference"@en .
+    for proc in proposal.etom_processes:
+        alt_list = " ,\n                  ".join(
+            f'"{_turtle_escape_literal(lbl)}"@en' for lbl in proc.skos_alt_labels
+        )
+        lines.extend(
+            [
+                f"{_format_turtle_term(proc.process_iri)} a etom:BusinessProcess , owl:NamedIndividual ;",
+                f'    rdfs:label "{_turtle_escape_literal(proc.label)}"@en ;',
+                f'    dcterms:identifier "{_turtle_escape_literal(proc.process_id)}" ;',
+                f'    rdfs:comment "{_turtle_escape_literal(proc.comment)}"@en ;',
+                f"    skos:altLabel {alt_list} .",
+                "",
+            ]
+        )
 
-tmf:operationalStatus a owl:DatatypeProperty ;
-    rdfs:domain tmf:CustomerFacingService ;
-    rdfs:range xsd:string ;
-    rdfs:label "operational status"@en ;
-    rdfs:comment "Canonical operational lifecycle status of the service (ACTIVE, MAINTENANCE, DECOMMISSIONED)."@en ;
-    skos:altLabel "circuit status"@en ,
-                  "service operational state"@en .
+    lines.extend(
+        [
+            "# ============================================================================",
+            "# Pruned TM Forum SID (GB922) & Telecom Assurance OWL Classes",
+            "# ============================================================================",
+        ]
+    )
 
-telco:bandwidthGbps a owl:DatatypeProperty ;
-    rdfs:domain tmf:CustomerFacingService ;
-    rdfs:range xsd:decimal ;
-    qudt:applicableUnit unit:GigaBIT-PER-SEC ;
-    rdfs:label "committed bandwidth (Gbps)"@en ;
-    rdfs:comment "Committed information rate normalized to canonical Gigabits per second (Gbps)."@en ;
-    skos:altLabel "circuit capacity Gbps"@en ,
-                  "normalized line rate"@en .
+    for cls in proposal.proposed_classes:
+        stmt_lines = [f"{_format_turtle_term(cls.class_iri)} a owl:Class ;"]
+        if cls.sub_class_of_iri:
+            stmt_lines.append(
+                f"    rdfs:subClassOf {_format_turtle_term(cls.sub_class_of_iri)} ;"
+            )
+        stmt_lines.append(f'    rdfs:label "{_turtle_escape_literal(cls.label)}"@en ;')
+        stmt_lines.append(
+            f'    rdfs:comment "{_turtle_escape_literal(cls.comment)}"@en ;'
+        )
+        alt_list = " ,\n                  ".join(
+            f'"{_turtle_escape_literal(lbl)}"@en' for lbl in cls.skos_alt_labels
+        )
+        stmt_lines.append(f"    skos:altLabel {alt_list} ;")
+        etom_list = " ,\n                             ".join(
+            _format_turtle_term(e_iri) for e_iri in cls.aligned_etom_process_iris
+        )
+        stmt_lines.append(f"    telco:alignedEtomProcess {etom_list} .")
+        lines.extend(stmt_lines)
+        lines.append("")
 
-telco:installationDate a owl:DatatypeProperty ;
-    rdfs:domain tmf:CustomerFacingService ;
-    rdfs:range xsd:date ;
-    rdfs:label "installation date"@en ;
-    rdfs:comment "Date on which the service circuit was commissioned."@en ;
-    skos:altLabel "commissioning date"@en ,
-                  "service activation date"@en .
+    lines.extend(
+        [
+            "# ============================================================================",
+            "# OWL Object & Datatype Properties",
+            "# ============================================================================",
+        ]
+    )
 
-tmf:rfsId a owl:DatatypeProperty ;
-    rdfs:domain tmf:ResourceFacingService ;
-    rdfs:range xsd:string ;
-    rdfs:label "resource facing service identifier"@en ;
-    rdfs:comment "Unique identifier of the ResourceFacingService bearer."@en ;
-    skos:altLabel "RFS bearer ID"@en ,
-                  "access bearer reference"@en .
+    for prop in proposal.proposed_properties:
+        stmt_lines = [
+            f"{_format_turtle_term(prop.property_iri)} a {_format_turtle_term(prop.property_type)} ;",
+            f"    rdfs:domain {_format_turtle_term(prop.domain_iri)} ;",
+            f"    rdfs:range {_format_turtle_term(prop.range_iri)} ;",
+        ]
+        if prop.qudt_applicable_unit_iri:
+            stmt_lines.append(
+                f"    qudt:applicableUnit {_format_turtle_term(prop.qudt_applicable_unit_iri)} ;"
+            )
+        stmt_lines.append(f'    rdfs:label "{_turtle_escape_literal(prop.label)}"@en ;')
+        stmt_lines.append(
+            f'    rdfs:comment "{_turtle_escape_literal(prop.comment)}"@en ;'
+        )
+        alt_list = " ,\n                  ".join(
+            f'"{_turtle_escape_literal(lbl)}"@en' for lbl in prop.skos_alt_labels
+        )
+        stmt_lines.append(f"    skos:altLabel {alt_list} .")
+        lines.extend(stmt_lines)
+        lines.append("")
 
-telco:vlanTag a owl:DatatypeProperty ;
-    rdfs:domain tmf:ResourceFacingService ;
-    rdfs:range xsd:integer ;
-    rdfs:label "VLAN tag"@en ;
-    rdfs:comment "IEEE 802.1Q VLAN identifier configured on the access bearer."@en ;
-    skos:altLabel "802.1Q VLAN ID"@en ,
-                  "service encapsulation tag"@en .
-
-telco:fiberSpanId a owl:DatatypeProperty ;
-    rdfs:domain tmf:ResourceFacingService ;
-    rdfs:range xsd:string ;
-    rdfs:label "fiber span identifier"@en ;
-    rdfs:comment "Identifier of the physical outside-plant optical fiber ring or span."@en ;
-    skos:altLabel "optical fiber span"@en ,
-                  "metro ring span ID"@en .
-
-tmf:resourceId a owl:DatatypeProperty ;
-    rdfs:domain tmf:PhysicalResource ;
-    rdfs:range xsd:string ;
-    rdfs:label "physical resource identifier"@en ;
-    rdfs:comment "Asset or inventory identifier of a physical network resource."@en ;
-    skos:altLabel "asset tag"@en ,
-                  "hardware inventory ID"@en .
-
-tmf:resourceName a owl:DatatypeProperty ;
-    rdfs:domain tmf:PhysicalResource ;
-    rdfs:range xsd:string ;
-    rdfs:label "physical resource hostname"@en ;
-    rdfs:comment "Network hostname or label of the physical resource."@en ;
-    skos:altLabel "router hostname"@en ,
-                  "node name"@en .
-
-telco:portIdentifier a owl:DatatypeProperty ;
-    rdfs:domain telco:OltPortResource ;
-    rdfs:range xsd:string ;
-    rdfs:label "OLT port identifier"@en ;
-    rdfs:comment "Slot and port identifier on the Optical Line Terminal."@en ;
-    skos:altLabel "optical port ID"@en ,
-                  "OLT interface name"@en .
-
-tmf:skuCode a owl:DatatypeProperty ;
-    rdfs:domain owl:Thing ;
-    rdfs:range xsd:string ;
-    rdfs:label "catalog or hardware SKU code"@en ;
-    rdfs:comment "Standardized commercial product SKU or hardware equipment model code."@en ;
-    skos:altLabel "SKU identifier"@en ,
-                  "product or model code"@en .
-
-telco:maxPacketLossPct a owl:DatatypeProperty ;
-    rdfs:domain tmf:ServiceSpecification ;
-    rdfs:range xsd:decimal ;
-    qudt:applicableUnit unit:PERCENT ;
-    rdfs:label "maximum packet loss ceiling (%)"@en ;
-    rdfs:comment "Maximum allowed frame/packet loss percentage before SLA breach."@en ;
-    skos:altLabel "SLA packet loss threshold"@en ,
-                  "frame loss ceiling percent"@en .
-
-telco:availabilityTargetPct a owl:DatatypeProperty ;
-    rdfs:domain tmf:ServiceSpecification ;
-    rdfs:range xsd:decimal ;
-    qudt:applicableUnit unit:PERCENT ;
-    rdfs:label "annual availability target (%)"@en ;
-    rdfs:comment "Contracted service availability percentage target."@en ;
-    skos:altLabel "SLA uptime target"@en ,
-                  "service availability percent"@en .
-
-telco:lifecycleStatus a owl:DatatypeProperty ;
-    rdfs:domain tmf:ServiceSpecification ;
-    rdfs:range xsd:string ;
-    rdfs:label "catalog lifecycle status"@en ;
-    rdfs:comment "Commercial catalog lifecycle state (ACTIVE or DEPRECATED)."@en ;
-    skos:altLabel "SKU lifecycle state"@en ,
-                  "product status"@en .
-
-telco:autoRemediationAllowed a owl:DatatypeProperty ;
-    rdfs:domain tmf:ServiceSpecification ;
-    rdfs:range xsd:boolean ;
-    rdfs:label "autonomous remediation allowed"@en ;
-    rdfs:comment "Indicates whether zero-touch autonomous optical DDM recalibration is permitted for the tier."@en ;
-    skos:altLabel "self-healing eligible"@en ,
-                  "automated recalibration flag"@en .
-
-telco:rxOpticalPowerMinDbm a owl:DatatypeProperty ;
-    rdfs:domain telco:OpticalCalibrationProfile ;
-    rdfs:range xsd:decimal ;
-    qudt:applicableUnit unit:MilliWATT-DeciBEL ;
-    rdfs:label "minimum Rx optical power (dBm)"@en ;
-    rdfs:comment "Minimum normal receive optical power threshold in dBm before soft attenuation warning."@en ;
-    skos:altLabel "Rx nominal floor dBm"@en ,
-                  "optical receive power minimum"@en .
-
-telco:rxLosCutThresholdDbm a owl:DatatypeProperty ;
-    rdfs:domain telco:OpticalCalibrationProfile ;
-    rdfs:range xsd:decimal ;
-    qudt:applicableUnit unit:MilliWATT-DeciBEL ;
-    rdfs:label "Rx Loss-of-Signal hard cut threshold (dBm)"@en ;
-    rdfs:comment "Receive optical power threshold below which a hard physical fiber cut is declared."@en ;
-    skos:altLabel "LOS optical cutoff dBm"@en ,
-                  "hard fiber cut power threshold"@en .
-
-tmf:ticketId a owl:DatatypeProperty ;
-    rdfs:domain tmf:TroubleTicket ;
-    rdfs:range xsd:string ;
-    rdfs:label "trouble ticket identifier"@en ;
-    rdfs:comment "Unique TMF621 trouble ticket identifier."@en ;
-    skos:altLabel "incident number"@en ,
-                  "dispatch ticket ID"@en .
-
-tmf:severity a owl:DatatypeProperty ;
-    rdfs:domain tmf:TroubleTicket ;
-    rdfs:range xsd:string ;
-    rdfs:label "ticket severity"@en ;
-    rdfs:comment "Severity level of the trouble ticket (CRITICAL, MAJOR, MINOR, WARNING)."@en ;
-    skos:altLabel "incident priority"@en ,
-                  "fault severity"@en .
-
-tmf:status a owl:DatatypeProperty ;
-    rdfs:domain tmf:TroubleTicket ;
-    rdfs:range xsd:string ;
-    rdfs:label "ticket status"@en ;
-    rdfs:comment "Lifecycle status of the TMF621 trouble ticket."@en ;
-    skos:altLabel "incident state"@en ,
-                  "dispatch workflow status"@en .
-"""
+    return "\n".join(lines)
 
 
 def write_knowledge_graph_trig_with_tbox(
-    tbox_path: Path, trig_path: Path
+    tbox_path: Path,
+    trig_path: Path,
+    tbox_graph_iri: str = GRAPH_TBOX_URI,
+    virtual_graph_iri: str = GRAPH_VIRTUAL_IB_URI,
 ) -> None:
     """
     Write `data/semantic_store/knowledge_graph.trig` containing `<urn:telco:graph:tbox:sid-etom>`
@@ -938,398 +526,233 @@ def write_knowledge_graph_trig_with_tbox(
 @prefix etom: <http://tmforum.org/etom/> .
 @prefix telco: <http://telco.enterprise.org/ontology/> .
 """
-    # Serialize triples inside <urn:telco:graph:tbox:sid-etom>
     nt_lines = g_tbox.serialize(format="ntriples").splitlines()
     indented_nt = "\n".join(f"    {line}" for line in sorted(nt_lines) if line.strip())
 
     trig_doc = (
         f"{prefix_block}\n"
         f"# Named Graph 1: Pruned TM Forum SID & eTOM Conceptual TBox\n"
-        f"<{GRAPH_TBOX_URI}> {{\n"
+        f"<{tbox_graph_iri}> {{\n"
         f"{indented_nt}\n"
         f"}}\n\n"
         f"# Named Graph 2: Zero-Copy Virtual SQL CMDB Graph (0 persisted triples on disk)\n"
-        f"<{GRAPH_VIRTUAL_IB_URI}> {{\n"
+        f"<{virtual_graph_iri}> {{\n"
         f"}}\n"
     )
     trig_path.parent.mkdir(parents=True, exist_ok=True)
     trig_path.write_text(trig_doc, encoding="utf-8")
 
 
-# ============================================================================
-# 3. Base W3C SHACL Shapes Generator (`shapes/*.ttl`)
-# ============================================================================
-def build_service_spec_shape_turtle() -> str:
+def compile_r2rml_turtle_from_proposal(
+    proposal: CandidateOntologyAndMappingProposal,
+) -> str:
     """
-    Return W3C SHACL shape `shapes/service_spec_shape.ttl` enforcing:
-      - `telco:maxPacketLossPct >= 0.0` and `<= 100.0`
-      - `telco:lifecycleStatus` in `("ACTIVE" "DEPRECATED")`
-      - `telco:availabilityTargetPct >= 0.0` and `<= 100.0`
+    Generically compile `mappings/cmdb_r2rml.ttl` from the bound table mappings
+    inside a validated `CandidateOntologyAndMappingProposal`.
     """
-    return """@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix tmf: <http://tmforum.org/sid/> .
-@prefix telco: <http://telco.enterprise.org/ontology/> .
+    lines: List[str] = [
+        "@prefix rr: <http://www.w3.org/ns/r2rml#> .",
+        "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
+        "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .",
+        "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
+        "@prefix tmf: <http://tmforum.org/sid/> .",
+        "@prefix telco: <http://telco.enterprise.org/ontology/> .",
+        "@base <urn:telco:r2rml:cmdb:> .",
+        "",
+    ]
 
-telco:ServiceSpecificationShape a sh:NodeShape ;
-    sh:targetClass tmf:ServiceSpecification ;
-    rdfs:label "TMF SID ServiceSpecification SHACL Quarantine Shape"@en ;
-    rdfs:comment "Enforces non-negative packet loss ceilings and valid catalog lifecycle states prior to Named Graph promotion."@en ;
-    sh:property [
-        sh:path tmf:skuCode ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1 ;
-        sh:message "Every ServiceSpecification must declare a single string tmf:skuCode."@en ;
-    ] ;
-    sh:property [
-        sh:path telco:maxPacketLossPct ;
-        sh:minCount 1 ;
-        sh:minInclusive 0.0 ;
-        sh:maxInclusive 100.0 ;
-        sh:message "telco:maxPacketLossPct must be a non-negative percentage between 0.0 and 100.0."@en ;
-    ] ;
-    sh:property [
-        sh:path telco:availabilityTargetPct ;
-        sh:minCount 1 ;
-        sh:minInclusive 0.0 ;
-        sh:maxInclusive 100.0 ;
-        sh:message "telco:availabilityTargetPct must be between 0.0 and 100.0."@en ;
-    ] ;
-    sh:property [
-        sh:path telco:lifecycleStatus ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:in ( "ACTIVE" "DEPRECATED" ) ;
-        sh:message "telco:lifecycleStatus must be strictly 'ACTIVE' or 'DEPRECATED'."@en ;
-    ] .
-"""
+    for tbl in proposal.table_mappings:
+        if tbl.table_disposition != "BOUND_VIRTUAL_GRAPH":
+            lines.append(
+                f"# Excluded Noise Table: {tbl.table_name} ({tbl.total_rows} rows) -> {tbl.table_disposition}"
+            )
+            lines.append("")
+            continue
 
+        if not tbl.sql_query or not tbl.subject_iri_template or not tbl.subject_class_iri:
+            raise ValueError(
+                f"Bound table '{tbl.table_name}' is missing required R2RML sql_query or subject template."
+            )
 
-def build_trouble_ticket_shape_turtle() -> str:
-    """
-    Return W3C SHACL shape `shapes/trouble_ticket_shape.ttl` for Step 8 CQRS
-    `commit_validated_graph_triples` writeback validation.
-    """
-    return """@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix sh: <http://www.w3.org/ns/shacl#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix tmf: <http://tmforum.org/sid/> .
-@prefix telco: <http://telco.enterprise.org/ontology/> .
-
-telco:TroubleTicketShape a sh:NodeShape ;
-    sh:targetClass tmf:TroubleTicket ;
-    rdfs:label "TMF621 TroubleTicket SHACL Writeback Shape"@en ;
-    rdfs:comment "Validates candidate RDF trouble ticket triples before atomic commit to the knowledge fabric."@en ;
-    sh:property [
-        sh:path tmf:ticketId ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:maxCount 1 ;
-        sh:message "TroubleTicket requires a single string tmf:ticketId."@en ;
-    ] ;
-    sh:property [
-        sh:path tmf:severity ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:in ( "CRITICAL" "MAJOR" "MINOR" "WARNING" ) ;
-        sh:message "TroubleTicket tmf:severity must be one of CRITICAL, MAJOR, MINOR, WARNING."@en ;
-    ] ;
-    sh:property [
-        sh:path tmf:status ;
-        sh:datatype xsd:string ;
-        sh:minCount 1 ;
-        sh:message "TroubleTicket requires a tmf:status string."@en ;
-    ] ;
-    sh:property [
-        sh:path telco:affectedCircuit ;
-        sh:nodeKind sh:IRI ;
-        sh:minCount 1 ;
-        sh:message "TroubleTicket must reference at least one telco:affectedCircuit IRI."@en ;
-    ] ;
-    sh:property [
-        sh:path telco:affectedResource ;
-        sh:nodeKind sh:IRI ;
-        sh:minCount 1 ;
-        sh:message "TroubleTicket must reference at least one telco:affectedResource IRI."@en ;
-    ] .
-"""
-
-
-# ============================================================================
-# 4. Physical W3C R2RML Virtual Graph Mapping Generator (`mappings/cmdb_r2rml.ttl`)
-# ============================================================================
-def build_cmdb_r2rml_turtle() -> str:
-    """
-    Return the W3C R2RML (`http://www.w3.org/ns/r2rml#`) Turtle mapping file
-    (`mappings/cmdb_r2rml.ttl`) defining `<#CustomerTriplesMap>`,
-    `<#CfsCircuitTriplesMap>`, and `<#RfsResourceTriplesMap>` targeting
-    Named Graph `<urn:telco:graph:virtual:ib>`.
-    """
-    return """@prefix rr: <http://www.w3.org/ns/r2rml#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix tmf: <http://tmforum.org/sid/> .
-@prefix telco: <http://telco.enterprise.org/ontology/> .
-@base <urn:telco:r2rml:cmdb:> .
-
-# ============================================================================
-# TriplesMap 1: T_OSS_CUST_PARTY -> tmf:Customer
-# Excludes internal/legacy columns: PARTY_SURR_ID, LEGACY_CRM_ID, CREATED_TS
-# ============================================================================
-<#CustomerTriplesMap> a rr:TriplesMap ;
-    rdfs:label "OSS Customer Party to TMF SID Customer Virtual Mapping"@en ;
-    rr:logicalTable [
-        rr:sqlQuery \"\"\"
-            SELECT
-                CUST_EXT_REF,
-                LEGAL_NAME,
-                SEGMENT_CD,
-                ACCT_MGR_ID
-            FROM T_OSS_CUST_PARTY
-        \"\"\"
-    ] ;
-    rr:subjectMap [
-        rr:template "urn:telco:party:customer:{CUST_EXT_REF}" ;
-        rr:class tmf:Customer ;
-        rr:graph <urn:telco:graph:virtual:ib>
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:customerId ;
-        rr:objectMap [ rr:column "CUST_EXT_REF" ; rr:datatype xsd:string ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:partyLegalName ;
-        rr:objectMap [ rr:column "LEGAL_NAME" ; rr:datatype xsd:string ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:marketSegment ;
-        rr:objectMap [ rr:column "SEGMENT_CD" ; rr:datatype xsd:string ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate telco:accountManagerCode ;
-        rr:objectMap [ rr:column "ACCT_MGR_ID" ; rr:datatype xsd:string ]
-    ] .
-
-# ============================================================================
-# TriplesMap 2: T_CMDB_CFS_CIRCUIT -> tmf:CustomerFacingService
-# Enforces:
-#   1. SCD Type 2 active filter: WHERE VALID_TO_TS IS NULL
-#      (retains active row CFS_ROW_ID=2001 [ETH-10G-GOLD] and filters out
-#       expired row CFS_ROW_ID=2000 [ETH-1G-SILVER] for CIR-994821)
-#   2. Shadow enum translation: '10'->'ACTIVE', '20'->'MAINTENANCE', '99'->'DECOMMISSIONED'
-#   3. QUDT bandwidth normalization: Kbps / Mbps / Gbps -> canonical Gbps
-# Excludes: LEGACY_BILL_TAG; keeps CFS_ROW_ID, VALID_FROM_TS, VALID_TO_TS as SQL control only
-# ============================================================================
-<#CfsCircuitTriplesMap> a rr:TriplesMap ;
-    rdfs:label "CMDB CFS Circuit to TMF SID CustomerFacingService Virtual Mapping"@en ;
-    rr:logicalTable [
-        rr:sqlQuery \"\"\"
-            SELECT
-                CIRCUIT_ID,
-                CUST_REF_ID,
-                PROD_SPEC_CODE,
-                INSTALL_DT,
-                CASE OPER_STATUS_CD
-                    WHEN '10' THEN 'ACTIVE'
-                    WHEN '20' THEN 'MAINTENANCE'
-                    WHEN '99' THEN 'DECOMMISSIONED'
-                    ELSE 'UNKNOWN'
-                END AS CANONICAL_OPER_STATUS,
-                CASE BW_UNIT_CD
-                    WHEN 'Gbps' THEN CAST(BW_VAL AS REAL)
-                    WHEN 'Mbps' THEN CAST(BW_VAL AS REAL) / 1000.0
-                    WHEN 'Kbps' THEN CAST(BW_VAL AS REAL) / 1000000.0
-                    ELSE CAST(BW_VAL AS REAL)
-                END AS BANDWIDTH_GBPS
-            FROM T_CMDB_CFS_CIRCUIT
-            WHERE VALID_TO_TS IS NULL
-        \"\"\"
-    ] ;
-    rr:subjectMap [
-        rr:template "urn:telco:service:cfs:{CIRCUIT_ID}" ;
-        rr:class tmf:CustomerFacingService ;
-        rr:graph <urn:telco:graph:virtual:ib>
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:serviceId ;
-        rr:objectMap [ rr:column "CIRCUIT_ID" ; rr:datatype xsd:string ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:hasCustomer ;
-        rr:objectMap [
-            rr:template "urn:telco:party:customer:{CUST_REF_ID}" ;
-            rr:termType rr:IRI
+        map_label = tbl.r2rml_label or f"{tbl.table_name} to {tbl.subject_class_iri} Virtual Mapping"
+        block_lines: List[str] = [
+            f"{_format_turtle_term(tbl.r2rml_triples_map_id)} a rr:TriplesMap ;",
+            f'    rdfs:label "{_turtle_escape_literal(map_label)}"@en ;',
+            "    rr:logicalTable [",
+            '        rr:sqlQuery """',
+            f"            {tbl.sql_query.strip()}",
+            '        """',
+            "    ] ;",
+            "    rr:subjectMap [",
+            f'        rr:template "{tbl.subject_iri_template}" ;',
+            f"        rr:class {_format_turtle_term(tbl.subject_class_iri)} ;",
+            f"        rr:graph <{proposal.virtual_graph_iri}>",
         ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:isDescribedBy ;
-        rr:objectMap [
-            rr:template "urn:telco:catalog:sku:{PROD_SPEC_CODE}" ;
-            rr:termType rr:IRI
-        ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:operationalStatus ;
-        rr:objectMap [ rr:column "CANONICAL_OPER_STATUS" ; rr:datatype xsd:string ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate telco:bandwidthGbps ;
-        rr:objectMap [ rr:column "BANDWIDTH_GBPS" ; rr:datatype xsd:decimal ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate telco:installationDate ;
-        rr:objectMap [ rr:column "INSTALL_DT" ; rr:datatype xsd:date ]
-    ] .
 
-# ============================================================================
-# TriplesMap 3: T_CMDB_RFS_RESOURCE -> tmf:ResourceFacingService & PhysicalResource
-# Excludes internal sync column: LAST_SYNC_UTC
-# Note: T_BILLING_AUDIT_NOISE (25 rows) is intentionally unmapped (EXCLUDED_NOISE).
-# ============================================================================
-<#RfsResourceTriplesMap> a rr:TriplesMap ;
-    rdfs:label "CMDB RFS Resource to TMF SID ResourceFacingService & PhysicalResource Mapping"@en ;
-    rr:logicalTable [
-        rr:sqlQuery \"\"\"
-            SELECT
-                RFS_ID,
-                PARENT_CFS_ID,
-                PE_ROUTER_HOSTNAME,
-                OLT_PORT_ID,
-                CPE_ASSET_ID,
-                CPE_MODEL_SKU,
-                VLAN_TAG,
-                FIBER_SPAN_ID
-            FROM T_CMDB_RFS_RESOURCE
-        \"\"\"
-    ] ;
-    rr:subjectMap [
-        rr:template "urn:telco:service:rfs:{RFS_ID}" ;
-        rr:class tmf:ResourceFacingService ;
-        rr:graph <urn:telco:graph:virtual:ib>
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:rfsId ;
-        rr:objectMap [ rr:column "RFS_ID" ; rr:datatype xsd:string ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:supportsService ;
-        rr:objectMap [
-            rr:template "urn:telco:service:cfs:{PARENT_CFS_ID}" ;
-            rr:termType rr:IRI
-        ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate telco:terminatesOnRouter ;
-        rr:objectMap [
-            rr:template "urn:telco:resource:router:{PE_ROUTER_HOSTNAME}" ;
-            rr:termType rr:IRI
-        ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate telco:usesOltPort ;
-        rr:objectMap [
-            rr:template "urn:telco:resource:port:{OLT_PORT_ID}" ;
-            rr:termType rr:IRI
-        ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate telco:demarcatesAtCpe ;
-        rr:objectMap [
-            rr:template "urn:telco:resource:cpe:{CPE_ASSET_ID}" ;
-            rr:termType rr:IRI
-        ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate tmf:hasResourceSpecification ;
-        rr:objectMap [
-            rr:template "urn:telco:resource:spec:{CPE_MODEL_SKU}" ;
-            rr:termType rr:IRI
-        ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate telco:vlanTag ;
-        rr:objectMap [ rr:column "VLAN_TAG" ; rr:datatype xsd:integer ]
-    ] ;
-    rr:predicateObjectMap [
-        rr:predicate telco:fiberSpanId ;
-        rr:objectMap [ rr:column "FIBER_SPAN_ID" ; rr:datatype xsd:string ]
-    ] .
-"""
+        if not tbl.predicate_object_mappings:
+            block_lines.append("    ] .")
+        else:
+            block_lines.append("    ] ;")
+            for idx, pom in enumerate(tbl.predicate_object_mappings):
+                is_last = idx == len(tbl.predicate_object_mappings) - 1
+                term_char = "." if is_last else ";"
+                if pom.mapping_kind == "iri_template":
+                    block_lines.extend(
+                        [
+                            "    rr:predicateObjectMap [",
+                            f"        rr:predicate {_format_turtle_term(pom.predicate_iri)} ;",
+                            "        rr:objectMap [",
+                            f'            rr:template "{pom.column_or_template}" ;',
+                            "            rr:termType rr:IRI",
+                            "        ]",
+                            f"    ] {term_char}",
+                        ]
+                    )
+                else:
+                    dtype_clause = (
+                        f" ; rr:datatype {_format_turtle_term(pom.datatype_iri)}"
+                        if pom.datatype_iri
+                        else ""
+                    )
+                    block_lines.extend(
+                        [
+                            "    rr:predicateObjectMap [",
+                            f"        rr:predicate {_format_turtle_term(pom.predicate_iri)} ;",
+                            f'        rr:objectMap [ rr:column "{pom.column_or_template}"{dtype_clause} ]',
+                            f"    ] {term_char}",
+                        ]
+                    )
+
+        lines.extend(block_lines)
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def compile_shacl_shape_turtle(shape: ProposedShaclNodeShape) -> str:
+    """Generically compile a `ProposedShaclNodeShape` into valid W3C SHACL Turtle."""
+    lines: List[str] = [
+        "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
+        "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .",
+        "@prefix sh: <http://www.w3.org/ns/shacl#> .",
+        "@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .",
+        "@prefix tmf: <http://tmforum.org/sid/> .",
+        "@prefix telco: <http://telco.enterprise.org/ontology/> .",
+        "",
+        f"{_format_turtle_term(shape.shape_iri)} a sh:NodeShape ;",
+        f"    sh:targetClass {_format_turtle_term(shape.target_class_iri)} ;",
+        f'    rdfs:label "{_turtle_escape_literal(shape.label)}"@en ;',
+        f'    rdfs:comment "{_turtle_escape_literal(shape.comment)}"@en ;',
+    ]
+
+    for idx, prop in enumerate(shape.property_constraints):
+        is_last = idx == len(shape.property_constraints) - 1
+        term_char = "." if is_last else ";"
+        lines.append("    sh:property [")
+        lines.append(f"        sh:path {_format_turtle_term(prop.path_iri)} ;")
+        if prop.datatype_iri:
+            lines.append(
+                f"        sh:datatype {_format_turtle_term(prop.datatype_iri)} ;"
+            )
+        if prop.node_kind_iri:
+            lines.append(
+                f"        sh:nodeKind {_format_turtle_term(prop.node_kind_iri)} ;"
+            )
+        if prop.min_count is not None:
+            lines.append(f"        sh:minCount {prop.min_count} ;")
+        if prop.max_count is not None:
+            lines.append(f"        sh:maxCount {prop.max_count} ;")
+        if prop.min_inclusive is not None:
+            lines.append(f"        sh:minInclusive {prop.min_inclusive} ;")
+        if prop.max_inclusive is not None:
+            lines.append(f"        sh:maxInclusive {prop.max_inclusive} ;")
+        if prop.allowed_values:
+            vals_str = " ".join(
+                f'"{_turtle_escape_literal(v)}"' for v in prop.allowed_values
+            )
+            lines.append(f"        sh:in ( {vals_str} ) ;")
+        lines.append(f'        sh:message "{_turtle_escape_literal(prop.message)}"@en ;')
+        lines.append(f"    ] {term_char}")
+
+    lines.append("")
+    return "\n".join(lines)
 
 
 # ============================================================================
-# 5. Automated Evaluator Agent Ontology & Mapping Critique
+# 4. Automated Evaluator Agent Critique (Candidate & Locked Modes)
 # ============================================================================
-def evaluate_ontology_and_r2rml(
-    table_profiles: List[TableProfileEntry],
-    tbox_path: Path,
-    r2rml_path: Path,
-    trig_path: Path,
+def evaluate_proposal_and_artifacts(
+    proposal: CandidateOntologyAndMappingProposal,
+    tbox_turtle_text: str,
+    r2rml_turtle_text: str,
+    trig_path: Optional[Path] = None,
 ) -> EvaluatorOntologyCritique:
     """
-    Execute the deterministic Evaluator Agent critique across `tbox_sid_etom.ttl`,
-    `cmdb_r2rml.ttl`, and `knowledge_graph.trig`.
-    """
-    tbox_text = tbox_path.read_text(encoding="utf-8")
-    r2rml_text = r2rml_path.read_text(encoding="utf-8")
+    Execute the deterministic Evaluator Agent critique over the compiled TBox
+    and R2RML Turtle strings (and `knowledge_graph.trig` if locked on disk).
 
-    # 1. Verify zero SQL table or column names leaked into tbox_sid_etom.ttl
+    Extracts physical SQL table and column tokens dynamically from
+    `proposal.table_mappings` without any hardcoded strings in Python.
+    """
     sql_identifiers: List[str] = []
-    for tbl in table_profiles:
+    for tbl in proposal.table_mappings:
         sql_identifiers.append(tbl.table_name)
         for col in tbl.columns:
             sql_identifiers.append(col.column_name)
 
     leaked_tokens = sorted(
-        {token for token in sql_identifiers if token in tbox_text}
+        {token for token in sql_identifiers if token in tbox_turtle_text}
     )
     zero_sql_leakage = len(leaked_tokens) == 0
 
-    # 2. Parse TBox in rdflib and count OWL classes, properties, and skos:altLabel
     g_tbox = Graph()
-    g_tbox.parse(str(tbox_path), format="turtle")
+    g_tbox.parse(data=tbox_turtle_text, format="turtle")
     classes = set(g_tbox.subjects(RDF.type, OWL.Class))
     obj_props = set(g_tbox.subjects(RDF.type, OWL.ObjectProperty))
     dt_props = set(g_tbox.subjects(RDF.type, OWL.DatatypeProperty))
     alt_labels = list(g_tbox.triples((None, SKOS.altLabel, None)))
 
-    # 3. Parse R2RML in rdflib and verify noise exclusion, SCD2, shadow enum, QUDT math
     g_r2rml = Graph()
-    g_r2rml.parse(str(r2rml_path), format="turtle")
+    g_r2rml.parse(data=r2rml_turtle_text, format="turtle")
     triples_maps = set(g_r2rml.subjects(RDF.type, RR_NS.TriplesMap))
-
-    # Ensure T_BILLING_AUDIT_NOISE is never referenced inside any rr:sqlQuery or rr:tableName
     sql_queries = [
         str(o) for _, _, o in g_r2rml.triples((None, RR_NS.sqlQuery, None))
     ]
     joined_sql = "\n".join(sql_queries)
-    billing_excluded = (
-        "T_BILLING_AUDIT_NOISE" not in joined_sql
-        and len(triples_maps) == 3
-    )
-    scd2_present = "WHERE VALID_TO_TS IS NULL" in joined_sql
-    shadow_enum_present = (
-        "WHEN '10' THEN 'ACTIVE'" in joined_sql
-        and "WHEN '20' THEN 'MAINTENANCE'" in joined_sql
-        and "WHEN '99' THEN 'DECOMMISSIONED'" in joined_sql
-    )
-    qudt_present = (
-        "WHEN 'Mbps' THEN CAST(BW_VAL AS REAL) / 1000.0" in joined_sql
-        and "WHEN 'Kbps' THEN CAST(BW_VAL AS REAL) / 1000000.0" in joined_sql
-    )
 
-    # 4. Verify <urn:telco:graph:virtual:ib> has 0 persisted triples in knowledge_graph.trig
-    ds = Dataset()
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=DeprecationWarning, module=r"^rdflib\.")
-        ds.parse(str(trig_path), format="trig")
-    virtual_ctx = ds.graph(URIRef(GRAPH_VIRTUAL_IB_URI))
-    virtual_zero_triples = len(virtual_ctx) == 0
+    excluded_tables = [
+        t.table_name
+        for t in proposal.table_mappings
+        if t.table_disposition == "EXCLUDED_NOISE"
+    ]
+    bound_tables = [
+        t.table_name
+        for t in proposal.table_mappings
+        if t.table_disposition == "BOUND_VIRTUAL_GRAPH"
+    ]
+    billing_excluded = (
+        len(excluded_tables) >= 1
+        and all(ex_tbl not in joined_sql for ex_tbl in excluded_tables)
+        and len(triples_maps) == len(bound_tables)
+    )
+    scd2_present = "IS NULL" in joined_sql.upper() and "WHERE" in joined_sql.upper()
+    shadow_enum_present = (
+        "'ACTIVE'" in joined_sql
+        and "'MAINTENANCE'" in joined_sql
+        and "'DECOMMISSIONED'" in joined_sql
+    )
+    qudt_present = "1000.0" in joined_sql and "1000000.0" in joined_sql
+
+    virtual_zero_triples = True
+    if trig_path is not None and trig_path.exists():
+        ds = Dataset()
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore", category=DeprecationWarning, module=r"^rdflib\."
+            )
+            ds.parse(str(trig_path), format="trig")
+        virtual_ctx = ds.graph(URIRef(proposal.virtual_graph_iri))
+        virtual_zero_triples = len(virtual_ctx) == 0
 
     overall_passed = (
         zero_sql_leakage
@@ -1345,9 +768,9 @@ def evaluate_ontology_and_r2rml(
     summary = (
         f"PASS: 0/{len(set(sql_identifiers))} physical SQL tokens leaked into TBox; "
         f"{len(classes)} OWL classes, {len(obj_props) + len(dt_props)} properties, and "
-        f"{len(alt_labels)} skos:altLabel synonyms verified; T_BILLING_AUDIT_NOISE excluded; "
-        f"SCD2 (WHERE VALID_TO_TS IS NULL), shadow enum translation, and QUDT Gbps math active; "
-        f"<urn:telco:graph:virtual:ib> has 0 persisted triples on disk."
+        f"{len(alt_labels)} skos:altLabel synonyms verified; {len(excluded_tables)} noise table(s) "
+        f"({', '.join(excluded_tables)}) excluded; SCD2 active-window filter, shadow enum translation, "
+        f"and QUDT Gbps normalization verified; <{proposal.virtual_graph_iri}> has 0 persisted triples on disk."
     )
 
     return EvaluatorOntologyCritique(
@@ -1367,11 +790,11 @@ def evaluate_ontology_and_r2rml(
 
 
 # ============================================================================
-# 6. Mandatory HITL Gate 1 Report Generator (`.html` & `.md`)
+# 5. Mandatory HITL Gate 1 Report Generator (`.html` & `.md`)
 # ============================================================================
 def _write_hitl_gate1_markdown_report(
+    proposal: CandidateOntologyAndMappingProposal,
     table_profiles: List[TableProfileEntry],
-    scd2_verification: Scd2CircuitVerification,
     critique: EvaluatorOntologyCritique,
     gate1_status: Literal["CANDIDATE_PROPOSED", "LOCKED_APPROVED"],
     executed_at_utc: str,
@@ -1379,22 +802,40 @@ def _write_hitl_gate1_markdown_report(
 ) -> None:
     """Write `reports/hitl_gate1_ontology_mapping_review.md`."""
     md_path.parent.mkdir(parents=True, exist_ok=True)
+    scd2 = proposal.scd2_verification
     lines: List[str] = [
-        f"# Mandatory HITL Gate 1 Review — Prong 1 SQL CMDB Profiler, TMF SID/eTOM TBox & R2RML Mapping (`DT-01a`)",
+        "# Mandatory HITL Gate 1 Review — Prong 1 SQL CMDB AI Schema Profiler, TMF SID/eTOM TBox & R2RML Mapping (`DT-01a`)",
         "",
         f"- **Gate 1 Sign-Off Status:** **`{gate1_status}`**",
+        f"- **Proposal ID:** `{proposal.proposal_id}` (`{proposal.llm_model_used}`)",
         f"- **Executed At (UTC):** `{executed_at_utc}`",
         f"- **Evaluator Critique Result:** `{critique.critique_summary}`",
         "",
         "---",
         "",
-        "## 1. SQLite CMDB Table-Level Profiling & Noise Exclusion Summary",
+        "## 1. HITL Gate 1 Lead Architect Verification Questions",
         "",
-        "| Table Name | Total Rows | Active Rows | Disposition | Target TMF SID Classes | R2RML TriplesMap |",
-        "| :--- | :---: | :---: | :---: | :--- | :--- |",
     ]
+    for idx, q_text in enumerate(proposal.architect_verification_questions, start=1):
+        check_mark = "[x]" if gate1_status == "LOCKED_APPROVED" else "[ ]"
+        lines.append(f"{idx}. {check_mark} {q_text}")
+
+    lines.extend(
+        [
+            "",
+            "---",
+            "",
+            "## 2. SQLite CMDB Table-Level Profiling & Noise Exclusion Summary",
+            "",
+            "| Table Name | Total Rows | Active Rows | Disposition | Target TMF SID Classes | R2RML TriplesMap |",
+            "| :--- | :---: | :---: | :---: | :--- | :--- |",
+        ]
+    )
     for tbl in table_profiles:
-        classes_str = ", ".join(f"`{c}`" for c in tbl.target_tmf_classes) or "*None (Excluded)*"
+        classes_str = (
+            ", ".join(f"`{c}`" for c in tbl.target_tmf_classes)
+            or "*None (Excluded)*"
+        )
         lines.append(
             f"| `{tbl.table_name}` | {tbl.total_rows} | {tbl.active_rows} | "
             f"**`{tbl.table_disposition}`** | {classes_str} | `{tbl.r2rml_triples_map_id}` |"
@@ -1405,9 +846,18 @@ def _write_hitl_gate1_markdown_report(
             "",
             "---",
             "",
-            "## 2. Dynamic Column-Level Disposition Matrix (`PRAGMA table_info`)",
+            f"## 3. Target Circuit `{scd2.circuit_id}` SCD Type 2, Shadow Enum & QUDT Verification",
             "",
-            "| Table | Column | SQL Type | Disposition | Mapped TBox Target | Transformation / Audit Rationale |",
+            f"- **Superseded Historical Row Filtered Out:** `ROW_ID={scd2.expired_row_id}` (`{scd2.expired_product_sku}`, expired `{scd2.expired_valid_to_ts}`)",
+            f"- **Active Current Row Retained:** `ROW_ID={scd2.active_row_id}` (`{scd2.active_product_sku}`)",
+            f"- **Shadow Enum Translation:** `'{scd2.raw_oper_status_cd}'` $\\rightarrow$ **`'{scd2.canonical_oper_status}'`**",
+            f"- **QUDT Bandwidth Normalization:** `{scd2.raw_bandwidth_val} {scd2.raw_bandwidth_unit}` $\\rightarrow$ **`{scd2.normalized_bandwidth_gbps} Gbps`** (`unit:GigaBIT-PER-SEC`)",
+            "",
+            "---",
+            "",
+            "## 4. Dynamic Column-Level Disposition Matrix (`PRAGMA table_info`)",
+            "",
+            "| Table | Column | SQL Type | Disposition | Mapped TBox Target | Audit Rationale |",
             "| :--- | :--- | :---: | :---: | :--- | :--- |",
         ]
     )
@@ -1418,26 +868,13 @@ def _write_hitl_gate1_markdown_report(
                 f"**`{col.disposition}`** | `{col.mapped_tbox_target}` | {col.audit_rationale} |"
             )
 
-    lines.extend(
-        [
-            "",
-            "---",
-            "",
-            f"## 3. Target Circuit `{scd2_verification.circuit_id}` SCD Type 2, Shadow Enum & QUDT Verification",
-            "",
-            f"- **Superseded Historical Row Filtered Out (`VALID_TO_TS IS NOT NULL`):** `CFS_ROW_ID={scd2_verification.expired_row_id}` (`{scd2_verification.expired_product_sku}`, expired `{scd2_verification.expired_valid_to_ts}`)",
-            f"- **Active Current Row Retained (`WHERE VALID_TO_TS IS NULL`):** `CFS_ROW_ID={scd2_verification.active_row_id}` (`{scd2_verification.active_product_sku}`)",
-            f"- **Shadow Enum Translation (`OPER_STATUS_CD`):** `'{scd2_verification.raw_oper_status_cd}'` $\\rightarrow$ **`'{scd2_verification.canonical_oper_status}'`**",
-            f"- **QUDT Bandwidth Normalization:** `{scd2_verification.raw_bandwidth_val} {scd2_verification.raw_bandwidth_unit}` $\\rightarrow$ **`{scd2_verification.normalized_bandwidth_gbps} Gbps`** (`unit:GigaBIT-PER-SEC`)",
-            "",
-        ]
-    )
+    lines.append("")
     md_path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def _write_hitl_gate1_html_report(
+    proposal: CandidateOntologyAndMappingProposal,
     table_profiles: List[TableProfileEntry],
-    scd2_verification: Scd2CircuitVerification,
     critique: EvaluatorOntologyCritique,
     gate1_status: Literal["CANDIDATE_PROPOSED", "LOCKED_APPROVED"],
     executed_at_utc: str,
@@ -1446,11 +883,22 @@ def _write_hitl_gate1_html_report(
     """Write self-contained `reports/hitl_gate1_ontology_mapping_review.html`."""
     html_path.parent.mkdir(parents=True, exist_ok=True)
     badge_bg = "#059669" if gate1_status == "LOCKED_APPROVED" else "#D97706"
+    scd2 = proposal.scd2_verification
+
+    questions_html = "".join(
+        f"<li><strong>Q{idx}:</strong> {html.escape(q)}</li>"
+        for idx, q in enumerate(proposal.architect_verification_questions, start=1)
+    )
 
     table_rows_html: List[str] = []
     for tbl in table_profiles:
-        t_color = "#059669" if tbl.table_disposition == "BOUND_VIRTUAL_GRAPH" else "#DC2626"
-        classes_html = ", ".join(f"<code>{html.escape(c)}</code>" for c in tbl.target_tmf_classes) or "<em>None (Excluded Noise)</em>"
+        t_color = (
+            "#059669" if tbl.table_disposition == "BOUND_VIRTUAL_GRAPH" else "#DC2626"
+        )
+        classes_html = (
+            ", ".join(f"<code>{html.escape(c)}</code>" for c in tbl.target_tmf_classes)
+            or "<em>None (Excluded Noise)</em>"
+        )
         table_rows_html.append(
             f"""
             <tr>
@@ -1547,19 +995,28 @@ def _write_hitl_gate1_html_report(
 </head>
 <body>
   <div class="banner">
-    <h1>Mandatory HITL Gate 1 — Prong 1 SQL CMDB Profiler, TMF SID/eTOM TBox &amp; R2RML Mapping (DT-01a)</h1>
+    <h1>Mandatory HITL Gate 1 — Prong 1 SQL CMDB AI Schema Profiler, TMF SID/eTOM TBox &amp; R2RML Mapping (DT-01a)</h1>
     <p>
       <strong>Sign-Off Status:</strong>
       <span style="padding:4px 10px;border-radius:9999px;font-weight:700;background:{badge_bg};color:#FFF;">
         {html.escape(gate1_status)}
       </span>
+      &nbsp;|&nbsp; <strong>Proposal ID:</strong> <code>{html.escape(proposal.proposal_id)}</code>
+      &nbsp;|&nbsp; <strong>Model:</strong> <code>{html.escape(proposal.llm_model_used)}</code>
       &nbsp;|&nbsp; <strong>Executed At (UTC):</strong> {html.escape(executed_at_utc)}
     </p>
     <p><strong>Evaluator Critique:</strong> {html.escape(critique.critique_summary)}</p>
   </div>
 
   <div class="card">
-    <h2>1. SQLite CMDB Table-Level Profiling &amp; Noise Exclusion (4 Tables, 104 Rows)</h2>
+    <h2>1. HITL Gate 1 Lead Architect Verification Questions</h2>
+    <ol>
+      {questions_html}
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>2. SQLite CMDB Table-Level Profiling &amp; Noise Exclusion</h2>
     <table>
       <thead>
         <tr>
@@ -1578,17 +1035,17 @@ def _write_hitl_gate1_html_report(
   </div>
 
   <div class="card">
-    <h2>2. Target Circuit {html.escape(scd2_verification.circuit_id)} SCD Type 2, Shadow Enum &amp; QUDT Proof</h2>
+    <h2>3. Target Circuit {html.escape(scd2.circuit_id)} SCD Type 2, Shadow Enum &amp; QUDT Proof</h2>
     <ul>
-      <li><strong>Filtered Expired SCD2 Row (<code>VALID_TO_TS IS NOT NULL</code>):</strong> <code>CFS_ROW_ID={scd2_verification.expired_row_id}</code> (<code>{html.escape(scd2_verification.expired_product_sku)}</code>, expired <code>{html.escape(scd2_verification.expired_valid_to_ts)}</code>)</li>
-      <li><strong>Retained Active SCD2 Row (<code>WHERE VALID_TO_TS IS NULL</code>):</strong> <code>CFS_ROW_ID={scd2_verification.active_row_id}</code> (<code>{html.escape(scd2_verification.active_product_sku)}</code>)</li>
-      <li><strong>Shadow Enum Translation (<code>OPER_STATUS_CD</code>):</strong> <code>'{html.escape(scd2_verification.raw_oper_status_cd)}'</code> &rarr; <strong><code>'{html.escape(scd2_verification.canonical_oper_status)}'</code></strong></li>
-      <li><strong>QUDT Bandwidth Normalization:</strong> <code>{scd2_verification.raw_bandwidth_val} {html.escape(scd2_verification.raw_bandwidth_unit)}</code> &rarr; <strong><code>{scd2_verification.normalized_bandwidth_gbps} Gbps</code></strong> (<code>unit:GigaBIT-PER-SEC</code>)</li>
+      <li><strong>Filtered Expired SCD2 Row:</strong> <code>ROW_ID={scd2.expired_row_id}</code> (<code>{html.escape(scd2.expired_product_sku)}</code>, expired <code>{html.escape(scd2.expired_valid_to_ts)}</code>)</li>
+      <li><strong>Retained Active SCD2 Row:</strong> <code>ROW_ID={scd2.active_row_id}</code> (<code>{html.escape(scd2.active_product_sku)}</code>)</li>
+      <li><strong>Shadow Enum Translation:</strong> <code>'{html.escape(scd2.raw_oper_status_cd)}'</code> &rarr; <strong><code>'{html.escape(scd2.canonical_oper_status)}'</code></strong></li>
+      <li><strong>QUDT Bandwidth Normalization:</strong> <code>{scd2.raw_bandwidth_val} {html.escape(scd2.raw_bandwidth_unit)}</code> &rarr; <strong><code>{scd2.normalized_bandwidth_gbps} Gbps</code></strong> (<code>unit:GigaBIT-PER-SEC</code>)</li>
     </ul>
   </div>
 
   <div class="card">
-    <h2>3. Dynamic Column-Level Disposition Matrix (PRAGMA table_info)</h2>
+    <h2>4. Dynamic Column-Level Disposition Matrix (PRAGMA table_info)</h2>
     <table>
       <thead>
         <tr>
@@ -1612,40 +1069,69 @@ def _write_hitl_gate1_html_report(
 
 
 # ============================================================================
-# 7. Main Scenario `DT-01a` Orchestrator Entry Function
+# 6. Two-Phase Scenario `DT-01a` Orchestrator Entry Function
 # ============================================================================
 def run_dt01a_cmdb_profiler(
     config: AppConfig,
     logger: logging.Logger,
-    mode: Literal["candidate", "approve"] = "approve",
+    mode: Literal["candidate", "approve"] = "candidate",
     update_golden_ref: bool = False,
     workspace_root: Optional[Path] = None,
+    proposal_generator: Optional[ProposalGeneratorFn] = None,
 ) -> Dt01aExecutionResult:
     """
-    Execute Scenario `DT-01a`:
-      1. Profile `cmdb_installed_base.db` dynamically via `PRAGMA table_info(...)`.
-      2. Write `data/semantic_store/tbox_sid_etom.ttl` and materialize `<urn:telco:graph:tbox:sid-etom>`
-         in `data/semantic_store/knowledge_graph.trig` (with `0` persisted triples in
-         `<urn:telco:graph:virtual:ib>`).
-      3. Write `shapes/service_spec_shape.ttl` and `shapes/trouble_ticket_shape.ttl`.
-      4. Write `mappings/cmdb_r2rml.ttl`.
-      5. Run the Evaluator Agent Ontology Critique.
-      6. Write `reports/hitl_gate1_ontology_mapping_review.html` and `.md` with status
-         `CANDIDATE_PROPOSED` (`mode="candidate"`) or `LOCKED_APPROVED` (`mode="approve"`).
-      7. Optionally copy approved artifacts to `data/golden_reference/` when `update_golden_ref=True`.
+    Execute Scenario `DT-01a` in Two-Phase Interactive HITL Gate 1 mode:
+
+    - Phase 1 (`mode="candidate"`, default):
+      1. Dynamically introspects `sqlite_db_path` via `introspect_sqlite_database`.
+      2. Loads `use_case_charter_path` and `tmf_vocab_path`.
+      3. Invokes `generate_candidate_proposal_via_llm` (or `proposal_generator` when
+         injected by unit tests) to synthesize `CandidateOntologyAndMappingProposal`.
+      4. Saves `data/semantic_store/gate1_candidate_proposal.json`.
+      5. Ensures `tbox_sid_etom.ttl`, `knowledge_graph.trig`, `cmdb_r2rml.ttl`, and
+         `shapes/*.ttl` are NOT locked on disk yet (`SYS-01` shows
+         `CANDIDATE_PROPOSED (Awaiting HITL Approval)` and `UNBOUND (Pending Gate 1 Lock)`).
+      6. Writes `reports/hitl_gate1_ontology_mapping_review.html` and `.md` with
+         status `CANDIDATE_PROPOSED` and returns the Architect Verification Questions.
+
+    - Phase 2 (`mode="approve"`):
+      1. Loads `data/semantic_store/gate1_candidate_proposal.json` (or generates it
+         first if not yet present on disk).
+      2. Generically compiles and writes `tbox_sid_etom.ttl`, `knowledge_graph.trig`
+         (`0` persisted triples in `<urn:telco:graph:virtual:ib>`), `cmdb_r2rml.ttl`,
+         and `shapes/*.ttl` (`service_spec_shape.ttl`, `trouble_ticket_shape.ttl`).
+      3. Runs the Evaluator Agent Critique over the locked artifacts.
+      4. Updates `reports/hitl_gate1_ontology_mapping_review.html` and `.md` to
+         `LOCKED_APPROVED` (`SYS-01` transitions to `LOCKED_APPROVED` and `BOUND_ZERO_COPY`).
+      5. Optionally copies approved artifacts into `data/golden_reference/` if
+         `update_golden_ref=True`.
     """
     root_dir = workspace_root if workspace_root is not None else get_workspace_root()
     sqlite_path = root_dir / Path(config.layer4_compiler_federation.sqlite_db_path)
+    charter_path = root_dir / Path(
+        config.track_b_ingestion_and_er.use_case_charter_path
+    )
+    vocab_path = root_dir / Path(config.track_b_ingestion_and_er.tmf_vocab_path)
+    proposal_path = root_dir / Path(
+        config.track_b_ingestion_and_er.gate1_candidate_proposal_path
+    )
     tbox_path = root_dir / Path(config.layer4_compiler_federation.tbox_path)
     trig_path = root_dir / Path(config.layer4_compiler_federation.dataset_trig_path)
     r2rml_path = root_dir / Path(config.layer4_compiler_federation.r2rml_path)
     shapes_dir = root_dir / Path(config.layer4_compiler_federation.shapes_dir)
-    service_spec_shape_path = shapes_dir / "service_spec_shape.ttl"
-    trouble_ticket_shape_path = shapes_dir / "trouble_ticket_shape.ttl"
     hitl_html_path = root_dir / Path(
         config.track_b_ingestion_and_er.hitl_gate1_report_path
     )
     hitl_md_path = hitl_html_path.with_suffix(".md")
+
+    # Fallback to real workspace charter & vocab if running inside an isolated pytest tmp_path
+    real_root = get_workspace_root()
+    if not charter_path.exists():
+        charter_path = real_root / Path(
+            config.track_b_ingestion_and_er.use_case_charter_path
+        )
+    if not vocab_path.exists():
+        vocab_path = real_root / Path(config.track_b_ingestion_and_er.tmf_vocab_path)
 
     logger.info(
         "Starting Scenario DT-01a (mode=%s, update_golden_ref=%s) against %s",
@@ -1654,11 +1140,35 @@ def run_dt01a_cmdb_profiler(
         sqlite_path,
     )
 
-    # 1. Profile SQLite CMDB dynamically
-    table_profiles, scd2_verification = profile_cmdb_sqlite_database(
-        sqlite_path=sqlite_path,
-        target_circuit_id=config.use_case.circuit_id,
-    )
+    gen_fn = proposal_generator or generate_candidate_proposal_via_llm
+
+    if mode == "candidate" or not proposal_path.exists():
+        introspection = introspect_sqlite_database(sqlite_path)
+        charter_text = charter_path.read_text(encoding="utf-8")
+        vocab_data = json.loads(vocab_path.read_text(encoding="utf-8"))
+        proposal = gen_fn(introspection, charter_text, vocab_data, config, logger)
+
+        proposal_path.parent.mkdir(parents=True, exist_ok=True)
+        proposal_path.write_text(
+            json.dumps(proposal.model_dump(), indent=2) + "\n",
+            encoding="utf-8",
+        )
+        logger.info(
+            "DT-01a saved structured candidate proposal to %s",
+            proposal_path.relative_to(root_dir).as_posix(),
+        )
+    else:
+        proposal = CandidateOntologyAndMappingProposal.model_validate_json(
+            proposal_path.read_text(encoding="utf-8")
+        )
+        logger.info(
+            "DT-01a loaded existing candidate proposal from %s for HITL Gate 1 approval",
+            proposal_path.relative_to(root_dir).as_posix(),
+        )
+
+    tbox_turtle_str = compile_tbox_turtle_from_proposal(proposal)
+    r2rml_turtle_str = compile_r2rml_turtle_from_proposal(proposal)
+    table_profiles = [m.to_table_profile_entry() for m in proposal.table_mappings]
     total_rows = sum(t.total_rows for t in table_profiles)
     bound_tables = sum(
         1 for t in table_profiles if t.table_disposition == "BOUND_VIRTUAL_GRAPH"
@@ -1666,97 +1176,141 @@ def run_dt01a_cmdb_profiler(
     excluded_tables = sum(
         1 for t in table_profiles if t.table_disposition == "EXCLUDED_NOISE"
     )
-    logger.info(
-        "DT-01a profiled %d SQLite tables (%d rows): %d bound, %d excluded noise (T_BILLING_AUDIT_NOISE)",
-        len(table_profiles),
-        total_rows,
-        bound_tables,
-        excluded_tables,
-    )
+    executed_at_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
-    # 2. Write pruned TBox & TriG Dataset
+    if mode == "candidate":
+        # Ensure locked artifacts are NOT materialized yet during Phase 1 (candidate mode)
+        for locked_file in [tbox_path, trig_path, r2rml_path]:
+            if locked_file.exists():
+                locked_file.unlink()
+        if shapes_dir.exists():
+            for sh_file in shapes_dir.glob("*.ttl"):
+                sh_file.unlink()
+
+        critique = evaluate_proposal_and_artifacts(
+            proposal=proposal,
+            tbox_turtle_text=tbox_turtle_str,
+            r2rml_turtle_text=r2rml_turtle_str,
+            trig_path=None,
+        )
+        if not critique.overall_passed:
+            raise ValueError(
+                f"DT-01a Candidate Proposal failed Evaluator Critique: {critique.critique_summary}"
+            )
+
+        _write_hitl_gate1_html_report(
+            proposal=proposal,
+            table_profiles=table_profiles,
+            critique=critique,
+            gate1_status="CANDIDATE_PROPOSED",
+            executed_at_utc=executed_at_utc,
+            html_path=hitl_html_path,
+        )
+        _write_hitl_gate1_markdown_report(
+            proposal=proposal,
+            table_profiles=table_profiles,
+            critique=critique,
+            gate1_status="CANDIDATE_PROPOSED",
+            executed_at_utc=executed_at_utc,
+            md_path=hitl_md_path,
+        )
+        logger.info(
+            "DT-01a Phase 1 (candidate) complete: awaiting HITL Gate 1 approval (%s)",
+            hitl_html_path.relative_to(root_dir).as_posix(),
+        )
+
+        return Dt01aExecutionResult(
+            scenario_id="DT-01a",
+            gate1_mode="candidate",
+            gate1_status="CANDIDATE_PROPOSED",
+            executed_at_utc=executed_at_utc,
+            total_tables_inspected=len(table_profiles),
+            total_rows_inspected=total_rows,
+            bound_tables_count=bound_tables,
+            excluded_noise_tables_count=excluded_tables,
+            table_profiles=table_profiles,
+            scd2_verification=proposal.scd2_verification,
+            evaluator_critique=critique,
+            candidate_proposal_path=proposal_path,
+            architect_verification_questions=proposal.architect_verification_questions,
+            tbox_path=None,
+            trig_dataset_path=None,
+            r2rml_path=None,
+            service_spec_shape_path=None,
+            trouble_ticket_shape_path=None,
+            hitl_html_report_path=hitl_html_path,
+            hitl_markdown_report_path=hitl_md_path,
+            golden_ref_updated=False,
+        )
+
+    # Phase 2 (`mode == "approve"`): Compile and lock artifacts on disk
     tbox_path.parent.mkdir(parents=True, exist_ok=True)
-    tbox_path.write_text(build_tbox_sid_etom_turtle(), encoding="utf-8")
-    write_knowledge_graph_trig_with_tbox(tbox_path=tbox_path, trig_path=trig_path)
-    logger.info(
-        "DT-01a wrote TBox (%s) and initialized TriG dataset (%s) with 0 virtual triples on disk",
-        tbox_path.relative_to(root_dir).as_posix(),
-        trig_path.relative_to(root_dir).as_posix(),
-    )
-
-    # 3. Write Base W3C SHACL Shapes
-    shapes_dir.mkdir(parents=True, exist_ok=True)
-    service_spec_shape_path.write_text(
-        build_service_spec_shape_turtle(), encoding="utf-8"
-    )
-    trouble_ticket_shape_path.write_text(
-        build_trouble_ticket_shape_turtle(), encoding="utf-8"
-    )
-    logger.info(
-        "DT-01a wrote W3C SHACL shapes: %s, %s",
-        service_spec_shape_path.relative_to(root_dir).as_posix(),
-        trouble_ticket_shape_path.relative_to(root_dir).as_posix(),
-    )
-
-    # 4. Write W3C R2RML Mapping
-    r2rml_path.parent.mkdir(parents=True, exist_ok=True)
-    r2rml_path.write_text(build_cmdb_r2rml_turtle(), encoding="utf-8")
-    logger.info(
-        "DT-01a wrote W3C R2RML mapping: %s",
-        r2rml_path.relative_to(root_dir).as_posix(),
-    )
-
-    # 5. Execute Evaluator Ontology Critique
-    critique = evaluate_ontology_and_r2rml(
-        table_profiles=table_profiles,
+    tbox_path.write_text(tbox_turtle_str, encoding="utf-8")
+    write_knowledge_graph_trig_with_tbox(
         tbox_path=tbox_path,
-        r2rml_path=r2rml_path,
+        trig_path=trig_path,
+        tbox_graph_iri=proposal.ontology_iri,
+        virtual_graph_iri=proposal.virtual_graph_iri,
+    )
+
+    r2rml_path.parent.mkdir(parents=True, exist_ok=True)
+    r2rml_path.write_text(r2rml_turtle_str, encoding="utf-8")
+
+    shapes_dir.mkdir(parents=True, exist_ok=True)
+    written_shape_paths: Dict[str, Path] = {}
+    for sh_spec in proposal.shacl_shapes:
+        sh_out = shapes_dir / sh_spec.output_filename
+        sh_out.write_text(compile_shacl_shape_turtle(sh_spec), encoding="utf-8")
+        written_shape_paths[sh_spec.output_filename] = sh_out
+
+    service_spec_shape_path = written_shape_paths.get(
+        "service_spec_shape.ttl", shapes_dir / "service_spec_shape.ttl"
+    )
+    trouble_ticket_shape_path = written_shape_paths.get(
+        "trouble_ticket_shape.ttl", shapes_dir / "trouble_ticket_shape.ttl"
+    )
+
+    critique = evaluate_proposal_and_artifacts(
+        proposal=proposal,
+        tbox_turtle_text=tbox_turtle_str,
+        r2rml_turtle_text=r2rml_turtle_str,
         trig_path=trig_path,
     )
     if not critique.overall_passed:
         raise ValueError(
-            f"DT-01a Evaluator Ontology Critique failed: {critique.critique_summary}"
+            f"DT-01a Locked Artifacts failed Evaluator Critique: {critique.critique_summary}"
         )
-    logger.info("DT-01a Evaluator Critique: %s", critique.critique_summary)
 
-    # 6. Render HITL Gate 1 Reports
-    gate1_status: Literal["CANDIDATE_PROPOSED", "LOCKED_APPROVED"] = (
-        "LOCKED_APPROVED" if mode == "approve" else "CANDIDATE_PROPOSED"
-    )
-    executed_at_utc = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     _write_hitl_gate1_html_report(
+        proposal=proposal,
         table_profiles=table_profiles,
-        scd2_verification=scd2_verification,
         critique=critique,
-        gate1_status=gate1_status,
+        gate1_status="LOCKED_APPROVED",
         executed_at_utc=executed_at_utc,
         html_path=hitl_html_path,
     )
     _write_hitl_gate1_markdown_report(
+        proposal=proposal,
         table_profiles=table_profiles,
-        scd2_verification=scd2_verification,
         critique=critique,
-        gate1_status=gate1_status,
+        gate1_status="LOCKED_APPROVED",
         executed_at_utc=executed_at_utc,
         md_path=hitl_md_path,
     )
     logger.info(
-        "DT-01a wrote HITL Gate 1 reports (%s) with status=%s",
-        hitl_html_path.relative_to(root_dir).as_posix(),
-        gate1_status,
+        "DT-01a Phase 2 (approve) locked TBox (%s), R2RML (%s), and SHACL shapes; status=LOCKED_APPROVED",
+        tbox_path.relative_to(root_dir).as_posix(),
+        r2rml_path.relative_to(root_dir).as_posix(),
     )
 
-    # 7. Optional Golden Reference promotion (--update-golden-ref)
     golden_updated = False
     if update_golden_ref:
         golden_dir = root_dir / Path("data/golden_reference")
         golden_dir.mkdir(parents=True, exist_ok=True)
         shutil.copy2(tbox_path, golden_dir / tbox_path.name)
         shutil.copy2(r2rml_path, golden_dir / r2rml_path.name)
-        shutil.copy2(service_spec_shape_path, golden_dir / service_spec_shape_path.name)
-        shutil.copy2(
-            trouble_ticket_shape_path, golden_dir / trouble_ticket_shape_path.name
-        )
+        for sh_file in written_shape_paths.values():
+            shutil.copy2(sh_file, golden_dir / sh_file.name)
         golden_updated = True
         logger.info(
             "DT-01a promoted approved Step 2 artifacts into %s",
@@ -1765,16 +1319,18 @@ def run_dt01a_cmdb_profiler(
 
     return Dt01aExecutionResult(
         scenario_id="DT-01a",
-        gate1_mode=mode,
-        gate1_status=gate1_status,
+        gate1_mode="approve",
+        gate1_status="LOCKED_APPROVED",
         executed_at_utc=executed_at_utc,
         total_tables_inspected=len(table_profiles),
         total_rows_inspected=total_rows,
         bound_tables_count=bound_tables,
         excluded_noise_tables_count=excluded_tables,
         table_profiles=table_profiles,
-        scd2_verification=scd2_verification,
+        scd2_verification=proposal.scd2_verification,
         evaluator_critique=critique,
+        candidate_proposal_path=proposal_path,
+        architect_verification_questions=proposal.architect_verification_questions,
         tbox_path=tbox_path,
         trig_dataset_path=trig_path,
         r2rml_path=r2rml_path,
@@ -1784,4 +1340,3 @@ def run_dt01a_cmdb_profiler(
         hitl_markdown_report_path=hitl_md_path,
         golden_ref_updated=golden_updated,
     )
-

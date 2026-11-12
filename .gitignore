@@ -37,4 +37,5 @@ tmp/
 # 6. Large Terraform provider binaries (NOTE: *.tf, *.tfvars, .terraform.lock.hcl, and terraform.tfstate ARE tracked)
 .terraform/
 terraform/.terraform/
+*.tfstate.backup
 

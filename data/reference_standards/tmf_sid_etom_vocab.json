@@ -1,0 +1,387 @@
+{
+  "catalog_id": "TMF-SID-ETOM-QUDT-REF-2026-V1",
+  "catalog_title": "TM Forum SID (GB922), eTOM (GB921) & QUDT Reference Vocabulary Catalog",
+  "namespaces": {
+    "tmf": "http://tmforum.org/sid/",
+    "etom": "http://tmforum.org/etom/",
+    "telco": "http://telco.enterprise.org/ontology/",
+    "qudt": "http://qudt.org/schema/qudt/",
+    "unit": "http://qudt.org/vocab/unit/",
+    "skos": "http://www.w3.org/2004/02/skos/core#"
+  },
+  "sid_classes": [
+    {
+      "class_iri": "tmf:Party",
+      "domain": "Party",
+      "label": "Party",
+      "description": "An individual or organization that has a relationship with the enterprise.",
+      "default_alt_labels": ["Legal Entity", "Business Party", "Stakeholder"]
+    },
+    {
+      "class_iri": "tmf:Organization",
+      "domain": "Party",
+      "label": "Organization",
+      "description": "A group of people identified by shared interests or purpose, such as a corporate business entity.",
+      "default_alt_labels": ["Corporate Entity", "Registered Company", "Enterprise Organization"]
+    },
+    {
+      "class_iri": "tmf:Individual",
+      "domain": "Party",
+      "label": "Individual",
+      "description": "A single human being acting as a contact, technician, or residential subscriber.",
+      "default_alt_labels": ["Natural Person", "Contact Person"]
+    },
+    {
+      "class_iri": "tmf:PartyRole",
+      "domain": "Party",
+      "label": "Party Role",
+      "description": "The part played by a party in a given context with specific characteristics and rights.",
+      "default_alt_labels": ["Actor Role", "Business Relationship Role"]
+    },
+    {
+      "class_iri": "tmf:MarketSegment",
+      "domain": "Market_Sales",
+      "label": "Market Segment",
+      "description": "A grouping of parties, geographic areas, or sales channels that share common commercial requirements.",
+      "default_alt_labels": ["Customer Segment", "Commercial Tier", "B2B Market Classification"]
+    },
+    {
+      "class_iri": "tmf:SalesChannel",
+      "domain": "Market_Sales",
+      "label": "Sales Channel",
+      "description": "The mechanism or organization through which products and services are sold to customers.",
+      "default_alt_labels": ["Distribution Channel", "Partner Sales Route"]
+    },
+    {
+      "class_iri": "tmf:MarketingCampaign",
+      "domain": "Market_Sales",
+      "label": "Marketing Campaign",
+      "description": "A coordinated series of promotional activities designed to drive product adoption.",
+      "default_alt_labels": ["Promotional Campaign", "Commercial Offer Drive"]
+    },
+    {
+      "class_iri": "tmf:Competitor",
+      "domain": "Market_Sales",
+      "label": "Competitor",
+      "description": "A rival telecom operator offering competing connectivity services in the same market.",
+      "default_alt_labels": ["Market Rival", "Competing Operator"]
+    },
+    {
+      "class_iri": "tmf:Customer",
+      "domain": "Customer",
+      "label": "Customer",
+      "description": "An enterprise party or organization that subscribes to commercial telecom products and holds an active Master Service Agreement.",
+      "default_alt_labels": ["Enterprise Subscriber", "B2B Account", "Contracted Party", "Corporate Client"]
+    },
+    {
+      "class_iri": "tmf:CustomerAccount",
+      "domain": "Customer",
+      "label": "Customer Account",
+      "description": "An arrangement by which a customer is administered and billed for subscribed services.",
+      "default_alt_labels": ["Billing Account", "Subscriber Account"]
+    },
+    {
+      "class_iri": "tmf:CustomerBill",
+      "domain": "Customer",
+      "label": "Customer Bill",
+      "description": "A financial invoice issued to a customer for recurring and usage-based telecom charges.",
+      "default_alt_labels": ["Telecom Invoice", "Monthly Statement", "Billing Ledger Record"]
+    },
+    {
+      "class_iri": "tmf:AppliedCustomerBillingRate",
+      "domain": "Customer",
+      "label": "Applied Customer Billing Rate",
+      "description": "A financial charge, tax, or discount applied to a customer bill during a billing cycle.",
+      "default_alt_labels": ["Invoice Line Item", "Tax & VAT Charge", "Billing Audit Entry"]
+    },
+    {
+      "class_iri": "tmf:CustomerCreditProfile",
+      "domain": "Customer",
+      "label": "Customer Credit Profile",
+      "description": "Creditworthiness, dunning level, and payment risk score associated with a customer.",
+      "default_alt_labels": ["Dunning Profile", "Credit Risk Score"]
+    },
+    {
+      "class_iri": "tmf:ProductOffering",
+      "domain": "Product",
+      "label": "Product Offering",
+      "description": "A commercial offering marketed to customers in the product catalog.",
+      "default_alt_labels": ["Catalog Offering", "Commercial Plan"]
+    },
+    {
+      "class_iri": "tmf:Product",
+      "domain": "Product",
+      "label": "Product",
+      "description": "A procured commercial telecom offering binding a customer agreement to one or more CustomerFacingServices.",
+      "default_alt_labels": ["Commercial Product Instance", "Subscribed Telecom Offering", "Enterprise Connectivity Subscription"]
+    },
+    {
+      "class_iri": "tmf:ProductSpecification",
+      "domain": "Product",
+      "label": "Product Specification",
+      "description": "The invariant characteristics and rules defining a type of commercial product.",
+      "default_alt_labels": ["Product Blueprint", "Commercial Product Template"]
+    },
+    {
+      "class_iri": "tmf:ProductOrder",
+      "domain": "Product",
+      "label": "Product Order",
+      "description": "A customer request to provision, upgrade, modify, or cease a telecom product.",
+      "default_alt_labels": ["Commercial Order", "Service Provisioning Request"]
+    },
+    {
+      "class_iri": "tmf:ProductPrice",
+      "domain": "Product",
+      "label": "Product Price",
+      "description": "The recurring monthly or one-off monetary tariff associated with a product.",
+      "default_alt_labels": ["Monthly Recurring Charge", "Tariff Rate"]
+    },
+    {
+      "class_iri": "tmf:CustomerFacingService",
+      "domain": "Service",
+      "label": "Customer Facing Service",
+      "description": "An active Layer 2 Ethernet or wavelength connectivity circuit directly visible to and contracted by an enterprise customer.",
+      "default_alt_labels": ["CFS Circuit", "Enterprise L2 Fiber Circuit", "Carrier Ethernet Service", "Leased Line Connection"]
+    },
+    {
+      "class_iri": "tmf:ServiceSpecification",
+      "domain": "Service",
+      "label": "Service Specification",
+      "description": "Standardized commercial catalog SKU defining bandwidth tier, SLA packet-loss ceiling, availability target, and autonomous remediation eligibility.",
+      "default_alt_labels": ["Commercial Product SKU", "Catalog Service Tier", "SLA Service Specification"]
+    },
+    {
+      "class_iri": "tmf:ResourceFacingService",
+      "domain": "Service",
+      "label": "Resource Facing Service",
+      "description": "Internal network transport and access bearer service realizing a CustomerFacingService across PE routers, OLT ports, fiber spans, and CPE devices.",
+      "default_alt_labels": ["RFS Access Bearer", "Network Transport Bearer", "L2 Optical Bearer Service"]
+    },
+    {
+      "class_iri": "tmf:ServiceOrder",
+      "domain": "Service",
+      "label": "Service Order",
+      "description": "An internal fulfillment instruction to activate or reconfigure a CustomerFacingService or ResourceFacingService.",
+      "default_alt_labels": ["TMF641 Service Order", "Fulfillment Work Order"]
+    },
+    {
+      "class_iri": "telco:SlaClause",
+      "domain": "Service",
+      "label": "Service Level Agreement Clause",
+      "description": "Contractual or catalog SLA clause specifying packet-loss thresholds, mean time to repair, service credit penalties, and VIP escalation rules.",
+      "default_alt_labels": ["SLA Guarantee Clause", "MSA Contractual Penalty Policy", "Quality of Service Commitment"]
+    },
+    {
+      "class_iri": "tmf:PhysicalResource",
+      "domain": "Resource",
+      "label": "Physical Resource",
+      "description": "A physical network equipment asset deployed in the provider core, access plant, or customer demarcation point.",
+      "default_alt_labels": ["Network Inventory Element", "Physical Hardware Asset", "Telecom Network Device"]
+    },
+    {
+      "class_iri": "telco:OltPortResource",
+      "domain": "Resource",
+      "sub_class_of": "tmf:PhysicalResource",
+      "label": "OLT Optical Port Resource",
+      "description": "Optical Line Terminal transceiver port terminating the access fiber span and providing real-time gNMI DDM optical telemetry.",
+      "default_alt_labels": ["OLT Port", "Optical Access Line Card Port", "PON Optical Interface"]
+    },
+    {
+      "class_iri": "telco:CpeDeviceResource",
+      "domain": "Resource",
+      "sub_class_of": "tmf:PhysicalResource",
+      "label": "Customer Premises Equipment Resource",
+      "description": "Physical demarcation switch or router installed at the enterprise customer site.",
+      "default_alt_labels": ["CPE Device", "Enterprise NTE Demarcation Chassis", "On-Premises Optical Access Switch"]
+    },
+    {
+      "class_iri": "telco:PeRouterResource",
+      "domain": "Resource",
+      "sub_class_of": "tmf:PhysicalResource",
+      "label": "Provider Edge Router Resource",
+      "description": "Metro or core Provider Edge router aggregating L2 Ethernet access bearers.",
+      "default_alt_labels": ["PE Router", "Metro Aggregation Router", "Edge Routing Node"]
+    },
+    {
+      "class_iri": "tmf:PhysicalResourceSpec",
+      "domain": "Resource",
+      "label": "Physical Resource Specification",
+      "description": "Vendor equipment model specification defining hardware capabilities, supported optical transceivers, and DDM calibration thresholds.",
+      "default_alt_labels": ["Hardware Model SKU", "Vendor Equipment Specification", "Chassis Hardware Model"]
+    },
+    {
+      "class_iri": "tmf:LogicalResource",
+      "domain": "Resource",
+      "label": "Logical Resource",
+      "description": "A non-physical network resource such as a VLAN ID, IP subnet, BGP ASN, or MPLS label.",
+      "default_alt_labels": ["Logical Network Identifier", "Virtual Network Resource"]
+    },
+    {
+      "class_iri": "telco:OpticalCalibrationProfile",
+      "domain": "Resource",
+      "label": "Optical Calibration Profile",
+      "description": "Vendor hardware manual optical Digital Diagnostic Monitoring (DDM) power envelope and autonomous laser bias recalibration specification.",
+      "default_alt_labels": ["DDM Optical Power Envelope", "SFP+ Tx/Rx Calibration Spec", "Optical Attenuation Threshold Profile"]
+    },
+    {
+      "class_iri": "tmf:EngagedParty",
+      "domain": "EngagedParty",
+      "label": "Engaged Party",
+      "description": "A vendor, partner, or field engineering contractor engaged in network operations.",
+      "default_alt_labels": ["Field Contractor", "Equipment Vendor Partner"]
+    },
+    {
+      "class_iri": "tmf:Vendor",
+      "domain": "EngagedParty",
+      "label": "Vendor",
+      "description": "An external network equipment manufacturer supplying optical transceivers, OLT shelves, or CPE routers.",
+      "default_alt_labels": ["Hardware Manufacturer", "NEM Supplier"]
+    },
+    {
+      "class_iri": "tmf:TroubleTicket",
+      "domain": "Common_Business",
+      "label": "Trouble Ticket",
+      "description": "TMF621 operational assurance ticket tracking network incidents, automated remediations, or field fiber splicing dispatches.",
+      "default_alt_labels": ["NOC Assurance Ticket", "TMF621 Incident Record", "Field Dispatch Trouble Ticket"]
+    },
+    {
+      "class_iri": "tmf:WorkOrder",
+      "domain": "Common_Business",
+      "label": "Work Order",
+      "description": "A field engineering task instruction dispatched to an outside-plant technician.",
+      "default_alt_labels": ["Field Dispatch Order", "Technician Task Sheet"]
+    },
+    {
+      "class_iri": "tmf:GeographicSite",
+      "domain": "Common_Business",
+      "label": "Geographic Site",
+      "description": "A physical building, central office, point of presence, or customer premises location.",
+      "default_alt_labels": ["Customer Site", "Central Office Location", "POP Facility"]
+    }
+  ],
+  "etom_processes": [
+    {
+      "process_id": "1.1.1",
+      "process_iri": "etom:Process_1_1_1_MarketStrategy",
+      "label": "eTOM 1.1.1 Market Strategy & Policy",
+      "domain": "Strategy_Infrastructure_Product",
+      "description": "Market segmentation, competitive analysis, and target market definition."
+    },
+    {
+      "process_id": "1.2.1",
+      "process_iri": "etom:Process_1_2_1_ProductAndOfferDevelopment",
+      "label": "eTOM 1.2.1 Product & Offer Development",
+      "domain": "Strategy_Infrastructure_Product",
+      "description": "Lifecycle management of commercial catalog SKUs and SLA service specifications."
+    },
+    {
+      "process_id": "1.3.3",
+      "process_iri": "etom:Process_1_3_3_OrderHandling",
+      "label": "eTOM 1.3.3 Order Handling",
+      "domain": "Operations_Fulfillment",
+      "description": "Customer order capture, credit validation, and commercial order tracking."
+    },
+    {
+      "process_id": "1.3.7",
+      "process_iri": "etom:Process_1_3_7_ProblemHandling",
+      "label": "eTOM 1.3.7 Problem Handling",
+      "domain": "Operations_Assurance",
+      "description": "Customer-facing service problem reception, SLA triage, root-cause correlation, and customer status notification.",
+      "default_alt_labels": ["Customer Problem Handling", "CFS SLA Assurance Triage"]
+    },
+    {
+      "process_id": "1.3.8",
+      "process_iri": "etom:Process_1_3_8_SlaManagement",
+      "label": "eTOM 1.3.8 Service Quality & SLA Management",
+      "domain": "Operations_Assurance",
+      "description": "Monitoring of contractual SLA thresholds, packet-loss ceilings, and service credit calculations."
+    },
+    {
+      "process_id": "1.3.10",
+      "process_iri": "etom:Process_1_3_10_BillingAndCollections",
+      "label": "eTOM 1.3.10 Billing & Collections Management",
+      "domain": "Operations_Billing",
+      "description": "Invoice generation, VAT/tax calculation, ERP ledger posting, and dunning management."
+    },
+    {
+      "process_id": "1.4.3",
+      "process_iri": "etom:Process_1_4_3_ServiceConfigurationAndActivation",
+      "label": "eTOM 1.4.3 Service Configuration & Activation",
+      "domain": "Operations_Fulfillment",
+      "description": "Automated TMF640 service provisioning and optical parameter reconfiguration."
+    },
+    {
+      "process_id": "1.4.5",
+      "process_iri": "etom:Process_1_4_5_ResourceTroubleManagement",
+      "label": "eTOM 1.4.5 Resource Trouble Management",
+      "domain": "Operations_Assurance",
+      "description": "Network resource fault localization, optical transceiver DDM diagnostics, autonomous self-healing, and field technician dispatch.",
+      "default_alt_labels": ["Resource Trouble Management", "Network Fault Isolation & Remediation"]
+    },
+    {
+      "process_id": "1.4.6",
+      "process_iri": "etom:Process_1_4_6_ResourcePerformanceManagement",
+      "label": "eTOM 1.4.6 Resource Performance Management",
+      "domain": "Operations_Assurance",
+      "description": "Continuous gNMI telemetry collection and optical power envelope monitoring."
+    },
+    {
+      "process_id": "1.5.2",
+      "process_iri": "etom:Process_1_5_2_ResourceProvisioning",
+      "label": "eTOM 1.5.2 Resource Provisioning",
+      "domain": "Operations_Fulfillment",
+      "description": "Physical CPE, OLT port, and fiber span allocation and inventory binding."
+    }
+  ],
+  "qudt_units": [
+    {
+      "unit_iri": "unit:GigaBIT-PER-SEC",
+      "symbol": "Gbps",
+      "quantity_kind": "DataRate",
+      "conversion_Note": "1 Gbps = 1000 Mbps = 1000000 Kbps"
+    },
+    {
+      "unit_iri": "unit:MegaBIT-PER-SEC",
+      "symbol": "Mbps",
+      "quantity_kind": "DataRate",
+      "conversion_Note": "Divide by 1000.0 to normalize to Gbps"
+    },
+    {
+      "unit_iri": "unit:KiloBIT-PER-SEC",
+      "symbol": "Kbps",
+      "quantity_kind": "DataRate",
+      "conversion_Note": "Divide by 1000000.0 to normalize to Gbps"
+    },
+    {
+      "unit_iri": "unit:MilliWATT-DeciBEL",
+      "symbol": "dBm",
+      "quantity_kind": "OpticalPowerLevel",
+      "conversion_Note": "Logarithmic optical power relative to 1 mW"
+    },
+    {
+      "unit_iri": "unit:PERCENT",
+      "symbol": "%",
+      "quantity_kind": "DimensionlessRatio",
+      "conversion_Note": "Percentage value between 0.0 and 100.0"
+    },
+    {
+      "unit_iri": "unit:DEG_C",
+      "symbol": "degC",
+      "quantity_kind": "Temperature",
+      "conversion_Note": "Degrees Celsius"
+    },
+    {
+      "unit_iri": "unit:HR",
+      "symbol": "h",
+      "quantity_kind": "Time",
+      "conversion_Note": "Hours (e.g., MTTR target)"
+    },
+    {
+      "unit_iri": "unit:EUR",
+      "symbol": "EUR",
+      "quantity_kind": "Currency",
+      "conversion_Note": "Euro monetary amount"
+    }
+  ]
+}
+

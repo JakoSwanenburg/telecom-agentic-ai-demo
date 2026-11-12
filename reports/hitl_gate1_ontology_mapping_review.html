@@ -51,19 +51,28 @@
 </head>
 <body>
   <div class="banner">
-    <h1>Mandatory HITL Gate 1 — Prong 1 SQL CMDB Profiler, TMF SID/eTOM TBox &amp; R2RML Mapping (DT-01a)</h1>
+    <h1>Mandatory HITL Gate 1 — Prong 1 SQL CMDB AI Schema Profiler, TMF SID/eTOM TBox &amp; R2RML Mapping (DT-01a)</h1>
     <p>
       <strong>Sign-Off Status:</strong>
-      <span style="padding:4px 10px;border-radius:9999px;font-weight:700;background:#059669;color:#FFF;">
-        LOCKED_APPROVED
+      <span style="padding:4px 10px;border-radius:9999px;font-weight:700;background:#D97706;color:#FFF;">
+        CANDIDATE_PROPOSED
       </span>
-      &nbsp;|&nbsp; <strong>Executed At (UTC):</strong> 2026-11-12T15:07:00Z
+      &nbsp;|&nbsp; <strong>Proposal ID:</strong> <code>PROP-UC-001-GATE1</code>
+      &nbsp;|&nbsp; <strong>Model:</strong> <code>gemini-3.8-flash</code>
+      &nbsp;|&nbsp; <strong>Executed At (UTC):</strong> 2026-11-12T16:56:24Z
     </p>
-    <p><strong>Evaluator Critique:</strong> PASS: 0/40 physical SQL tokens leaked into TBox; 14 OWL classes, 37 properties, and 122 skos:altLabel synonyms verified; T_BILLING_AUDIT_NOISE excluded; SCD2 (WHERE VALID_TO_TS IS NULL), shadow enum translation, and QUDT Gbps math active; &lt;urn:telco:graph:virtual:ib&gt; has 0 persisted triples on disk.</p>
+    <p><strong>Evaluator Critique:</strong> PASS: 0/40 physical SQL tokens leaked into TBox; 14 OWL classes, 37 properties, and 120 skos:altLabel synonyms verified; 1 noise table(s) (T_BILLING_AUDIT_NOISE) excluded; SCD2 active-window filter, shadow enum translation, and QUDT Gbps normalization verified; &lt;urn:telco:graph:virtual:ib&gt; has 0 persisted triples on disk.</p>
   </div>
 
   <div class="card">
-    <h2>1. SQLite CMDB Table-Level Profiling &amp; Noise Exclusion (4 Tables, 104 Rows)</h2>
+    <h2>1. HITL Gate 1 Lead Architect Verification Questions</h2>
+    <ol>
+      <li><strong>Q1:</strong> Does the Lead Ontologist approve the retention of exactly 14 TM Forum SID and telecom domain classes, confirming that financial billing and marketing classes are strictly pruned from the operational assurance TBox?</li><li><strong>Q2:</strong> Does the Lead Architect approve excluding T_BILLING_AUDIT_NOISE and stripping internal surrogate keys, legacy CRM identifiers, and NMS synchronization watermarks to prevent physical database plumbing leakage into the Knowledge Graph?</li><li><strong>Q3:</strong> Is the R2RML SQL pushdown filter WHERE VALID_TO_TS IS NULL confirmed as the authoritative mechanism to resolve active SCD Type 2 circuit state (such as retaining row 2001 and suppressing expired row 2000 for circuit CIR-994821)?</li><li><strong>Q4:</strong> Does the Lead Architect validate the status mapping rules (10 to ACTIVE, 20 to MAINTENANCE, 99 to DECOMMISSIONED) and the QUDT conversion arithmetic transforming mixed Kbps, Mbps, and Gbps values into canonical Gigabits per second?</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>2. SQLite CMDB Table-Level Profiling &amp; Noise Exclusion</h2>
     <table>
       <thead>
         <tr>
@@ -77,6 +86,19 @@
       </thead>
       <tbody>
         
+            <tr>
+              <td><code>T_BILLING_AUDIT_NOISE</code></td>
+              <td style="text-align:center;">25</td>
+              <td style="text-align:center;">0</td>
+              <td style="text-align:center;">
+                <span style="padding:3px 8px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
+                  EXCLUDED_NOISE
+                </span>
+              </td>
+              <td><em>None (Excluded Noise)</em></td>
+              <td><code>NONE (Excluded Noise Table)</code></td>
+            </tr>
+            
             <tr>
               <td><code>T_OSS_CUST_PARTY</code></td>
               <td style="text-align:center;">15</td>
@@ -112,21 +134,8 @@
                   BOUND_VIRTUAL_GRAPH
                 </span>
               </td>
-              <td><code>tmf:ResourceFacingService</code>, <code>tmf:PhysicalResource</code>, <code>telco:OltPortResource</code>, <code>telco:PeRouterResource</code>, <code>telco:CpeDeviceResource</code></td>
+              <td><code>tmf:ResourceFacingService</code></td>
               <td><code>&lt;#RfsResourceTriplesMap&gt;</code></td>
-            </tr>
-            
-            <tr>
-              <td><code>T_BILLING_AUDIT_NOISE</code></td>
-              <td style="text-align:center;">25</td>
-              <td style="text-align:center;">0</td>
-              <td style="text-align:center;">
-                <span style="padding:3px 8px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
-                  EXCLUDED_NOISE
-                </span>
-              </td>
-              <td><em>None (Excluded Noise)</em></td>
-              <td><code>NONE (Excluded Noise Table)</code></td>
             </tr>
             
       </tbody>
@@ -134,17 +143,17 @@
   </div>
 
   <div class="card">
-    <h2>2. Target Circuit CIR-994821 SCD Type 2, Shadow Enum &amp; QUDT Proof</h2>
+    <h2>3. Target Circuit CIR-994821 SCD Type 2, Shadow Enum &amp; QUDT Proof</h2>
     <ul>
-      <li><strong>Filtered Expired SCD2 Row (<code>VALID_TO_TS IS NOT NULL</code>):</strong> <code>CFS_ROW_ID=2000</code> (<code>ETH-1G-SILVER</code>, expired <code>2025-06-01T00:00:00Z</code>)</li>
-      <li><strong>Retained Active SCD2 Row (<code>WHERE VALID_TO_TS IS NULL</code>):</strong> <code>CFS_ROW_ID=2001</code> (<code>ETH-10G-GOLD</code>)</li>
-      <li><strong>Shadow Enum Translation (<code>OPER_STATUS_CD</code>):</strong> <code>'10'</code> &rarr; <strong><code>'ACTIVE'</code></strong></li>
+      <li><strong>Filtered Expired SCD2 Row:</strong> <code>ROW_ID=2000</code> (<code>ETH-1G-SILVER</code>, expired <code>2025-06-01T00:00:00Z</code>)</li>
+      <li><strong>Retained Active SCD2 Row:</strong> <code>ROW_ID=2001</code> (<code>ETH-10G-GOLD</code>)</li>
+      <li><strong>Shadow Enum Translation:</strong> <code>'10'</code> &rarr; <strong><code>'ACTIVE'</code></strong></li>
       <li><strong>QUDT Bandwidth Normalization:</strong> <code>10.0 Gbps</code> &rarr; <strong><code>10.0 Gbps</code></strong> (<code>unit:GigaBIT-PER-SEC</code>)</li>
     </ul>
   </div>
 
   <div class="card">
-    <h2>3. Dynamic Column-Level Disposition Matrix (PRAGMA table_info)</h2>
+    <h2>4. Dynamic Column-Level Disposition Matrix (PRAGMA table_info)</h2>
     <table>
       <thead>
         <tr>
@@ -159,357 +168,6 @@
       <tbody>
         
                 <tr>
-                  <td><code>T_OSS_CUST_PARTY</code></td>
-                  <td><code>PARTY_SURR_ID</code></td>
-                  <td style="text-align:center;"><code>INTEGER</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
-                      EXCLUDED_INTERNAL_OR_LEGACY
-                    </span>
-                  </td>
-                  <td><code>NONE (Excluded)</code></td>
-                  <td>Internal relational surrogate sequence key; canonical IRI uses CUST_EXT_REF.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_OSS_CUST_PARTY</code></td>
-                  <td><code>CUST_EXT_REF</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:Customer / tmf:customerId</code></td>
-                  <td>Canonical enterprise customer business identifier (e.g., CUST-ENT-409).</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_OSS_CUST_PARTY</code></td>
-                  <td><code>LEGAL_NAME</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:Customer / tmf:partyLegalName</code></td>
-                  <td>Official registered customer name used for entity resolution against MSA PDFs.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_OSS_CUST_PARTY</code></td>
-                  <td><code>SEGMENT_CD</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:Customer / tmf:marketSegment</code></td>
-                  <td>Commercial customer tier used for assurance prioritization.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_OSS_CUST_PARTY</code></td>
-                  <td><code>ACCT_MGR_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:Customer / telco:accountManagerCode</code></td>
-                  <td>Assigned enterprise account manager reference for VIP SLA escalations.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_OSS_CUST_PARTY</code></td>
-                  <td><code>LEGACY_CRM_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
-                      EXCLUDED_INTERNAL_OR_LEGACY
-                    </span>
-                  </td>
-                  <td><code>NONE (Excluded)</code></td>
-                  <td>Deprecated Siebel CRM foreign key; excluded to prevent legacy schema pollution.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_OSS_CUST_PARTY</code></td>
-                  <td><code>CREATED_TS</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
-                      EXCLUDED_INTERNAL_OR_LEGACY
-                    </span>
-                  </td>
-                  <td><code>NONE (Excluded)</code></td>
-                  <td>Internal database row creation timestamp not required by assurance TBox.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>CFS_ROW_ID</code></td>
-                  <td style="text-align:center;"><code>INTEGER</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#2563EB;">
-                      PHYSICAL_SCD2_CONTROL_ONLY
-                    </span>
-                  </td>
-                  <td><code>NONE (Layer 4 SCD2 Audit Control Only)</code></td>
-                  <td>Physical SCD Type 2 version surrogate key; zero exposure in Conceptual TBox.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>CIRCUIT_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:CustomerFacingService / tmf:serviceId</code></td>
-                  <td>Canonical L2 enterprise circuit identifier (e.g., CIR-994821).</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>CUST_REF_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:CustomerFacingService / tmf:hasCustomer</code></td>
-                  <td>Links CustomerFacingService instance to owning tmf:Customer.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>PROD_SPEC_CODE</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:CustomerFacingService / tmf:isDescribedBy</code></td>
-                  <td>Links active circuit to its commercial ServiceSpecification SKU (e.g., ETH-10G-GOLD).</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>OPER_STATUS_CD</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:CustomerFacingService / tmf:operationalStatus</code></td>
-                  <td>Translates undocumented numeric shadow enums (&#x27;10&#x27;,&#x27;20&#x27;,&#x27;99&#x27;) into canonical SID status literals.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>BW_VAL</code></td>
-                  <td style="text-align:center;"><code>NUMERIC</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:CustomerFacingService / telco:bandwidthGbps</code></td>
-                  <td>Raw bandwidth magnitude; combined with BW_UNIT_CD via QUDT scaling.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>BW_UNIT_CD</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:CustomerFacingService / telco:bandwidthGbps (qudt:unit unit:GigaBIT-PER-SEC)</code></td>
-                  <td>Mixed unit code (&#x27;Kbps&#x27;,&#x27;Mbps&#x27;,&#x27;Gbps&#x27;) normalized to canonical Gbps.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>INSTALL_DT</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:CustomerFacingService / telco:installationDate</code></td>
-                  <td>Service commission date for operational lifecycle context.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>VALID_FROM_TS</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#2563EB;">
-                      PHYSICAL_SCD2_CONTROL_ONLY
-                    </span>
-                  </td>
-                  <td><code>NONE (Layer 4 SCD2 Window Start Control Only)</code></td>
-                  <td>Physical SCD Type 2 effective-from timestamp handled by Layer 4 virtual SQL pushdown.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>VALID_TO_TS</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#2563EB;">
-                      PHYSICAL_SCD2_CONTROL_ONLY
-                    </span>
-                  </td>
-                  <td><code>NONE (Layer 4 R2RML WHERE VALID_TO_TS IS NULL Filter)</code></td>
-                  <td>Physical SCD Type 2 expiration timestamp; governs active circuit filtering in R2RML.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
-                  <td><code>LEGACY_BILL_TAG</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
-                      EXCLUDED_LEGACY
-                    </span>
-                  </td>
-                  <td><code>NONE (Excluded)</code></td>
-                  <td>Deprecated legacy billing tag; excluded from operational assurance ontology.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>RFS_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:ResourceFacingService / tmf:rfsId</code></td>
-                  <td>Canonical ResourceFacingService bearer identifier (e.g., RFS-OLT04-P12).</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>PARENT_CFS_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:ResourceFacingService / tmf:supportsService</code></td>
-                  <td>Binds ResourceFacingService to the parent CustomerFacingService circuit.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>PE_ROUTER_HOSTNAME</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:ResourceFacingService / telco:terminatesOnRouter (telco:PeRouterResource)</code></td>
-                  <td>Provider Edge aggregation router hostname (e.g., NLD-HAG-PE02).</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>OLT_PORT_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:ResourceFacingService / telco:usesOltPort (telco:OltPortResource)</code></td>
-                  <td>Physical OLT optical port identifier probed by CQRS gNMI telemetry (e.g., OLT04-P12).</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>CPE_ASSET_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:ResourceFacingService / telco:demarcatesAtCpe (telco:CpeDeviceResource)</code></td>
-                  <td>Customer Premises Equipment demarcation asset identifier (e.g., CPE-ASN-7741).</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>CPE_MODEL_SKU</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:PhysicalResource / tmf:hasResourceSpecification (tmf:PhysicalResourceSpec)</code></td>
-                  <td>Hardware model SKU (e.g., NOK-7210-SAS-Mxp) linking CMDB inventory to optical manual specs.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>VLAN_TAG</code></td>
-                  <td style="text-align:center;"><code>INTEGER</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:ResourceFacingService / telco:vlanTag</code></td>
-                  <td>IEEE 802.1Q encapsulation VLAN tag on the access bearer.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>FIBER_SPAN_ID</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
-                      MAPPED_TO_TBOX
-                    </span>
-                  </td>
-                  <td><code>tmf:ResourceFacingService / telco:fiberSpanId</code></td>
-                  <td>Physical metro fiber ring/span identifier for outside-plant fault localization.</td>
-                </tr>
-                
-                <tr>
-                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
-                  <td><code>LAST_SYNC_UTC</code></td>
-                  <td style="text-align:center;"><code>TEXT</code></td>
-                  <td style="text-align:center;">
-                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
-                      EXCLUDED_SYNC_METADATA
-                    </span>
-                  </td>
-                  <td><code>NONE (Excluded)</code></td>
-                  <td>Internal NMS polling sync watermark; excluded from Conceptual TBox.</td>
-                </tr>
-                
-                <tr>
                   <td><code>T_BILLING_AUDIT_NOISE</code></td>
                   <td><code>INV_ID</code></td>
                   <td style="text-align:center;"><code>TEXT</code></td>
@@ -519,7 +177,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance.</td>
+                  <td>Billing invoice identifier INV_ID is out of scope for L2 fiber service assurance and network topology.</td>
                 </tr>
                 
                 <tr>
@@ -532,7 +190,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance.</td>
+                  <td>Customer reference on billing invoice record is out of scope for network assurance.</td>
                 </tr>
                 
                 <tr>
@@ -545,7 +203,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance.</td>
+                  <td>Billing cycle code is out of scope for network fault triage.</td>
                 </tr>
                 
                 <tr>
@@ -558,7 +216,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance.</td>
+                  <td>Financial billing gross monetary amount is out of scope for network assurance.</td>
                 </tr>
                 
                 <tr>
@@ -571,7 +229,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance.</td>
+                  <td>Tax regime identifier is out of scope for network assurance.</td>
                 </tr>
                 
                 <tr>
@@ -584,7 +242,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance.</td>
+                  <td>Value added tax percentage is out of scope for network assurance.</td>
                 </tr>
                 
                 <tr>
@@ -597,7 +255,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance.</td>
+                  <td>General ledger posting timestamp is out of scope for network assurance.</td>
                 </tr>
                 
                 <tr>
@@ -610,7 +268,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance.</td>
+                  <td>Customer dunning credit risk level is out of scope for network assurance.</td>
                 </tr>
                 
                 <tr>
@@ -623,7 +281,7 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance. Represents internal batch/hash audit metadata (ERP_BATCH_REF / AUDIT_HASH).</td>
+                  <td>The column ERP_BATCH_REF represents batch audit metadata and is excluded from the virtual graph.</td>
                 </tr>
                 
                 <tr>
@@ -636,7 +294,358 @@
                     </span>
                   </td>
                   <td><code>NONE (Excluded Billing Noise Table)</code></td>
-                  <td>Financial ERP/billing invoice audit column out of scope for UC-001 L2 assurance. Represents internal batch/hash audit metadata (ERP_BATCH_REF / AUDIT_HASH).</td>
+                  <td>The column AUDIT_HASH represents cryptographic hash audit metadata and is excluded from the virtual graph.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_OSS_CUST_PARTY</code></td>
+                  <td><code>PARTY_SURR_ID</code></td>
+                  <td style="text-align:center;"><code>INTEGER</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
+                      EXCLUDED_INTERNAL_OR_LEGACY
+                    </span>
+                  </td>
+                  <td><code>NONE (Internal Surrogate Key)</code></td>
+                  <td>Internal database surrogate key has no business meaning in the TMF SID conceptual model.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_OSS_CUST_PARTY</code></td>
+                  <td><code>CUST_EXT_REF</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:customerId</code></td>
+                  <td>Canonical customer account reference mapped to tmf:customerId and used as URI template key.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_OSS_CUST_PARTY</code></td>
+                  <td><code>LEGAL_NAME</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:partyLegalName</code></td>
+                  <td>Corporate legal entity name mapped to tmf:partyLegalName.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_OSS_CUST_PARTY</code></td>
+                  <td><code>SEGMENT_CD</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:marketSegment</code></td>
+                  <td>Market segment classification mapped to tmf:marketSegment.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_OSS_CUST_PARTY</code></td>
+                  <td><code>ACCT_MGR_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:accountManagerCode</code></td>
+                  <td>Assigned enterprise account manager code mapped to telco:accountManagerCode.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_OSS_CUST_PARTY</code></td>
+                  <td><code>LEGACY_CRM_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
+                      EXCLUDED_INTERNAL_OR_LEGACY
+                    </span>
+                  </td>
+                  <td><code>NONE (Legacy CRM Identifier)</code></td>
+                  <td>Legacy CRM foreign key is deprecated and excluded from the enterprise semantic model.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_OSS_CUST_PARTY</code></td>
+                  <td><code>CREATED_TS</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
+                      EXCLUDED_INTERNAL_OR_LEGACY
+                    </span>
+                  </td>
+                  <td><code>NONE (Database Audit Timestamp)</code></td>
+                  <td>Physical database record creation timestamp is excluded to prevent internal plumbing leakage.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>CFS_ROW_ID</code></td>
+                  <td style="text-align:center;"><code>INTEGER</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#2563EB;">
+                      PHYSICAL_SCD2_CONTROL_ONLY
+                    </span>
+                  </td>
+                  <td><code>NONE (SCD2 Surrogate Primary Key)</code></td>
+                  <td>Physical SCD Type 2 surrogate primary key used for temporal versioning control only.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>CIRCUIT_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:serviceId</code></td>
+                  <td>Business key for the connectivity circuit mapped to tmf:serviceId and used as subject template.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>CUST_REF_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:hasCustomer</code></td>
+                  <td>Foreign key linking the circuit to the enterprise customer URI via tmf:hasCustomer.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>PROD_SPEC_CODE</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:isDescribedBy</code></td>
+                  <td>Commercial product catalog code linking the circuit to its service specification via tmf:isDescribedBy.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>OPER_STATUS_CD</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:operationalStatus</code></td>
+                  <td>Legacy numeric status code translated into canonical operational status literals in SQL.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>BW_VAL</code></td>
+                  <td style="text-align:center;"><code>NUMERIC</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:bandwidthGbps</code></td>
+                  <td>Raw numerical bandwidth value normalized to Gbps using BW_UNIT_CD in SQL pushdown.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>BW_UNIT_CD</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:bandwidthGbps</code></td>
+                  <td>Bandwidth unit code used for normalization calculation to unit:GigaBIT-PER-SEC.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>INSTALL_DT</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:installationDate</code></td>
+                  <td>Handover installation date mapped to telco:installationDate with xsd:date datatype.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>VALID_FROM_TS</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#2563EB;">
+                      PHYSICAL_SCD2_CONTROL_ONLY
+                    </span>
+                  </td>
+                  <td><code>NONE (SCD2 Valid From Timestamp)</code></td>
+                  <td>SCD Type 2 record effective start timestamp used strictly for physical temporal control.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>VALID_TO_TS</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#2563EB;">
+                      PHYSICAL_SCD2_CONTROL_ONLY
+                    </span>
+                  </td>
+                  <td><code>NONE (SCD2 Valid To Filter)</code></td>
+                  <td>SCD Type 2 expiration timestamp used in R2RML WHERE VALID_TO_TS IS NULL to select active inventory.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_CFS_CIRCUIT</code></td>
+                  <td><code>LEGACY_BILL_TAG</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
+                      EXCLUDED_LEGACY
+                    </span>
+                  </td>
+                  <td><code>NONE (Legacy Billing Tag)</code></td>
+                  <td>Obsolete billing system routing tag excluded from the enterprise assurance ontology.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>RFS_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:rfsId</code></td>
+                  <td>Primary identifier for the Resource Facing Service mapped to tmf:rfsId.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>PARENT_CFS_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:supportsService</code></td>
+                  <td>Reference to realizing Customer Facing Service mapped via tmf:supportsService.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>PE_ROUTER_HOSTNAME</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:terminatesOnRouter</code></td>
+                  <td>Provider Edge router hostname mapped to telco:terminatesOnRouter.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>OLT_PORT_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:usesOltPort</code></td>
+                  <td>Optical Line Terminal port mapped to telco:usesOltPort.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>CPE_ASSET_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:demarcatesAtCpe</code></td>
+                  <td>Customer Premises Equipment asset identifier mapped to telco:demarcatesAtCpe.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>CPE_MODEL_SKU</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>tmf:hasResourceSpecification</code></td>
+                  <td>Vendor hardware model SKU linking the CPE device to its resource specification.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>VLAN_TAG</code></td>
+                  <td style="text-align:center;"><code>INTEGER</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:vlanTag</code></td>
+                  <td>L2 transport encapsulation VLAN tag mapped to telco:vlanTag.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>FIBER_SPAN_ID</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#059669;">
+                      MAPPED_TO_TBOX
+                    </span>
+                  </td>
+                  <td><code>telco:fiberSpanId</code></td>
+                  <td>Physical outside plant fiber span identifier mapped to telco:fiberSpanId.</td>
+                </tr>
+                
+                <tr>
+                  <td><code>T_CMDB_RFS_RESOURCE</code></td>
+                  <td><code>LAST_SYNC_UTC</code></td>
+                  <td style="text-align:center;"><code>TEXT</code></td>
+                  <td style="text-align:center;">
+                    <span style="padding:2px 7px;border-radius:9999px;font-size:11px;font-weight:700;color:#FFF;background:#DC2626;">
+                      EXCLUDED_SYNC_METADATA
+                    </span>
+                  </td>
+                  <td><code>NONE (Sync Watermark)</code></td>
+                  <td>Network management system polling synchronization timestamp excluded from conceptual ontology.</td>
                 </tr>
                 
       </tbody>

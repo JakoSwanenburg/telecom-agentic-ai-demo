@@ -20,6 +20,7 @@ locals {
     "roles/cloudtrace.agent",
     "roles/secretmanager.secretAccessor",
     "roles/aiplatform.user",
+    "roles/serviceusage.serviceUsageConsumer",
   ])
 }
 

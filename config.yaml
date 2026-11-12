@@ -55,8 +55,8 @@ stage0:
   target_sop_id: "SOP-ASSUR-402"
 
 ai:
-  model_name: "gemini-2.5-pro"
-  location: "europe-west4"
+  model_name: "gemini-3.8-flash"
+  location: "global"
   temperature: 0.0
   max_output_tokens: 4096
   thinking_budget: 1024
@@ -88,7 +88,7 @@ layer1_orchestrator:
   option_id: "1D"
   transport_mode: "in_process"
   sse_port: 8000
-  llm_model: "gemini-2.5-flash"
+  llm_model: "gemini-3.8-flash"
   export_ai_studio_schema_path: "reports/ai_studio_tool_declarations.json"
 
 layer2_worker_and_sop:
@@ -115,6 +115,10 @@ layer4_compiler_federation:
 
 track_b_ingestion_and_er:
   option_id: "5A-HITL"
+  use_case_charter_path: "data/raw_sources/uc001_use_case_charter.md"
+  tmf_vocab_path: "data/reference_standards/tmf_sid_etom_vocab.json"
+  gate1_candidate_proposal_path: "data/semantic_store/gate1_candidate_proposal.json"
+  profiler_prompt_template_path: "prompts/s1_cmdb_schema_profiler_prompt.md"
   hitl_gate1_report_path: "reports/hitl_gate1_ontology_mapping_review.html"
   hitl_gate2_report_path: "reports/hitl_gate2_ingestion_er_curation.html"
   shacl_quarantine_report_path: "reports/shacl_quarantine_report.html"

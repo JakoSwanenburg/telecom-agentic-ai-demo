@@ -9,7 +9,7 @@ validation (`ConfigDict(extra="forbid", frozen=True)`) per AGENTS.md Part 2.2 & 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Literal, Tuple
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -194,6 +194,18 @@ class TrackBIngestionAndErSettings(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     option_id: str = Field(default="5A-HITL", min_length=1)
+    use_case_charter_path: str = Field(
+        default="data/raw_sources/uc001_use_case_charter.md", min_length=1
+    )
+    tmf_vocab_path: str = Field(
+        default="data/reference_standards/tmf_sid_etom_vocab.json", min_length=1
+    )
+    gate1_candidate_proposal_path: str = Field(
+        default="data/semantic_store/gate1_candidate_proposal.json", min_length=1
+    )
+    profiler_prompt_template_path: str = Field(
+        default="prompts/s1_cmdb_schema_profiler_prompt.md", min_length=1
+    )
     hitl_gate1_report_path: str = Field(
         default="reports/hitl_gate1_ontology_mapping_review.html", min_length=1
     )
@@ -476,7 +488,7 @@ class ColumnProfileEntry(BaseModel):
 
 
 class TableProfileEntry(BaseModel):
-    """Dynamic SQLite table profile entry across the 4 CMDB tables."""
+    """Dynamic SQLite table profile entry across the discovered relational tables."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -491,7 +503,7 @@ class TableProfileEntry(BaseModel):
 
 
 class Scd2CircuitVerification(BaseModel):
-    """Ground-truth verification of SCD Type 2, shadow enum & QUDT math for CIR-994821."""
+    """Ground-truth verification of SCD Type 2, shadow enum & QUDT math for a versioned circuit."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -506,6 +518,194 @@ class Scd2CircuitVerification(BaseModel):
     raw_bandwidth_val: float = Field(..., gt=0.0)
     raw_bandwidth_unit: str = Field(..., min_length=1)
     normalized_bandwidth_gbps: float = Field(..., gt=0.0)
+
+
+class IntrospectedColumnInfo(BaseModel):
+    """Raw column metadata dynamically discovered via `PRAGMA table_info` and SQL sampling."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    column_name: str = Field(..., min_length=1)
+    sql_type: str = Field(..., min_length=1)
+    not_null: bool
+    is_primary_key: bool
+    null_count: int = Field(..., ge=0)
+    distinct_count: int = Field(..., ge=0)
+    low_cardinality_values: List[str] = Field(default_factory=list)
+
+
+class IntrospectedForeignKeyInfo(BaseModel):
+    """Raw foreign key metadata dynamically discovered via `PRAGMA foreign_key_list`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    from_column: str = Field(..., min_length=1)
+    target_table: str = Field(..., min_length=1)
+    target_column: str = Field(..., min_length=1)
+
+
+class IntrospectedTableInfo(BaseModel):
+    """Raw relational table introspection dynamically extracted from SQLite."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    table_name: str = Field(..., min_length=1)
+    total_rows: int = Field(..., ge=0)
+    columns: List[IntrospectedColumnInfo] = Field(..., min_length=1)
+    foreign_keys: List[IntrospectedForeignKeyInfo] = Field(default_factory=list)
+    sample_rows: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class SqliteDatabaseIntrospection(BaseModel):
+    """Complete schema-independent introspection of a relational SQLite database."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    database_filename: str = Field(..., min_length=1)
+    total_tables: int = Field(..., ge=1)
+    total_rows: int = Field(..., ge=1)
+    tables: List[IntrospectedTableInfo] = Field(..., min_length=1)
+
+
+class ProposedEtomProcess(BaseModel):
+    """In-scope TM Forum eTOM (GB921) business process selected for the TBox."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    process_iri: str = Field(..., min_length=1)
+    process_id: str = Field(..., min_length=1)
+    label: str = Field(..., min_length=1)
+    comment: str = Field(..., min_length=1)
+    skos_alt_labels: List[str] = Field(..., min_length=2)
+
+
+class ProposedOntologyClass(BaseModel):
+    """Pruned TM Forum SID (GB922) / Telecom OWL class proposed for the TBox."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    class_iri: str = Field(..., min_length=1)
+    sub_class_of_iri: Optional[str] = None
+    label: str = Field(..., min_length=1)
+    comment: str = Field(..., min_length=1)
+    skos_alt_labels: List[str] = Field(..., min_length=2)
+    aligned_etom_process_iris: List[str] = Field(..., min_length=1)
+
+
+class ProposedOntologyProperty(BaseModel):
+    """OWL ObjectProperty or DatatypeProperty proposed for the TBox."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    property_iri: str = Field(..., min_length=1)
+    property_type: Literal["owl:ObjectProperty", "owl:DatatypeProperty"]
+    domain_iri: str = Field(..., min_length=1)
+    range_iri: str = Field(..., min_length=1)
+    qudt_applicable_unit_iri: Optional[str] = None
+    label: str = Field(..., min_length=1)
+    comment: str = Field(..., min_length=1)
+    skos_alt_labels: List[str] = Field(..., min_length=2)
+
+
+class R2rmlPredicateObjectMapSpec(BaseModel):
+    """Structured W3C R2RML `rr:predicateObjectMap` specification."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    predicate_iri: str = Field(..., min_length=1)
+    mapping_kind: Literal["column_literal", "iri_template"]
+    column_or_template: str = Field(..., min_length=1)
+    datatype_iri: Optional[str] = None
+
+
+class ProposedTableMapping(BaseModel):
+    """Structured table profiling & W3C R2RML mapping specification in the Gate 1 proposal."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    table_name: str = Field(..., min_length=1)
+    total_rows: int = Field(..., ge=0)
+    active_rows: int = Field(..., ge=0)
+    table_disposition: Literal["BOUND_VIRTUAL_GRAPH", "EXCLUDED_NOISE"]
+    target_tmf_classes: List[str] = Field(default_factory=list)
+    canonical_iri_templates: List[str] = Field(default_factory=list)
+    r2rml_triples_map_id: str = Field(..., min_length=1)
+    r2rml_label: Optional[str] = None
+    sql_query: Optional[str] = None
+    subject_iri_template: Optional[str] = None
+    subject_class_iri: Optional[str] = None
+    predicate_object_mappings: List[R2rmlPredicateObjectMapSpec] = Field(
+        default_factory=list
+    )
+    columns: List[ColumnProfileEntry] = Field(..., min_length=1)
+
+    def to_table_profile_entry(self) -> TableProfileEntry:
+        """Convert to `TableProfileEntry` for reporting and `SYS-01` compatibility."""
+        return TableProfileEntry(
+            table_name=self.table_name,
+            total_rows=self.total_rows,
+            active_rows=self.active_rows,
+            table_disposition=self.table_disposition,
+            target_tmf_classes=self.target_tmf_classes,
+            canonical_iri_templates=self.canonical_iri_templates,
+            r2rml_triples_map_id=self.r2rml_triples_map_id,
+            columns=self.columns,
+        )
+
+
+class ProposedShaclPropertyConstraint(BaseModel):
+    """Property constraint inside a proposed W3C SHACL NodeShape."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    path_iri: str = Field(..., min_length=1)
+    datatype_iri: Optional[str] = None
+    node_kind_iri: Optional[str] = None
+    min_count: Optional[int] = None
+    max_count: Optional[int] = None
+    min_inclusive: Optional[float] = None
+    max_inclusive: Optional[float] = None
+    allowed_values: List[str] = Field(default_factory=list)
+    message: str = Field(..., min_length=1)
+
+
+class ProposedShaclNodeShape(BaseModel):
+    """Structured W3C SHACL NodeShape specification compiled to `shapes/<filename>`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    output_filename: str = Field(..., min_length=1)
+    shape_iri: str = Field(..., min_length=1)
+    target_class_iri: str = Field(..., min_length=1)
+    label: str = Field(..., min_length=1)
+    comment: str = Field(..., min_length=1)
+    property_constraints: List[ProposedShaclPropertyConstraint] = Field(..., min_length=1)
+
+
+class CandidateOntologyAndMappingProposal(BaseModel):
+    """
+    Complete schema-independent HITL Gate 1 Candidate Proposal (`gate1_candidate_proposal.json`)
+    generated by the AI Schema Profiler from (1) Use Case Charter, (2) TMF SID/eTOM Vocabulary,
+    and (3) Dynamic SQLite Introspection.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    proposal_id: str = Field(..., min_length=1)
+    use_case_id: str = Field(..., min_length=1)
+    generated_at_utc: str = Field(..., min_length=1)
+    llm_model_used: str = Field(..., min_length=1)
+    ontology_iri: str = Field(default="urn:telco:graph:tbox:sid-etom", min_length=1)
+    virtual_graph_iri: str = Field(default="urn:telco:graph:virtual:ib", min_length=1)
+    ontology_label: str = Field(..., min_length=1)
+    ontology_comment: str = Field(..., min_length=1)
+    etom_processes: List[ProposedEtomProcess] = Field(..., min_length=2)
+    proposed_classes: List[ProposedOntologyClass] = Field(..., min_length=12)
+    proposed_properties: List[ProposedOntologyProperty] = Field(..., min_length=10)
+    table_mappings: List[ProposedTableMapping] = Field(..., min_length=1)
+    scd2_verification: Scd2CircuitVerification
+    shacl_shapes: List[ProposedShaclNodeShape] = Field(..., min_length=2)
+    architect_verification_questions: List[str] = Field(..., min_length=4)
 
 
 class EvaluatorOntologyCritique(BaseModel):
@@ -536,19 +736,22 @@ class Dt01aExecutionResult(BaseModel):
     gate1_mode: Literal["candidate", "approve"]
     gate1_status: Literal["CANDIDATE_PROPOSED", "LOCKED_APPROVED"]
     executed_at_utc: str = Field(..., min_length=1)
-    total_tables_inspected: int = Field(..., ge=4)
-    total_rows_inspected: int = Field(..., ge=104)
-    bound_tables_count: int = Field(..., ge=3)
+    total_tables_inspected: int = Field(..., ge=1)
+    total_rows_inspected: int = Field(..., ge=1)
+    bound_tables_count: int = Field(..., ge=1)
     excluded_noise_tables_count: int = Field(..., ge=1)
-    table_profiles: List[TableProfileEntry] = Field(..., min_length=4, max_length=4)
+    table_profiles: List[TableProfileEntry] = Field(..., min_length=1)
     scd2_verification: Scd2CircuitVerification
     evaluator_critique: EvaluatorOntologyCritique
-    tbox_path: Path
-    trig_dataset_path: Path
-    r2rml_path: Path
-    service_spec_shape_path: Path
-    trouble_ticket_shape_path: Path
+    candidate_proposal_path: Path
+    architect_verification_questions: List[str] = Field(..., min_length=4)
+    tbox_path: Optional[Path] = None
+    trig_dataset_path: Optional[Path] = None
+    r2rml_path: Optional[Path] = None
+    service_spec_shape_path: Optional[Path] = None
+    trouble_ticket_shape_path: Optional[Path] = None
     hitl_html_report_path: Path
     hitl_markdown_report_path: Path
     golden_ref_updated: bool
+
 

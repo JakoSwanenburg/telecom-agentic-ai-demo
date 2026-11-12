@@ -21,3 +21,11 @@ variable "environment" {
   default     = "dev"
 }
 
+variable "gcp_access_token" {
+  description = "Optional short-lived OAuth2 access token from gcloud auth print-access-token"
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+

@@ -59,7 +59,7 @@ def test_step1_config_loader_and_activity_03_lock() -> None:
     assert config.layer1_orchestrator.option_id == "1D"
     assert config.layer1_orchestrator.transport_mode in {"in_process", "sse"}
     assert config.layer1_orchestrator.sse_port == 8000
-    assert config.layer1_orchestrator.llm_model == "gemini-2.5-flash"
+    assert config.layer1_orchestrator.llm_model == "gemini-3.8-flash"
     assert (
         config.layer1_orchestrator.export_ai_studio_schema_path
         == "reports/ai_studio_tool_declarations.json"

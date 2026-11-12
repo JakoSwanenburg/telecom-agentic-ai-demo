@@ -34,10 +34,15 @@ Enterprise Reference Implementation demonstrating the **5-Layer Telecom Agentic 
 │   │   ├── excel/                       # Prong 2: Telco_Master_Product_SLA_Catalog_2026.xlsx
 │   │   ├── pdf/                         # Prong 3: Vendor_Optical_Hardware_Manual_v4.pdf & MSA PDF
 │   │   ├── sop/                         # Multi-SOP Runbook (.docx & .md)
+│   │   ├── uc001_use_case_charter.md    # Input 1: Natural-language Use Case Charter for UC-001
 │   │   └── STAGE0_ARTIFACT_MANIFEST.md
-│   ├── semantic_store/                  # Active Named Graph store (knowledge_graph.trig & tbox_sid_etom.ttl)
+│   ├── reference_standards/             # Input 2: Generic Telecom Terminology Reference
+│   │   └── tmf_sid_etom_vocab.json      # 35+ TMF SID (GB922) classes, eTOM (GB921) processes & QUDT units
+│   ├── semantic_store/                  # Active Named Graph store (gate1_candidate_proposal.json, tbox_sid_etom.ttl, knowledge_graph.trig)
 │   ├── golden_reference/                # Pre-verified fallback reference artifacts
 │   └── cqrs_state/                      # Inspectable CQRS runtime state (cqrs_runtime_state.json)
+├── prompts/                             # Externalized LLM system prompt templates (AGENTS.md Part 2.7)
+│   └── s1_cmdb_schema_profiler_prompt.md
 ├── mappings/                            # R2RML virtual SQL mappings & Excel RML rules
 ├── shapes/                              # Active pySHACL shape files (*.ttl)
 ├── skills/                              # Compiled Layer 2 Worker Agent skills & guardrails
@@ -104,7 +109,8 @@ All non-secret settings and relative paths are stored in [`config.yaml`](file://
 | `LOG_DIR` | `logging.log_dir` | `logs` | Relative directory for local rotating log files |
 | `STAGE0_RAW_DIR` | `paths.raw_sources_dir` | `data/raw_sources` | Relative output directory for Stage 0 raw sources |
 | `STAGE0_SEED` | `stage0.seed` | `42` | Deterministic random seed for Stage 0 data generation |
-| `AI_MODEL_NAME` | `ai.model_name` | `gemini-2.5-pro` | Configurable LLM model identifier |
+| `AI_MODEL_NAME` | `ai.model_name` | `gemini-3.8-flash` | Configurable LLM model identifier (Vertex AI `global` endpoint or `GEMINI_API_KEY`) |
+| `GEMINI_API_KEY` | *(Optional Auth Override)* | *(unset — uses Vertex AI)* | If set, uses Google AI Studio API key (`Option 1B`); otherwise uses Vertex AI (`Option 1A`) on `telecom-agentic-ai-demo` |
 | `LAYER1_TRANSPORT_MODE` | `layer1_orchestrator.transport_mode` | `in_process` | Layer 1 Northbound MCP transport mode (`in_process` or `sse`) |
 | `LAYER3_EXECUTION_MODE` | `layer3_nl2semantics.execution_mode` | `dual_comparison` | Layer 3 NL2Semantics mode (`dual_comparison`, `voicebox_hybrid`, `zero_shot_llm`) |
 | `CQRS_TELEMETRY_PRESET` | `cqrs_action_plane.active_telemetry_preset` | `branch_a_soft_degradation` | Active hardware telemetry preset (`branch_a_soft_degradation`, `branch_b_hard_fiber_cut`, `branch_c_maintenance_lock`) |
@@ -135,22 +141,34 @@ Outputs a rich console table and writes:
 - `reports/system_state_dashboard.html`
 - `reports/system_state_dashboard.md`
 
-### Execute Scenario `DT-01a` (Prong 1 SQL CMDB Profiler, TMF SID/eTOM TBox, R2RML & HITL Gate 1)
+### Execute Scenario `DT-01a` (Dynamic AI Schema Profiler, TMF SID/eTOM TBox, R2RML & Two-Phase HITL Gate 1)
 ```powershell
-# Run in candidate proposal mode (HITL Gate 1 = CANDIDATE_PROPOSED):
-.\.venv\Scripts\python.exe scripts\run_dt01a_cmdb_gate1.py --mode candidate
+# Phase 1 (DEFAULT — --mode candidate):
+# Dynamically introspects SQLite + Use Case Charter + TMF SID/eTOM Vocab via Gemini (gemini-3.8-flash),
+# writes gate1_candidate_proposal.json & hitl_gate1_ontology_mapping_review.html without locking TBox/R2RML,
+# and prints the HITL Gate 1 Architect Verification Questions:
+.\.venv\Scripts\python.exe scripts\run_dt01a_cmdb_gate1.py
 
-# Run with architect approval (HITL Gate 1 = LOCKED_APPROVED, default):
+# Phase 2 (--mode approve):
+# Compiles and locks tbox_sid_etom.ttl, knowledge_graph.trig, cmdb_r2rml.ttl, and shapes/*.ttl
+# from gate1_candidate_proposal.json and transitions SYS-01 to LOCKED_APPROVED / BOUND_ZERO_COPY:
 .\.venv\Scripts\python.exe scripts\run_dt01a_cmdb_gate1.py --mode approve
+
+# Interactive Two-Phase Mode (Phase 1 -> Console Prompt -> Phase 2):
+.\.venv\Scripts\python.exe scripts\run_dt01a_cmdb_gate1.py --interactive
 
 # Optional: Promote approved Step 2 artifacts into data/golden_reference/:
 .\.venv\Scripts\python.exe scripts\run_dt01a_cmdb_gate1.py --mode approve --update-golden-ref
 ```
 Generates:
-- `data/semantic_store/tbox_sid_etom.ttl` & `<urn:telco:graph:tbox:sid-etom>` in `data/semantic_store/knowledge_graph.trig` (`0` persisted triples in `<urn:telco:graph:virtual:ib>`)
-- `mappings/cmdb_r2rml.ttl`
-- `shapes/service_spec_shape.ttl` & `shapes/trouble_ticket_shape.ttl`
-- `reports/hitl_gate1_ontology_mapping_review.html` & `.md`
+- **Phase 1 (`--mode candidate`)**:
+  - `data/semantic_store/gate1_candidate_proposal.json`
+  - `reports/hitl_gate1_ontology_mapping_review.html` & `.md` (`CANDIDATE_PROPOSED`)
+- **Phase 2 (`--mode approve`)**:
+  - `data/semantic_store/tbox_sid_etom.ttl` & `<urn:telco:graph:tbox:sid-etom>` in `data/semantic_store/knowledge_graph.trig` (`0` persisted triples in `<urn:telco:graph:virtual:ib>`)
+  - `mappings/cmdb_r2rml.ttl`
+  - `shapes/service_spec_shape.ttl` & `shapes/trouble_ticket_shape.ttl`
+  - `reports/hitl_gate1_ontology_mapping_review.html` & `.md` (`LOCKED_APPROVED`)
 
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell

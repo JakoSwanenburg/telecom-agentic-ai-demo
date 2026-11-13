@@ -267,6 +267,9 @@ class CqrsActionPlaneSettings(BaseModel):
     state_file_path: str = Field(
         default="data/cqrs_state/cqrs_runtime_state.json", min_length=1
     )
+    ticket_journal_path: str = Field(
+        default="data/cqrs_state/tmf621_ticket_journal.json", min_length=1
+    )
     active_telemetry_preset: Literal[
         "branch_a_soft_degradation",
         "branch_b_hard_fiber_cut",
@@ -275,6 +278,53 @@ class CqrsActionPlaneSettings(BaseModel):
     rate_limit_max_tokens: int = Field(default=3, ge=1)
     rate_limit_window_seconds: int = Field(default=300, ge=1)
     mutex_ttl_seconds: int = Field(default=60, ge=1)
+    step8_verification_report_path: str = Field(
+        default="reports/step8_mcp_cqrs_verification_report.html", min_length=1
+    )
+
+
+class GnmiTelemetryServerSettings(BaseModel):
+    """Contract settings for `gnmi_telemetry_mcp`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    required_obo_scope: str = Field(default="telemetry:read", min_length=1)
+
+
+class Tmf640ActivationServerSettings(BaseModel):
+    """Contract settings for `tmf640_activation_mcp`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    required_obo_scope: str = Field(default="activation:write", min_length=1)
+
+
+class Tmf621TroubleTicketServerSettings(BaseModel):
+    """Contract settings for `tmf621_trouble_ticket_mcp`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    required_obo_scope: str = Field(default="ticket:write", min_length=1)
+    shacl_shape_path: str = Field(
+        default="shapes/trouble_ticket_shape.ttl", min_length=1
+    )
+
+
+class McpServersSettings(BaseModel):
+    """Per-tool security and schema validation contracts for Southbound MCP servers."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    require_obo_jwt: bool = False
+    gnmi_telemetry: GnmiTelemetryServerSettings = Field(
+        default_factory=GnmiTelemetryServerSettings
+    )
+    tmf640_activation: Tmf640ActivationServerSettings = Field(
+        default_factory=Tmf640ActivationServerSettings
+    )
+    tmf621_trouble_ticket: Tmf621TroubleTicketServerSettings = Field(
+        default_factory=Tmf621TroubleTicketServerSettings
+    )
 
 
 class AppConfig(BaseModel):
@@ -295,6 +345,7 @@ class AppConfig(BaseModel):
     layer4_compiler_federation: Layer4CompilerFederationSettings
     track_b_ingestion_and_er: TrackBIngestionAndErSettings
     cqrs_action_plane: CqrsActionPlaneSettings
+    mcp_servers: McpServersSettings = Field(default_factory=McpServersSettings)
 
 
 # ============================================================================
@@ -339,6 +390,24 @@ class MutexLockEntry(BaseModel):
     owner_subject: str = Field(..., min_length=1)
 
 
+class Tmf640ActivationRecord(BaseModel):
+    """Audit record for an executed TMF640 optical DDM bias recalibration."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    activation_id: str = Field(..., min_length=1)
+    executed_at_utc: str = Field(..., min_length=1)
+    circuit_id: str = Field(..., min_length=1)
+    olt_port_id: str = Field(..., min_length=1)
+    cpe_device_id: str = Field(..., min_length=1)
+    pre_rx_power_dbm: float
+    target_rx_dbm: float
+    post_rx_power_dbm: float
+    pre_laser_bias_ma: float
+    post_laser_bias_ma: float
+    reason: str = Field(..., min_length=1)
+
+
 class CqrsRuntimeState(BaseModel):
     """Inspectable JSON state backing the CQRS Singleton Check & Transactional Write servers."""
 
@@ -354,6 +423,13 @@ class CqrsRuntimeState(BaseModel):
     rate_limit_max_tokens: int = Field(..., ge=1)
     rate_limit_window_seconds: int = Field(..., ge=1)
     last_reset_utc: str = Field(..., min_length=1)
+    telemetry_probes_count: int = Field(default=0, ge=0)
+    last_telemetry_probe_utc: Optional[str] = None
+    tmf640_activations_count: int = Field(default=0, ge=0)
+    recalibration_executions: List[Tmf640ActivationRecord] = Field(default_factory=list)
+    circuit_recalibrated: Dict[str, bool] = Field(default_factory=dict)
+    tmf621_tickets_count: int = Field(default=0, ge=0)
+    tickets_created: int = Field(default=0, ge=0)
 
 
 # ============================================================================
@@ -1539,6 +1615,133 @@ class Dt02ExecutionResult(BaseModel):
     adverse_tests_passed: int = Field(..., ge=0)
     adverse_tests_total: int = Field(..., ge=0)
     architect_verification_questions: List[str] = Field(default_factory=list)
+
+
+# ============================================================================
+# Step 8 (IMP-010): Southbound Operational Telemetry & CQRS MCP Server Models
+# ============================================================================
+class OboAuthMetadata(BaseModel):
+    """OBO JWT verification metadata returned by southbound MCP servers."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    obo_jwt_present: bool
+    obo_jwt_verified: bool
+    obo_subject: Optional[str] = None
+    auth_mode: Literal["OBO_JWT_VERIFIED", "STANDALONE_MCP_BYPASS", "STANDALONE_RT05_BYPASS"]
+
+
+class GnmiOpticalTelemetryResponse(BaseModel):
+    """Validated response payload returned by `gnmi_telemetry_mcp.probe_optical_ddm_telemetry`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    circuit_id: str = Field(..., min_length=1)
+    olt_port_id: Optional[str] = None
+    telemetry_preset: Literal[
+        "branch_a_soft_degradation",
+        "branch_b_hard_fiber_cut",
+        "branch_c_maintenance_lock",
+    ]
+    probed_at_utc: str = Field(..., min_length=1)
+    rx_power_dbm: float
+    tx_power_dbm: float
+    packet_loss_pct: float = Field(..., ge=0.0, le=100.0)
+    jitter_ms: float = Field(..., ge=0.0)
+    ber: float = Field(..., ge=0.0)
+    laser_bias_ma: float = Field(..., ge=0.0)
+    temperature_c: float
+    los_alarm_active: bool = False
+    maintenance_lock: bool = False
+    active_crq_id: Optional[str] = None
+    uncached_live_probe: bool = True
+    post_recalibration_verified: bool = False
+    telemetry_probes_count: int = Field(..., ge=0)
+    auth: OboAuthMetadata
+
+
+class Tmf640ActivationResponse(BaseModel):
+    """Validated response payload returned by `tmf640_activation_mcp.recalibrate_optical_ddm_bias`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    executed: bool
+    status: Literal["EXECUTED", "REJECTED_SAFETY_INTERLOCK"]
+    reason_code: Optional[
+        Literal["LOS_CRITICAL_CUTOFF_ACTIVE", "MAINTENANCE_WINDOW_LOCK_ACTIVE"]
+    ] = None
+    explanation: str = Field(..., min_length=1)
+    circuit_id: str = Field(..., min_length=1)
+    olt_port_id: str = Field(..., min_length=1)
+    cpe_device_id: str = Field(..., min_length=1)
+    telemetry_preset: Literal[
+        "branch_a_soft_degradation",
+        "branch_b_hard_fiber_cut",
+        "branch_c_maintenance_lock",
+    ]
+    activation_record: Optional[Tmf640ActivationRecord] = None
+    tmf640_activations_count: int = Field(..., ge=0)
+    auth: OboAuthMetadata
+
+
+class Tmf621TicketRecord(BaseModel):
+    """Persisted TMF621 Trouble Ticket record stored in `tmf621_ticket_journal.json`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    ticket_id: str = Field(..., min_length=1)
+    ticket_uri: str = Field(..., min_length=1)
+    circuit_id: str = Field(..., min_length=1)
+    customer_id: str = Field(..., min_length=1)
+    affected_resource_id: str = Field(..., min_length=1)
+    severity: str = Field(..., min_length=1)
+    status: str = Field(..., min_length=1)
+    resolution_action: str = Field(..., min_length=1)
+    summary: str = Field(..., min_length=1)
+    external_ticket_id: Optional[str] = None
+    created_at_utc: str = Field(..., min_length=1)
+    updated_at_utc: str = Field(..., min_length=1)
+    shacl_conforms: bool
+
+
+class Tmf621TicketResponse(BaseModel):
+    """Validated response payload returned by `tmf621_trouble_ticket_mcp.create_or_update_trouble_ticket`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    persisted: bool
+    status: Literal["CREATED", "UPDATED", "REJECTED_SHACL_VIOLATION"]
+    shacl_conforms: bool
+    explanation: str = Field(..., min_length=1)
+    ticket: Optional[Tmf621TicketRecord] = None
+    tmf621_tickets_count: int = Field(..., ge=0)
+    auth: OboAuthMetadata
+
+
+class Step8VerificationCheck(BaseModel):
+    """Single check entry in the Step 8 MCP verification report."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    check_id: str = Field(..., min_length=1)
+    preset: str = Field(..., min_length=1)
+    server: str = Field(..., min_length=1)
+    passed: bool
+    detail: str = Field(..., min_length=1)
+
+
+class Step8VerificationSummary(BaseModel):
+    """Summary returned by `scripts/run_step8_mcp_servers_verification.py`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    generated_at_utc: str = Field(..., min_length=1)
+    total_checks: int = Field(..., ge=1)
+    passed_checks: int = Field(..., ge=0)
+    state_reset_at_end: bool
+    report_html_path: Path
+    report_markdown_path: Path
+    checks: List[Step8VerificationCheck] = Field(default_factory=list)
 
 
 

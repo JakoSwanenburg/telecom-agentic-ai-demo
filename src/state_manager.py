@@ -122,6 +122,9 @@ def reset_to_clean_slate(
         Path(config.layer4_compiler_federation.layer4_federation_proof_report_path).with_suffix(".md"),
         Path(config.layer3_nl2semantics.rt05_comparison_report_path),
         Path(config.layer3_nl2semantics.rt05_comparison_report_path).with_suffix(".md"),
+        Path(config.cqrs_action_plane.ticket_journal_path),
+        Path(config.cqrs_action_plane.step8_verification_report_path),
+        Path(config.cqrs_action_plane.step8_verification_report_path).with_suffix(".md"),
         Path(config.layer1_orchestrator.export_ai_studio_schema_path),
     ]
 

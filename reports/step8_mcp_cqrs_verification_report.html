@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Step 8 (IMP-010) Southbound MCP &amp; CQRS Verification</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; margin: 2rem; color: #111827; }
+    h1 { margin-bottom: 0.25rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #d1d5db; padding: 0.5rem 0.75rem; text-align: left; font-size: 0.92rem; }
+    th { background: #f3f4f6; }
+  </style>
+</head>
+<body>
+  <h1>Step 8 (IMP-010) Southbound MCP &amp; CQRS Verification Report</h1>
+  <p><strong>Generated At (UTC):</strong> <code>2026-11-13T13:33:17Z</code> |
+     <strong>Checks Passed:</strong> <code>11/11</code> |
+     <strong>CQRS State Reset:</strong> <code>True</code></p>
+  <table>
+    <thead>
+      <tr><th>Check ID</th><th>Preset</th><th>Server</th><th>Result</th><th>Detail</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>CHK-A1-GNMI-PRE</code></td><td><code>branch_a_soft_degradation</code></td><td><code>gnmi_telemetry_mcp</code></td><td><strong>PASS</strong></td><td>rx_dbm=-26.1, loss=0.45%, post_recal=False</td></tr>
+<tr><td><code>CHK-A2-TMF640-EXEC</code></td><td><code>branch_a_soft_degradation</code></td><td><code>tmf640_activation_mcp</code></td><td><strong>PASS</strong></td><td>status=EXECUTED, activations=1</td></tr>
+<tr><td><code>CHK-A3-GNMI-POST</code></td><td><code>branch_a_soft_degradation</code></td><td><code>gnmi_telemetry_mcp</code></td><td><strong>PASS</strong></td><td>rx_dbm=-21.4, loss=0.01%, post_recal=True</td></tr>
+<tr><td><code>CHK-A4-TMF621-VALID</code></td><td><code>branch_a_soft_degradation</code></td><td><code>tmf621_trouble_ticket_mcp</code></td><td><strong>PASS</strong></td><td>status=CREATED, shacl_conforms=True</td></tr>
+<tr><td><code>CHK-A5-TMF621-SHACL-REJECT</code></td><td><code>branch_a_soft_degradation</code></td><td><code>tmf621_trouble_ticket_mcp</code></td><td><strong>PASS</strong></td><td>status=REJECTED_SHACL_VIOLATION, persisted=False, shacl_conforms=False</td></tr>
+<tr><td><code>CHK-B1-GNMI-LOS</code></td><td><code>branch_b_hard_fiber_cut</code></td><td><code>gnmi_telemetry_mcp</code></td><td><strong>PASS</strong></td><td>rx_dbm=-38.5, loss=99.8%, los_alarm=True</td></tr>
+<tr><td><code>CHK-B2-TMF640-INTERLOCK</code></td><td><code>branch_b_hard_fiber_cut</code></td><td><code>tmf640_activation_mcp</code></td><td><strong>PASS</strong></td><td>status=REJECTED_SAFETY_INTERLOCK, reason_code=LOS_CRITICAL_CUTOFF_ACTIVE</td></tr>
+<tr><td><code>CHK-B3-TMF621-P1</code></td><td><code>branch_b_hard_fiber_cut</code></td><td><code>tmf621_trouble_ticket_mcp</code></td><td><strong>PASS</strong></td><td>status=CREATED, shacl_conforms=True</td></tr>
+<tr><td><code>CHK-C1-GNMI-LOCK</code></td><td><code>branch_c_maintenance_lock</code></td><td><code>gnmi_telemetry_mcp</code></td><td><strong>PASS</strong></td><td>maintenance_lock=True, crq=MAINT-CRQ-88210</td></tr>
+<tr><td><code>CHK-C2-TMF640-INTERLOCK</code></td><td><code>branch_c_maintenance_lock</code></td><td><code>tmf640_activation_mcp</code></td><td><strong>PASS</strong></td><td>status=REJECTED_SAFETY_INTERLOCK, reason_code=MAINTENANCE_WINDOW_LOCK_ACTIVE</td></tr>
+<tr><td><code>CHK-C3-TMF621-DEFERRED</code></td><td><code>branch_c_maintenance_lock</code></td><td><code>tmf621_trouble_ticket_mcp</code></td><td><strong>PASS</strong></td><td>status=CREATED, shacl_conforms=True</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

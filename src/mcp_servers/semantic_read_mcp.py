@@ -11,12 +11,12 @@ import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import jwt
 from mcp.server.mcpserver import MCPServer
 
 from src.config import get_workspace_root, load_config
 from src.layer3.nl2semantics_engine import run_layer3_nl2semantics
 from src.logger import setup_logger
+from src.mcp_servers.common import validate_obo_jwt
 from src.models import AppConfig
 
 mcp = MCPServer("semantic-read-mcp")
@@ -27,53 +27,12 @@ def _validate_obo_jwt(
     config: AppConfig,
 ) -> Dict[str, Any]:
     """Validate optional/mandatory OBO JWT token and required scope."""
-    required_scope = config.layer3_nl2semantics.required_obo_scope
-    require_jwt = config.layer3_nl2semantics.require_obo_jwt
-
-    if obo_jwt is None:
-        if require_jwt:
-            raise PermissionError("Missing mandatory OBO JWT token")
-        return {
-            "obo_jwt_present": False,
-            "obo_jwt_verified": False,
-            "obo_subject": None,
-            "auth_mode": "STANDALONE_RT05_BYPASS",
-        }
-
-    if not isinstance(obo_jwt, str) or not obo_jwt.strip():
-        raise PermissionError("Invalid OBO JWT token: empty token string.")
-
-    try:
-        payload = jwt.decode(
-            obo_jwt,
-            options={"verify_signature": False, "verify_exp": True},
-        )
-    except jwt.PyJWTError as exc:
-        raise PermissionError(f"Invalid or expired OBO JWT token: {exc}") from exc
-
-    sub = payload.get("sub")
-    if not isinstance(sub, str) or not sub.strip():
-        raise PermissionError("OBO JWT token missing mandatory 'sub' claim.")
-
-    raw_scopes = payload.get("scp", payload.get("scope", []))
-    if isinstance(raw_scopes, str):
-        scopes = set(raw_scopes.split())
-    elif isinstance(raw_scopes, list):
-        scopes = {str(s) for s in raw_scopes}
-    else:
-        scopes = set()
-
-    if required_scope not in scopes:
-        raise PermissionError(
-            f"OBO JWT token lacks required scope '{required_scope}' (found={sorted(scopes)})."
-        )
-
-    return {
-        "obo_jwt_present": True,
-        "obo_jwt_verified": True,
-        "obo_subject": sub,
-        "auth_mode": "OBO_JWT_VERIFIED",
-    }
+    return validate_obo_jwt(
+        obo_jwt=obo_jwt,
+        required_scope=config.layer3_nl2semantics.required_obo_scope,
+        require_jwt=config.layer3_nl2semantics.require_obo_jwt,
+        bypass_auth_mode="STANDALONE_RT05_BYPASS",
+    ).model_dump()
 
 
 def execute_query_knowledge_fabric(

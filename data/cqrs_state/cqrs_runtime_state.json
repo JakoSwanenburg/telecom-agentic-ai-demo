@@ -4,5 +4,12 @@
   "rate_limit_remaining_tokens": 3,
   "rate_limit_max_tokens": 3,
   "rate_limit_window_seconds": 300,
-  "last_reset_utc": "2026-11-12T16:50:31Z"
+  "last_reset_utc": "2026-11-13T13:33:17Z",
+  "telemetry_probes_count": 0,
+  "last_telemetry_probe_utc": null,
+  "tmf640_activations_count": 0,
+  "recalibration_executions": [],
+  "circuit_recalibrated": {},
+  "tmf621_tickets_count": 0,
+  "tickets_created": 0
 }

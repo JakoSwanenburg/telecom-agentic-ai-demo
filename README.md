@@ -240,6 +240,13 @@ Requires `DT-01a` (`LOCKED_APPROVED`) and a `COMPLETE` MCP catalog (fails fast w
 .\.venv\Scripts\python.exe scripts\run_dt02_sop_skill_compiler.py --mode approve
 ```
 
+### Execute Step 8 (Southbound Operational Telemetry & CQRS Write MCP Servers)
+Verifies `src/mcp_servers/gnmi_telemetry_mcp.py`, `src/mcp_servers/tmf640_activation_mcp.py`, and `src/mcp_servers/tmf621_trouble_ticket_mcp.py` across all 3 telemetry presets (`branch_a_soft_degradation`, `branch_b_hard_fiber_cut`, `branch_c_maintenance_lock`) plus negative `pySHACL` rejection against `shapes/trouble_ticket_shape.ttl`:
+```powershell
+.\.venv\Scripts\python.exe scripts\run_step8_mcp_servers_verification.py
+```
+Generates `reports/step8_mcp_cqrs_verification_report.html` (`.md`) and resets `data/cqrs_state/` back to clean `branch_a_soft_degradation` state unless `--keep-state` is passed.
+
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell
 .\.venv\Scripts\pytest.exe -v -W error::DeprecationWarning -W error::FutureWarning

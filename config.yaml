@@ -148,7 +148,19 @@ track_b_ingestion_and_er:
 cqrs_action_plane:
   option_id: "6A-Generic"
   state_file_path: "data/cqrs_state/cqrs_runtime_state.json"
+  ticket_journal_path: "data/cqrs_state/tmf621_ticket_journal.json"
   active_telemetry_preset: "branch_a_soft_degradation"
   rate_limit_max_tokens: 3
   rate_limit_window_seconds: 300
   mutex_ttl_seconds: 60
+  step8_verification_report_path: "reports/step8_mcp_cqrs_verification_report.html"
+
+mcp_servers:
+  require_obo_jwt: false
+  gnmi_telemetry:
+    required_obo_scope: "telemetry:read"
+  tmf640_activation:
+    required_obo_scope: "activation:write"
+  tmf621_trouble_ticket:
+    required_obo_scope: "ticket:write"
+    shacl_shape_path: "shapes/trouble_ticket_shape.ttl"

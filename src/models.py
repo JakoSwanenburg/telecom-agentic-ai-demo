@@ -187,6 +187,9 @@ class Layer4CompilerFederationSettings(BaseModel):
     sqlite_db_path: str = Field(
         default="data/raw_sources/sql/cmdb_installed_base.db", min_length=1
     )
+    layer4_federation_proof_report_path: str = Field(
+        default="reports/layer4_federation_proof_report.html", min_length=1
+    )
 
 
 class TrackBIngestionAndErSettings(BaseModel):
@@ -1094,6 +1097,124 @@ class Dt01cExecutionResult(BaseModel):
     gate2_markdown_report_path: Path
     architect_verification_questions: List[str] = Field(..., min_length=4)
     golden_ref_updated: bool = False
+
+
+# ============================================================================
+# Step 5 (Layer 4): R2RML-to-SQLite Pushdown Compiler & Federated Executor
+# ============================================================================
+class CompiledR2rmlQueryRecord(BaseModel):
+    """Audit record for a single R2RML TriplesMap compiled and executed against SQLite."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    triples_map_iri: str = Field(..., min_length=1)
+    target_class_iri: str = Field(..., min_length=1)
+    target_graph_iri: str = Field(..., min_length=1)
+    compiled_sql: str = Field(..., min_length=1)
+    rows_returned: int = Field(..., ge=0)
+    triples_projected: int = Field(..., ge=0)
+    execution_latency_ms: float = Field(..., ge=0.0)
+    unbound_columns_projected: List[str] = Field(default_factory=list)
+
+
+class Scd2AuditSummary(BaseModel):
+    """Dynamic SCD Type 2 and unmapped noise table audit derived from R2RML + SQLite."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sqlite_tables_discovered: List[str] = Field(default_factory=list)
+    mapped_tables: List[str] = Field(default_factory=list)
+    excluded_unmapped_tables: List[str] = Field(default_factory=list)
+    scd2_filtered_tables: List[str] = Field(default_factory=list)
+    total_rows_in_mapped_tables: int = Field(..., ge=0)
+    active_rows_retained: int = Field(..., ge=0)
+    historical_rows_suppressed: int = Field(..., ge=0)
+
+
+class VirtualGraphCompileResult(BaseModel):
+    """In-memory virtual graph projection result (never persisted to disk)."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    compiled_at_utc: str = Field(..., min_length=1)
+    virtual_graph_iri: str = Field(..., min_length=1)
+    disk_virtual_ib_triples_before: int = Field(..., ge=0)
+    in_memory_virtual_ib_triples: int = Field(..., ge=0)
+    query_records: List[CompiledR2rmlQueryRecord] = Field(..., min_length=1)
+    scd2_audit: Scd2AuditSummary
+
+
+class FederatedCircuitContext(BaseModel):
+    """Unified 6-graph semantic context returned for a single circuit assurance query."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    circuit_id: str = Field(..., min_length=1)
+    customer_id: str = Field(..., min_length=1)
+    customer_name: str = Field(..., min_length=1)
+    customer_subject_iri: str = Field(..., min_length=1)
+    bridged_legal_name: Optional[str] = None
+    bridged_er_confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    bridged_er_status: Optional[str] = None
+    product_sku: str = Field(..., min_length=1)
+    operational_status: str = Field(..., min_length=1)
+    bandwidth_gbps: float = Field(..., gt=0.0)
+    rfs_id: str = Field(..., min_length=1)
+    pe_router_hostname: str = Field(..., min_length=1)
+    olt_port_id: str = Field(..., min_length=1)
+    cpe_asset_id: str = Field(..., min_length=1)
+    cpe_model_sku: str = Field(..., min_length=1)
+    max_packet_loss_pct: float = Field(..., ge=0.0, le=100.0)
+    auto_remediation_allowed: bool
+    eligible_upgrade_sku: Optional[str] = None
+    catalog_lifecycle_status: Optional[str] = None
+    rx_optical_power_min_dbm: float
+    rx_los_cut_threshold_dbm: float
+    nominal_tx_dbm: Optional[float] = None
+    normal_rx_window: Optional[str] = None
+    sla_policy_label: Optional[str] = None
+    sla_credit_pct: Optional[float] = None
+    breach_duration_mins: Optional[int] = None
+    doc_lifecycle_statuses: List[str] = Field(default_factory=list)
+
+
+class ChallengeResolutionProofEntry(BaseModel):
+    """Single row of the Layer 4 5-Challenge Resolution Proof Table."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    challenge_number: int = Field(..., ge=1, le=5)
+    challenge_name: str = Field(..., min_length=1)
+    problem_statement: str = Field(..., min_length=1)
+    layer4_resolution_mechanism: str = Field(..., min_length=1)
+    live_verification_evidence: str = Field(..., min_length=1)
+    status: Literal["RESOLVED"] = "RESOLVED"
+
+
+class FiveChallengeProofTable(BaseModel):
+    """Complete 5-Challenge Resolution Proof Table for Stage 1/2 Layer 4."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    circuit_id: str = Field(..., min_length=1)
+    entries: List[ChallengeResolutionProofEntry] = Field(..., min_length=5, max_length=5)
+
+
+class Layer4FederationExecutionResult(BaseModel):
+    """Complete validated output returned by `query_federated_circuit_context`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    executed_at_utc: str = Field(..., min_length=1)
+    circuit_id: str = Field(..., min_length=1)
+    compile_result: VirtualGraphCompileResult
+    circuit_context: FederatedCircuitContext
+    proof_table: FiveChallengeProofTable
+    disk_virtual_ib_triples_after: int = Field(..., ge=0)
+    federated_graphs_queried: List[str] = Field(..., min_length=1)
+    report_html_path: Path
+    report_markdown_path: Path
+
 
 
 

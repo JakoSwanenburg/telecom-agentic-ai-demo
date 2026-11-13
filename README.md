@@ -199,6 +199,15 @@ Requires Step 2 (`DT-01a`) to be `LOCKED_APPROVED` (fails fast otherwise):
 .\.venv\Scripts\python.exe scripts\run_dt01c_pdf_bites_gate2.py --mode approve --update-golden-ref
 ```
 
+### Execute Step 5 (Layer 4 R2RML Pushdown Compiler & 6-Graph Federated Proof)
+Requires Track B artifacts (`DT-01a..c`) with `0` persisted triples in `<urn:telco:graph:virtual:ib>` on disk:
+```powershell
+.\.venv\Scripts\python.exe scripts\run_step5_layer4_federation.py --circuit-id CIR-994821
+```
+Generates:
+- Ephemeral in-memory `<urn:telco:graph:virtual:ib>` projection (`535` triples; `0` triples persisted to disk)
+- `reports/layer4_federation_proof_report.html` & `.md` (compiled SQL pushdown queries, unified 6-graph context, and 5-Challenge Resolution Proof Table)
+
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell
 .\.venv\Scripts\pytest.exe -v -W error::DeprecationWarning -W error::FutureWarning

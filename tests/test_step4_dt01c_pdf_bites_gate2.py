@@ -64,6 +64,22 @@ def _setup_isolated_workspace(tmp_path: Path, include_dt01b: bool = True) -> Pat
         dst = tmp_path / rel
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
+
+    # Ensure the isolated TriG starts in pre-Step-4 state (no promoted BITES/ER graphs)
+    trig_path = tmp_path / "data/semantic_store/knowledge_graph.trig"
+    if trig_path.exists():
+        ds = Dataset()
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning, module=r"^rdflib\.")
+            ds.parse(str(trig_path), format="trig")
+            for g_uri in [
+                URIRef("urn:telco:graph:bites:doc-hw-v4"),
+                URIRef("urn:telco:graph:bites:doc-msa-v1"),
+                GRAPH_META_DOC_LIFECYCLE,
+                GRAPH_BRIDGE_ER,
+            ]:
+                ds.remove((None, None, None, g_uri))
+            ds.serialize(destination=str(trig_path), format="trig")
     return tmp_path
 
 

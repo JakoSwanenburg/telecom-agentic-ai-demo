@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Step 5 Layer 4 Federation Proof (CIR-994821)</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
+    .card { background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 6px; margin-bottom: 18px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 13px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #e2e8f0; }
+    pre { margin: 0; white-space: pre-wrap; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h1>Step 5: Layer 4 R2RML Pushdown &amp; Federated Resolution Proof (CIR-994821)</h1>
+  <div class="card">
+    <p><strong>In-Memory virtual:ib Triples:</strong> 535 |
+       <strong>On-Disk virtual:ib Triples (Before / After):</strong> 0 / 0</p>
+    <p><strong>Customer:</strong> CUST-ENT-409 (A Corporate Enterprise) &harr;
+       A Corporate Enterprise B.V. (ER: 0.9235)</p>
+    <p><strong>Active Circuit:</strong> ETH-10G-GOLD | ACTIVE | 10.0 Gbps |
+       <strong>CPE:</strong> CPE-ASN-7741 (NOK-7210-SAS-Mxp)</p>
+    <p><strong>Catalog SLA &amp; Optical Cutoffs:</strong> maxPacketLossPct=0.1% |
+       autoRemediationAllowed=True |
+       rxOpticalPowerMinDbm=-25.0 dBm | rxLosCutThresholdDbm=-27.5 dBm</p>
+  </div>
+
+  <h2>1. Compiled R2RML-to-SQLite Pushdown Queries</h2>
+  <table>
+    <thead><tr><th>TriplesMap</th><th>Rows</th><th>Triples</th><th>Latency (ms)</th><th>Unbound Cols</th><th>Compiled SQL</th></tr></thead>
+    <tbody><tr><td><code>urn:telco:r2rml:cmdb:#CfsCircuitTriplesMap</code></td><td>25</td><td>175</td><td>0.071</td><td><code>-</code></td><td><pre>/* SCD2 Filter: Select active CFS rows (WHERE VALID_TO_TS IS NULL). Note: for circuit CIR-994821, expired row CFS_ROW_ID=2000 is filtered out and active row CFS_ROW_ID=2001 is retained */ SELECT CIRCUIT_ID, CUST_REF_ID, PROD_SPEC_CODE, INSTALL_DT, CASE OPER_STATUS_CD WHEN &#x27;10&#x27; THEN &#x27;ACTIVE&#x27; WHEN &#x27;20&#x27; THEN &#x27;MAINTENANCE&#x27; WHEN &#x27;99&#x27; THEN &#x27;DECOMMISSIONED&#x27; ELSE &#x27;UNKNOWN&#x27; END AS CANONICAL_OPER_STATUS, CASE BW_UNIT_CD WHEN &#x27;Gbps&#x27; THEN CAST(BW_VAL AS REAL) WHEN &#x27;Mbps&#x27; THEN CAST(BW_VAL AS REAL) / 1000.0 WHEN &#x27;Kbps&#x27; THEN CAST(BW_VAL AS REAL) / 1000000.0 ELSE CAST(BW_VAL AS REAL) END AS BANDWIDTH_GBPS FROM T_CMDB_CFS_CIRCUIT WHERE VALID_TO_TS IS NULL</pre></td></tr>
+<tr><td><code>urn:telco:r2rml:cmdb:#CustomerTriplesMap</code></td><td>15</td><td>72</td><td>0.053</td><td><code>-</code></td><td><pre>SELECT CUST_EXT_REF, LEGAL_NAME, SEGMENT_CD, ACCT_MGR_ID FROM T_OSS_CUST_PARTY</pre></td></tr>
+<tr><td><code>urn:telco:r2rml:cmdb:#RfsResourceTriplesMap</code></td><td>32</td><td>288</td><td>0.077</td><td><code>CPE_MODEL_SKU</code></td><td><pre>SELECT RFS_ID, PARENT_CFS_ID, PE_ROUTER_HOSTNAME, OLT_PORT_ID, CPE_ASSET_ID, CPE_MODEL_SKU, VLAN_TAG, FIBER_SPAN_ID FROM T_CMDB_RFS_RESOURCE</pre></td></tr></tbody>
+  </table>
+
+  <h2>2. 5-Challenge Resolution Proof Table</h2>
+  <table>
+    <thead><tr><th>#</th><th>Challenge</th><th>Problem</th><th>Layer 4 Resolution</th><th>Live Verification Evidence</th><th>Status</th></tr></thead>
+    <tbody><tr><td>1</td><td><strong>Zero-Copy Semantic Virtualization</strong></td><td>Live CMDB operational topology must remain authoritative in SQLite without duplicating installed-base rows onto RDF disk storage.</td><td>R2RML pushdown compiler executes SQL queries on demand and projects &lt;urn:telco:graph:virtual:ib&gt; strictly in memory.</td><td>In-memory virtual:ib triples=535 | Disk virtual:ib triples before=0, after=0.</td><td><strong>RESOLVED</strong></td></tr>
+<tr><td>2</td><td><strong>Unstable Universal Keys across Silos</strong></td><td>CMDB customer names, MSA legal names, product SKU IRIs, and hardware model SKUs use heterogeneous identifiers across SQL, Excel, and PDFs.</td><td>Approved ER bridge (&lt;urn:telco:graph:bridge:er&gt;) plus canonical SKU &amp; hardware key alignment inside Layer 4 federated SPARQL.</td><td>Bridged CUST-ENT-409 (&#x27;A Corporate Enterprise&#x27;) &lt;-&gt; &#x27;A Corporate Enterprise B.V.&#x27; (ER=0.9235); joined SKU &#x27;ETH-10G-GOLD&#x27; &amp; CPE &#x27;NOK-7210-SAS-Mxp&#x27;.</td><td><strong>RESOLVED</strong></td></tr>
+<tr><td>3</td><td><strong>SCD Type 2 Historical Contamination &amp; Exclusion</strong></td><td>CMDB contains superseded SCD2 circuit rows and unmapped billing noise tables that would corrupt active SLA/remediation decisions.</td><td>R2RML SQL pushdown enforces active-row filtering (VALID_TO_TS IS NULL) and omits unmapped noise tables.</td><td>Suppressed 7 historical row(s) across [&#x27;T_CMDB_CFS_CIRCUIT&#x27;]; excluded [&#x27;T_BILLING_AUDIT_NOISE&#x27;]; retained CIR-994821 -&gt; ETH-10G-GOLD (ACTIVE, 10.0 Gbps).</td><td><strong>RESOLVED</strong></td></tr>
+<tr><td>4</td><td><strong>Unstructured Dark Data Scope &amp; Lifecycle</strong></td><td>Hardware optical cutoffs and customer MSA SLA clauses live in unstructured PDFs requiring scope separation and active lifecycle governance.</td><td>Scoped BITES graphs separate GLOBAL_SCOPE hardware profiles (&lt;urn:telco:graph:bites:doc-hw-v4&gt;) from DOCUMENT_SCOPE MSAs (&lt;urn:telco:graph:bites:doc-msa-v1&gt;) and lifecycle metadata.</td><td>Optical Rx window min=-25.0 dBm, LOS cutoff=-27.5 dBm; Lifecycles=[&#x27;ACTIVE&#x27;].</td><td><strong>RESOLVED</strong></td></tr>
+<tr><td>5</td><td><strong>Deterministic Read-Only SPARQL &amp; Zero-Hallucination Guardrails</strong></td><td>Layer 4 must prevent mutation side effects and never fabricate missing contract/optical values.</td><td>SPARQL guard rejects INSERT/DELETE/DROP/CLEAR/LOAD; Pydantic v2 validates required vs. Optional graph-backed fields.</td><td>Read-only 6-graph SPARQL join succeeded for CIR-994821: maxPacketLossPct=0.1%, autoRemediationAllowed=True.</td><td><strong>RESOLVED</strong></td></tr></tbody>
+  </table>
+</body>
+</html>

@@ -118,6 +118,7 @@ layer4_compiler_federation:
   excel_rml_path: "mappings/excel_catalog_rml.yaml"
   shapes_dir: "shapes"
   sqlite_db_path: "data/raw_sources/sql/cmdb_installed_base.db"
+  layer4_federation_proof_report_path: "reports/layer4_federation_proof_report.html"
 
 track_b_ingestion_and_er:
   option_id: "5A-HITL"

@@ -1084,7 +1084,7 @@ def run_dt01a_cmdb_profiler(
 
     - Phase 1 (`mode="candidate"`, default):
       1. Dynamically introspects `sqlite_db_path` via `introspect_sqlite_database`.
-      2. Loads `use_case_charter_path` and `tmf_vocab_path`.
+      2. Loads `use_case_charter_path` and `tmf_sid_etom_vocab_path`.
       3. Invokes `generate_candidate_proposal_via_llm` (or `proposal_generator` when
          injected by unit tests) to synthesize `CandidateOntologyAndMappingProposal`.
       4. Saves `data/semantic_store/gate1_candidate_proposal.json`.
@@ -1111,7 +1111,9 @@ def run_dt01a_cmdb_profiler(
     charter_path = root_dir / Path(
         config.track_b_ingestion_and_er.use_case_charter_path
     )
-    vocab_path = root_dir / Path(config.track_b_ingestion_and_er.tmf_vocab_path)
+    vocab_path = root_dir / Path(
+        config.track_b_ingestion_and_er.tmf_sid_etom_vocab_path
+    )
     proposal_path = root_dir / Path(
         config.track_b_ingestion_and_er.gate1_candidate_proposal_path
     )
@@ -1131,7 +1133,9 @@ def run_dt01a_cmdb_profiler(
             config.track_b_ingestion_and_er.use_case_charter_path
         )
     if not vocab_path.exists():
-        vocab_path = real_root / Path(config.track_b_ingestion_and_er.tmf_vocab_path)
+        vocab_path = real_root / Path(
+            config.track_b_ingestion_and_er.tmf_sid_etom_vocab_path
+        )
 
     logger.info(
         "Starting Scenario DT-01a (mode=%s, update_golden_ref=%s) against %s",

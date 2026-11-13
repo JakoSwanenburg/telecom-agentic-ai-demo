@@ -197,7 +197,7 @@ class TrackBIngestionAndErSettings(BaseModel):
     use_case_charter_path: str = Field(
         default="data/raw_sources/uc001_use_case_charter.md", min_length=1
     )
-    tmf_vocab_path: str = Field(
+    tmf_sid_etom_vocab_path: str = Field(
         default="data/reference_standards/tmf_sid_etom_vocab.json", min_length=1
     )
     gate1_candidate_proposal_path: str = Field(

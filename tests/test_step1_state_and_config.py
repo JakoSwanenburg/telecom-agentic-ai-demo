@@ -99,6 +99,14 @@ def test_step1_config_loader_and_activity_03_lock() -> None:
     # 6. Track B Ingestion & ER (Option 5A-HITL)
     assert config.track_b_ingestion_and_er.option_id == "5A-HITL"
     assert (
+        config.track_b_ingestion_and_er.use_case_charter_path
+        == "data/raw_sources/uc001_use_case_charter.md"
+    )
+    assert (
+        config.track_b_ingestion_and_er.tmf_sid_etom_vocab_path
+        == "data/reference_standards/tmf_sid_etom_vocab.json"
+    )
+    assert (
         config.track_b_ingestion_and_er.hitl_gate1_report_path
         == "reports/hitl_gate1_ontology_mapping_review.html"
     )

@@ -132,7 +132,9 @@ def test_reusable_knowledge_inputs_and_dynamic_sqlite_introspection() -> None:
     assert "1.4.5" in charter_text
 
     # 2. Input 2: Generic TMF SID / eTOM / QUDT reference vocabulary JSON
-    vocab_path = root / Path(config.track_b_ingestion_and_er.tmf_vocab_path)
+    vocab_path = root / Path(
+        config.track_b_ingestion_and_er.tmf_sid_etom_vocab_path
+    )
     assert vocab_path.exists()
     vocab_data = json.loads(vocab_path.read_text(encoding="utf-8"))
     sid_classes = vocab_data.get("sid_classes", [])
@@ -325,7 +327,9 @@ def test_two_phase_hitl_gate1_candidate_then_approve_and_sys01_transitions(
     assert (
         tmp_path / Path(config.track_b_ingestion_and_er.use_case_charter_path)
     ).exists()
-    assert (tmp_path / Path(config.track_b_ingestion_and_er.tmf_vocab_path)).exists()
+    assert (
+        tmp_path / Path(config.track_b_ingestion_and_er.tmf_sid_etom_vocab_path)
+    ).exists()
     assert (tmp_path / Path("data/golden_reference/tbox_sid_etom.ttl")).exists()
 
     sys01_after_wipe = inspect_system_state(

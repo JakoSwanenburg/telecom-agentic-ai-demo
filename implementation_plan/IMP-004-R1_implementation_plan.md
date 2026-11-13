@@ -38,7 +38,7 @@ Refine Step 2 (`DT-01a`) to enforce **100% Use-Case & Database-Schema Independen
 2. **Two Reusable, Schema-Independent Knowledge Inputs (`config.yaml`)**:
    - Extend `track_b_ingestion_and_er` in `config.yaml` and `TrackBIngestionAndErSettings` in `src/models.py` with:
      - `use_case_charter_path: "data/raw_sources/uc001_use_case_charter.md"`
-     - `tmf_Connect_vocab_path: "data/reference_standards/tmf_sid_etom_vocab.json"`
+     - `tmf_sid_etom_vocab_path: "data/reference_standards/tmf_sid_etom_vocab.json"`
      - `gate1_candidate_proposal_path: "data/semantic_store/gate1_candidate_proposal.json"`
      - `profiler_prompt_template_path: "prompts/s1_cmdb_schema_profiler_prompt.md"`
    - **`DT-00` Preservation (`src/state_manager.py`):** Preserve `data/raw_sources/uc001_use_case_charter.md` and `data/reference_standards/tmf_sid_etom_vocab.json` across clean-slate wipes while deleting `data/semantic_store/gate1_candidate_proposal.json`.

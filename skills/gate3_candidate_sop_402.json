@@ -1,0 +1,238 @@
+{
+  "generated_at_utc": "2026-11-13T12:22:25Z",
+  "model_used": "gemini-3.8-flash",
+  "status": "VERIFIED_LOCKED",
+  "proposal": {
+    "procedure_assessments": [
+      {
+        "section_heading": "Section 1: Purpose, General NOC Safety & Change Control Governance",
+        "procedure_id": "GOV-NOC-001",
+        "relevance_score": 0.6,
+        "disposition": "GOVERNANCE_CONTEXT",
+        "rationale": "Provides overarching NOC safety invariants, OBO token authentication requirements, and CI/CD SOP slicing rules across all assurance domains."
+      },
+      {
+        "section_heading": "Section 2 (SOP-ASSUR-101): BGP Peering Session Flap Triage & Dampening",
+        "procedure_id": "SOP-ASSUR-101",
+        "relevance_score": 0.05,
+        "disposition": "OUT_OF_SCOPE_PRUNED",
+        "rationale": "IP Core routing and eBGP route flap dampening procedure; out of scope for L2 enterprise optical access assurance."
+      },
+      {
+        "section_heading": "Section 3 (SOP-ASSUR-205): 5G RAN gNodeB Sector Outage & Tilt Reset",
+        "procedure_id": "SOP-ASSUR-205",
+        "relevance_score": 0.05,
+        "disposition": "OUT_OF_SCOPE_PRUNED",
+        "rationale": "Mobile 5G RAN antenna electrical tilt and fronthaul procedure; unrelated to fixed enterprise Carrier Ethernet L2 circuits."
+      },
+      {
+        "section_heading": "Section 4 (SOP-ASSUR-310): Residential GPON ONT Optical Dying-Gasp Handling",
+        "procedure_id": "SOP-ASSUR-310",
+        "relevance_score": 0.15,
+        "disposition": "OUT_OF_SCOPE_PRUNED",
+        "rationale": "Consumer mass GPON ONT power failure handling; incompatible with SLA-governed dedicated B2B enterprise fiber circuits."
+      },
+      {
+        "section_heading": "Section 5 (SOP-ASSUR-402 \u2014 TARGET): Enterprise L2 Fiber Packet-Loss Triage & Optical DDM Recalibration",
+        "procedure_id": "SOP-ASSUR-402",
+        "relevance_score": 1.0,
+        "disposition": "IN_SCOPE_SELECTED",
+        "rationale": "Directly implements UC-001 enterprise L2 circuit packet-loss triage, optical DDM telemetry diagnosis, and governed remediation."
+      },
+      {
+        "section_heading": "Section 6 (SOP-ASSUR-509): Core DWDM Erbium-Doped Fiber Amplifier (EDFA) Pump Laser Replacement",
+        "procedure_id": "SOP-ASSUR-509",
+        "relevance_score": 0.1,
+        "disposition": "OUT_OF_SCOPE_PRUNED",
+        "rationale": "Core DWDM optical line amplifier maintenance procedure; irrelevant to access/aggregation L2 Carrier Ethernet demarcation."
+      }
+    ],
+    "skill_spec": {
+      "uc_id": "UC-001",
+      "sop_id": "SOP-ASSUR-402",
+      "skill_id": "telco.assurance.l2_fiber_degradation",
+      "etom_process_ids": [
+        "1.3.7",
+        "1.4.5"
+      ],
+      "bound_mcp_primitives": [
+        "mcp://semantic-read/query_knowledge_fabric",
+        "cqrs://singleton-check/probe_resource_state",
+        "cqrs://transactional-write/execute_governed_mutation",
+        "cqrs://transactional-write/commit_validated_graph_triples"
+      ],
+      "workflow_steps": [
+        {
+          "step_number": 1,
+          "step_id": "STEP_1_SEMANTIC_CONTEXT",
+          "description": "Multi-pronged federated read querying CMDB topology, SLA entitlements, and hardware calibration envelope.",
+          "mcp_primitive_uri": "mcp://semantic-read/query_knowledge_fabric",
+          "protocol": "SPARQL_1_1_FEDERATED_READ",
+          "guardrail_ids": []
+        },
+        {
+          "step_number": 2,
+          "step_id": "STEP_2_SINGLETON_OPTICAL_PROBE",
+          "description": "Un-cached live gNMI optical DDM telemetry probe and Redis port mutex lock acquisition.",
+          "mcp_primitive_uri": "cqrs://singleton-check/probe_resource_state",
+          "protocol": "gNMI_OPTICAL_TELEMETRY",
+          "guardrail_ids": [
+            "GR-PRE-01"
+          ]
+        },
+        {
+          "step_number": 3,
+          "step_id": "STEP_3_GUARDRAIL_BRANCH_EXECUTION",
+          "description": "Deterministic branch evaluation: execute autonomous TMF640 DDM recalibration or trigger TMF621 field dispatch.",
+          "mcp_primitive_uri": "cqrs://transactional-write/execute_governed_mutation",
+          "protocol": "TMF640_SERVICE_ACTIVATION",
+          "guardrail_ids": [
+            "GR-INV-01",
+            "GR-INV-02"
+          ]
+        },
+        {
+          "step_number": 4,
+          "step_id": "STEP_4_POST_VERIFICATION_COMMIT",
+          "description": "Post-recalibration telemetry verification and pySHACL-validated graph resolution commit.",
+          "mcp_primitive_uri": "cqrs://transactional-write/commit_validated_graph_triples",
+          "protocol": "SHACL_VALIDATED_RDF_COMMIT",
+          "guardrail_ids": [
+            "GR-POST-01"
+          ]
+        }
+      ],
+      "branch_routing": [
+        {
+          "branch_id": "BRANCH_A_SOFT_OPTICAL_DEGRADATION",
+          "condition_summary": "reported_packet_loss_pct >= 0.5 AND -27.5 <= live_rx_dbm <= -25.0 AND maintenance_lock == false",
+          "allowed_mcp_primitive_uri": "cqrs://transactional-write/execute_governed_mutation",
+          "allowed_protocol": "TMF640_SERVICE_ACTIVATION",
+          "outcome_status": "RECALIBRATION_COMPLETED"
+        },
+        {
+          "branch_id": "BRANCH_B_HARD_FIBER_CUT",
+          "condition_summary": "reported_packet_loss_pct >= 0.5 AND live_rx_dbm < -27.5",
+          "allowed_mcp_primitive_uri": "cqrs://transactional-write/execute_governed_mutation",
+          "allowed_protocol": "TMF621_TROUBLE_TICKET",
+          "outcome_status": "FIELD_DISPATCH_TRIGGERED"
+        },
+        {
+          "branch_id": "BRANCH_C_MAINTENANCE_OR_NORMAL",
+          "condition_summary": "reported_packet_loss_pct < 0.5 OR maintenance_lock == true OR live_rx_dbm > -25.0",
+          "allowed_mcp_primitive_uri": "mcp://semantic-read/query_knowledge_fabric",
+          "allowed_protocol": null,
+          "outcome_status": "MUTATION_SUPPRESSED_NO_ACTION"
+        }
+      ]
+    },
+    "guardrails_spec": {
+      "uc_id": "UC-001",
+      "sop_id": "SOP-ASSUR-402",
+      "rules": [
+        {
+          "guardrail_id": "GR-PRE-01",
+          "phase": "PRE_CONDITION",
+          "description": "Enforces live un-cached gNMI telemetry probing before any southbound write tool execution.",
+          "parameter": "gnmi_uncached_probed",
+          "operator": "==",
+          "threshold_value": true,
+          "blocking_action": "ABORT_MUTATION_MISSING_LIVE_TELEMETRY",
+          "target_tool": "TMF640_SERVICE_ACTIVATION"
+        },
+        {
+          "guardrail_id": "GR-INV-01",
+          "phase": "EXECUTION_INVARIANT",
+          "description": "Blocks remote DDM recalibration when optical Rx power is below the hardware critical LOS cutoff (-27.5 dBm).",
+          "parameter": "rx_power_dbm",
+          "operator": ">=",
+          "threshold_value": -27.5,
+          "blocking_action": "BLOCK_RECALIBRATION_TRIGGER_FIELD_DISPATCH",
+          "target_tool": "TMF640_SERVICE_ACTIVATION"
+        },
+        {
+          "guardrail_id": "GR-INV-02",
+          "phase": "EXECUTION_INVARIANT",
+          "description": "Blocks remote southbound state mutations during active customer maintenance freeze windows.",
+          "parameter": "maintenance_lock",
+          "operator": "==",
+          "threshold_value": false,
+          "blocking_action": "BLOCK_MUTATION_ACTIVE_MAINTENANCE_FREEZE",
+          "target_tool": "TMF640_SERVICE_ACTIVATION"
+        },
+        {
+          "guardrail_id": "GR-POST-01",
+          "phase": "POST_CONDITION",
+          "description": "Enforces post-recalibration gNMI optical telemetry re-probing prior to closing incident and committing resolution triples.",
+          "parameter": "post_check_required",
+          "operator": "==",
+          "threshold_value": true,
+          "blocking_action": "ROLLBACK_AND_ESCALATE_UNVERIFIED_MUTATION",
+          "target_tool": "TMF640_SERVICE_ACTIVATION"
+        }
+      ]
+    },
+    "architect_verification_questions": [
+      "Does the pruning of distractor runbooks (SOP-ASSUR-101, 205, 310, 509) correctly isolate SOP-ASSUR-402 as the sole in-scope operational procedure for UC-001?",
+      "Does the compiled 4-step state machine correctly bind read-plane SPARQL federation and write-plane CQRS primitives strictly adhering to Option 2.1D-Catalog?",
+      "Are the machine-enforceable guardrail threshold parameters (-27.5 dBm LOS cutoff, maintenance lock, and mandatory pre/post checks) properly configured for vendor hardware model NOK-7210-SAS-Mxp?",
+      "Do the specified guardrail invariants provide deterministic 3/3 adverse scenario interception proof against cached telemetry, severe physical fiber breaks, and active maintenance windows?"
+    ]
+  },
+  "adverse_suite": {
+    "executed_at_utc": "2026-11-13T12:36:52Z",
+    "total_tests": 3,
+    "passed_tests": 3,
+    "all_passed": true,
+    "cases": [
+      {
+        "test_id": "ADV-01",
+        "test_name": "Critical LOS Hard Fiber Cut Bypass Attempt",
+        "target_tool": "TMF640_SERVICE_ACTIVATION",
+        "payload": {
+          "rx_power_dbm": -31.0,
+          "maintenance_lock": false,
+          "gnmi_uncached_probed": true,
+          "post_check_required": true
+        },
+        "expected_blocking_guardrail_id": "GR-INV-01",
+        "actual_blocked": true,
+        "actual_blocking_guardrail_id": "GR-INV-01",
+        "reason": "Blocked by GR-INV-01 (EXECUTION_INVARIANT): expected rx_power_dbm >= -27.5, got -31.0. Action: BLOCK_RECALIBRATION_TRIGGER_FIELD_DISPATCH",
+        "passed": true
+      },
+      {
+        "test_id": "ADV-02",
+        "test_name": "Active Maintenance Window Lock Bypass Attempt",
+        "target_tool": "TMF640_SERVICE_ACTIVATION",
+        "payload": {
+          "rx_power_dbm": -26.1,
+          "maintenance_lock": true,
+          "gnmi_uncached_probed": true,
+          "post_check_required": true
+        },
+        "expected_blocking_guardrail_id": "GR-INV-02",
+        "actual_blocked": true,
+        "actual_blocking_guardrail_id": "GR-INV-02",
+        "reason": "Blocked by GR-INV-02 (EXECUTION_INVARIANT): expected maintenance_lock == False, got True. Action: BLOCK_MUTATION_ACTIVE_MAINTENANCE_FREEZE",
+        "passed": true
+      },
+      {
+        "test_id": "ADV-03",
+        "test_name": "Stale / Un-Probed Telemetry Cache Bypass Attempt",
+        "target_tool": "TMF640_SERVICE_ACTIVATION",
+        "payload": {
+          "rx_power_dbm": -26.1,
+          "maintenance_lock": false,
+          "gnmi_uncached_probed": false,
+          "post_check_required": true
+        },
+        "expected_blocking_guardrail_id": "GR-PRE-01",
+        "actual_blocked": true,
+        "actual_blocking_guardrail_id": "GR-PRE-01",
+        "reason": "Blocked by GR-PRE-01 (PRE_CONDITION): expected gnmi_uncached_probed == True, got False. Action: ABORT_MUTATION_MISSING_LIVE_TELEMETRY",
+        "passed": true
+      }
+    ]
+  }
+}

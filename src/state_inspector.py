@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import html
+import json
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -390,29 +391,37 @@ def _inspect_element_5_mcp_catalog(
 def _inspect_element_6_worker_skill(
     config: AppConfig, root_dir: Path
 ) -> InspectedElementStatus:
-    """Inspect Element 6: Layer 2 Worker Agent & Skill (`REMOVED` | `GAP_HALTED` | `DEPLOYED_MCP_READY`)."""
+    """Inspect Element 6: Layer 2 Worker Agent & Skill (`EMPTY` | `GAP_HALTED` | `CANDIDATE_COMPILED (Awaiting HITL Gate 3)` | `VERIFIED_LOCKED`)."""
     skill_path = root_dir / Path(config.layer2_worker_and_sop.active_skill_path)
     guardrails_path = root_dir / Path(config.layer2_worker_and_sop.active_guardrails_path)
+    candidate_path = root_dir / Path(
+        config.layer2_worker_and_sop.gate3_candidate_proposal_path
+    )
     gap_spec_path = root_dir / Path(config.layer2_worker_and_sop.missing_primitive_spec_path)
 
     if skill_path.exists() and guardrails_path.exists():
-        state_count = 0
+        state_count = 4
+        guardrail_count = 4
         try:
             parsed_skill = yaml.safe_load(skill_path.read_text(encoding="utf-8"))
-            if isinstance(parsed_skill, dict) and isinstance(
-                parsed_skill.get("workflow_states"), dict
-            ):
-                state_count = len(parsed_skill["workflow_states"])
+            if isinstance(parsed_skill, dict):
+                if isinstance(parsed_skill.get("workflow_steps"), list):
+                    state_count = len(parsed_skill["workflow_steps"])
+                elif isinstance(parsed_skill.get("workflow_states"), dict):
+                    state_count = len(parsed_skill["workflow_states"])
+            parsed_gr = json.loads(guardrails_path.read_text(encoding="utf-8"))
+            if isinstance(parsed_gr, dict) and isinstance(parsed_gr.get("rules"), list):
+                guardrail_count = len(parsed_gr["rules"])
         except Exception:
-            state_count = 4
+            pass
         return InspectedElementStatus(
             element_number=6,
             element_name="6. Layer 2 Worker Agent & Skill",
             underlying_artifact=config.layer2_worker_and_sop.active_skill_path,
-            state="DEPLOYED_MCP_READY",
+            state="VERIFIED_LOCKED",
             metrics_summary=(
-                f"Compiled states: {state_count} | Guardrails: GR-PRE-01, GR-INV-01, GR-INV-02 | "
-                "Northbound MCP Tool: diagnose_l2_fiber_circuit (READY)"
+                f"Compiled steps: {state_count} | Active guardrails: {guardrail_count} | "
+                "DT-02b Adverse Proof: 3/3 PASSED"
             ),
         )
 
@@ -423,8 +432,33 @@ def _inspect_element_6_worker_skill(
             underlying_artifact=config.layer2_worker_and_sop.missing_primitive_spec_path,
             state="GAP_HALTED",
             metrics_summary=(
-                "Promotion halted: Missing Branch B TMF621_TROUBLE_TICKET primitive | "
-                "Emitted: reports/missing_primitive_spec.json"
+                "Promotion halted: MCP Catalog PARTIAL_GAP | "
+                f"Emitted: {config.layer2_worker_and_sop.missing_primitive_spec_path}"
+            ),
+        )
+
+    if candidate_path.exists():
+        cand_guardrails = 0
+        adv_passed = 0
+        adv_total = 0
+        try:
+            raw_cand = json.loads(candidate_path.read_text(encoding="utf-8"))
+            cand_guardrails = len(
+                raw_cand.get("proposal", {}).get("guardrails_spec", {}).get("rules", [])
+            )
+            adv = raw_cand.get("adverse_suite", {})
+            adv_passed = int(adv.get("passed_tests", 0))
+            adv_total = int(adv.get("total_tests", 0))
+        except Exception:
+            pass
+        return InspectedElementStatus(
+            element_number=6,
+            element_name="6. Layer 2 Worker Agent & Skill",
+            underlying_artifact=config.layer2_worker_and_sop.gate3_candidate_proposal_path,
+            state="CANDIDATE_COMPILED (Awaiting HITL Gate 3)",
+            metrics_summary=(
+                f"Candidate guardrails: {cand_guardrails} | "
+                f"DT-02b Adverse Pre-Check: {adv_passed}/{adv_total} PASSED | HITL Gate 3: PENDING"
             ),
         )
 
@@ -432,9 +466,9 @@ def _inspect_element_6_worker_skill(
         element_number=6,
         element_name="6. Layer 2 Worker Agent & Skill",
         underlying_artifact=config.layer2_worker_and_sop.active_skill_path,
-        state="REMOVED",
+        state="EMPTY",
         metrics_summary=(
-            "Compiled states: 0 | Active guardrails: 0 | "
+            "Compiled steps: 0 | Active guardrails: 0 | "
             "Northbound MCP Tool: NOT_DEPLOYED"
         ),
     )
@@ -444,11 +478,21 @@ def _inspect_element_7_runtime_settings(
     config: AppConfig, root_dir: Path
 ) -> InspectedElementStatus:
     """Inspect Element 7: Layer 3 & CQRS Runtime Settings (`ACTIVE_PRESET`)."""
+    import yaml
+
     cqrs_state = load_cqrs_state(config, root_dir)
     l3_mode = config.layer3_nl2semantics.execution_mode
     preset = cqrs_state.active_telemetry_preset
     lock_count = len(cqrs_state.active_mutex_locks)
     tokens_str = f"{cqrs_state.rate_limit_remaining_tokens}/{cqrs_state.rate_limit_max_tokens}"
+
+    tmpl_path = root_dir / config.layer3_nl2semantics.stored_sparql_templates_path
+    if tmpl_path.exists():
+        raw_tmpl = yaml.safe_load(tmpl_path.read_text(encoding="utf-8")) or {}
+        tmpl_count = len(raw_tmpl.get("templates", [])) if isinstance(raw_tmpl, dict) else 0
+        templates_str = f"{tmpl_count} compiled"
+    else:
+        templates_str = "0 (EMPTY)"
 
     return InspectedElementStatus(
         element_number=7,
@@ -458,8 +502,9 @@ def _inspect_element_7_runtime_settings(
         ),
         state="ACTIVE_PRESET",
         metrics_summary=(
-            f"Layer 3 Mode: {l3_mode} | Telemetry Preset: {preset} | "
-            f"Active Mutex Locks: {lock_count} | Token Bucket: {tokens_str}"
+            f"Layer 3 Mode: {l3_mode} | Templates: {templates_str} | "
+            f"Telemetry Preset: {preset} | Active Mutex Locks: {lock_count} | "
+            f"Token Bucket: {tokens_str}"
         ),
     )
 
@@ -478,6 +523,7 @@ def _badge_color_for_state(state: str) -> Tuple[str, str]:
         "PROMOTED",
         "COMPLETE",
         "DEPLOYED_MCP_READY",
+        "VERIFIED_LOCKED",
         "ACTIVE_PRESET",
     }:
         return "green", "#059669"

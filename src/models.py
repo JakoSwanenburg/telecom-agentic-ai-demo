@@ -153,6 +153,12 @@ class Layer2WorkerAndSopSettings(BaseModel):
     runtime_option_id: str = Field(default="2.2A", min_length=1)
     active_skill_path: str = Field(default="skills/skill_sop_402.yaml", min_length=1)
     active_guardrails_path: str = Field(default="skills/guardrails_sop_402.json", min_length=1)
+    gate3_candidate_proposal_path: str = Field(
+        default="skills/gate3_candidate_sop_402.json", min_length=1
+    )
+    sop_compiler_prompt_template_path: str = Field(
+        default="prompts/track_a_sop_compiler_prompt.md", min_length=1
+    )
     missing_primitive_spec_path: str = Field(
         default="reports/missing_primitive_spec.json", min_length=1
     )
@@ -1355,6 +1361,184 @@ class TemplateCompileResult(BaseModel):
     ast_passed_count: int = Field(..., ge=0)
     layer4_verified_circuit_id: str = Field(..., min_length=1)
     layer4_verified_rows: int = Field(..., ge=1)
+
+
+# =============================================================================
+# Step 7 (Track A — DT-02a & DT-02b): SOP-to-Skill Compiler & Adverse Harness
+# =============================================================================
+
+
+class SopProcedureAssessment(BaseModel):
+    """Relevance assessment of a single SOP runbook section against UC-001."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    section_heading: str = Field(..., min_length=1)
+    procedure_id: str = Field(..., min_length=1)
+    relevance_score: float = Field(..., ge=0.0, le=1.0)
+    disposition: Literal["IN_SCOPE_SELECTED", "OUT_OF_SCOPE_PRUNED", "GOVERNANCE_CONTEXT"]
+    rationale: str = Field(..., min_length=1)
+
+
+class SkillWorkflowStep(BaseModel):
+    """Single deterministic state machine step in the compiled Layer 2 skill."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    step_number: int = Field(..., ge=1)
+    step_id: str = Field(..., min_length=1)
+    description: str = Field(..., min_length=1)
+    mcp_primitive_uri: str = Field(..., min_length=1)
+    protocol: Optional[str] = None
+    guardrail_ids: List[str] = Field(default_factory=list)
+
+
+class SkillBranchRule(BaseModel):
+    """Deterministic branch routing rule (Branches A, B, C)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    branch_id: str = Field(..., min_length=1)
+    condition_summary: str = Field(..., min_length=1)
+    allowed_mcp_primitive_uri: str = Field(..., min_length=1)
+    allowed_protocol: Optional[str] = None
+    outcome_status: str = Field(..., min_length=1)
+
+
+class CompiledSkillSpec(BaseModel):
+    """Declarative agent skill specification written to skills/skill_sop_402.yaml."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    uc_id: str = Field(..., min_length=1)
+    sop_id: str = Field(..., min_length=1)
+    skill_id: str = Field(..., min_length=1)
+    etom_process_ids: List[str] = Field(..., min_length=1)
+    bound_mcp_primitives: List[str] = Field(..., min_length=1)
+    workflow_steps: List[SkillWorkflowStep] = Field(..., min_length=3)
+    branch_routing: List[SkillBranchRule] = Field(..., min_length=3)
+
+
+class MachineGuardrailRule(BaseModel):
+    """Machine-enforceable guardrail rule evaluated before/after southbound writes."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    guardrail_id: str = Field(..., min_length=1)
+    phase: Literal["PRE_CONDITION", "EXECUTION_INVARIANT", "POST_CONDITION"]
+    description: str = Field(..., min_length=1)
+    parameter: str = Field(..., min_length=1)
+    operator: Literal["==", "!=", ">=", "<=", ">", "<"]
+    threshold_value: bool | float | int | str
+    blocking_action: str = Field(..., min_length=1)
+    target_tool: str = Field(..., min_length=1)
+
+
+class CompiledGuardrailsSpec(BaseModel):
+    """Machine-enforceable guardrail contract written to skills/guardrails_sop_402.json."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    uc_id: str = Field(..., min_length=1)
+    sop_id: str = Field(..., min_length=1)
+    rules: List[MachineGuardrailRule] = Field(..., min_length=4)
+
+
+class CompiledSopSkillProposal(BaseModel):
+    """Structured LLM output for Track A SOP-to-Skill compilation (DT-02a)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    procedure_assessments: List[SopProcedureAssessment] = Field(..., min_length=1)
+    skill_spec: CompiledSkillSpec
+    guardrails_spec: CompiledGuardrailsSpec
+    architect_verification_questions: List[str] = Field(..., min_length=4, max_length=4)
+
+
+class MissingPrimitiveToolSpec(BaseModel):
+    """Functional Tool Specification for a missing/disabled MCP primitive (PARTIAL_GAP)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    required_mcp_primitive_uri: str = Field(..., min_length=1)
+    tool_name: str = Field(..., min_length=1)
+    required_protocol: str = Field(..., min_length=1)
+    functional_description: str = Field(..., min_length=1)
+    sop_step_requiring_it: str = Field(..., min_length=1)
+    input_parameter_schema: Dict[str, Any]
+    expected_output_schema: Dict[str, Any]
+    required_obo_jwt_scope: str = Field(..., min_length=1)
+    idempotency_and_rollback_requirements: str = Field(..., min_length=1)
+
+
+class MissingPrimitivesGapReport(BaseModel):
+    """Gap diagnostic written to reports/missing_primitive_spec.json on PARTIAL_GAP."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    generated_at_utc: str = Field(..., min_length=1)
+    catalog_state: Literal["PARTIAL_GAP"]
+    blocking_reason: str = Field(..., min_length=1)
+    missing_tools: List[MissingPrimitiveToolSpec] = Field(..., min_length=1)
+
+
+class AdverseTestCaseResult(BaseModel):
+    """Result of a single DT-02b synthetic adverse guardrail test case."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    test_id: str = Field(..., min_length=1)
+    test_name: str = Field(..., min_length=1)
+    target_tool: str = Field(..., min_length=1)
+    payload: Dict[str, Any]
+    expected_blocking_guardrail_id: str = Field(..., min_length=1)
+    actual_blocked: bool
+    actual_blocking_guardrail_id: Optional[str] = None
+    reason: str = Field(..., min_length=1)
+    passed: bool
+
+
+class AdverseTestSuiteResult(BaseModel):
+    """Aggregated DT-02b adverse guardrail rejection test suite result."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    executed_at_utc: str = Field(..., min_length=1)
+    total_tests: int = Field(..., ge=1)
+    passed_tests: int = Field(..., ge=0)
+    all_passed: bool
+    cases: List[AdverseTestCaseResult] = Field(..., min_length=1)
+
+
+class Gate3CandidateBundle(BaseModel):
+    """Staged Gate 3 candidate artifact saved to skills/gate3_candidate_sop_402.json."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    generated_at_utc: str = Field(..., min_length=1)
+    model_used: str = Field(..., min_length=1)
+    status: Literal["CANDIDATE_COMPILED", "VERIFIED_LOCKED"]
+    proposal: CompiledSopSkillProposal
+    adverse_suite: AdverseTestSuiteResult
+
+
+class Dt02ExecutionResult(BaseModel):
+    """Top-level execution result for Scenario DT-02a & DT-02b."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["candidate", "approve"]
+    sys01_element6_state: str = Field(..., min_length=1)
+    model_used: str = Field(..., min_length=1)
+    catalog_state: str = Field(..., min_length=1)
+    candidate_proposal_path: Path
+    active_skill_path: Path
+    active_guardrails_path: Path
+    hitl_report_html_path: Path
+    hitl_report_markdown_path: Path
+    adverse_tests_passed: int = Field(..., ge=0)
+    adverse_tests_total: int = Field(..., ge=0)
+    architect_verification_questions: List[str] = Field(default_factory=list)
 
 
 

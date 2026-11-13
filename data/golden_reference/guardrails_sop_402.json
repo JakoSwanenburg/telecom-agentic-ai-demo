@@ -1,0 +1,46 @@
+{
+  "uc_id": "UC-001",
+  "sop_id": "SOP-ASSUR-402",
+  "rules": [
+    {
+      "guardrail_id": "GR-PRE-01",
+      "phase": "PRE_CONDITION",
+      "description": "Enforces live un-cached gNMI telemetry probing before any southbound write tool execution.",
+      "parameter": "gnmi_uncached_probed",
+      "operator": "==",
+      "threshold_value": true,
+      "blocking_action": "ABORT_MUTATION_MISSING_LIVE_TELEMETRY",
+      "target_tool": "TMF640_SERVICE_ACTIVATION"
+    },
+    {
+      "guardrail_id": "GR-INV-01",
+      "phase": "EXECUTION_INVARIANT",
+      "description": "Blocks remote DDM recalibration when optical Rx power is below the hardware critical LOS cutoff (-27.5 dBm).",
+      "parameter": "rx_power_dbm",
+      "operator": ">=",
+      "threshold_value": -27.5,
+      "blocking_action": "BLOCK_RECALIBRATION_TRIGGER_FIELD_DISPATCH",
+      "target_tool": "TMF640_SERVICE_ACTIVATION"
+    },
+    {
+      "guardrail_id": "GR-INV-02",
+      "phase": "EXECUTION_INVARIANT",
+      "description": "Blocks remote southbound state mutations during active customer maintenance freeze windows.",
+      "parameter": "maintenance_lock",
+      "operator": "==",
+      "threshold_value": false,
+      "blocking_action": "BLOCK_MUTATION_ACTIVE_MAINTENANCE_FREEZE",
+      "target_tool": "TMF640_SERVICE_ACTIVATION"
+    },
+    {
+      "guardrail_id": "GR-POST-01",
+      "phase": "POST_CONDITION",
+      "description": "Enforces post-recalibration gNMI optical telemetry re-probing prior to closing incident and committing resolution triples.",
+      "parameter": "post_check_required",
+      "operator": "==",
+      "threshold_value": true,
+      "blocking_action": "ROLLBACK_AND_ESCALATE_UNVERIFIED_MUTATION",
+      "target_tool": "TMF640_SERVICE_ACTIVATION"
+    }
+  ]
+}

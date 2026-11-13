@@ -225,6 +225,21 @@ Generates:
 - `reports/rt05_layer3_nl2semantics_comparison.html` & `.md` (side-by-side latency, AST Gatekeeper audit, row counts, missing fields, and compiled/generated SPARQL)
 - Southbound MCP Server: `src/mcp_servers/semantic_read_mcp.py` (`MCPServer("semantic-read-mcp")` exposing `query_knowledge_fabric` with configurable `obo_jwt` scope verification via `layer3_nl2semantics.require_obo_jwt`)
 
+### Execute Step 7 (Track A `DT-02a` / `DT-02b` SOP-to-Skill Compiler & Two-Phase HITL Gate 3)
+Requires `DT-01a` (`LOCKED_APPROVED`) and a `COMPLETE` MCP catalog (fails fast with `reports/missing_primitive_spec.json` if `PARTIAL_GAP` is active):
+```powershell
+# Phase 1 (DEFAULT — --mode candidate):
+# Dynamically introspects Master NOC Runbook + Use Case Charter + TBox + MCP Catalog,
+# compiles candidate skill & guardrails via Gemini, runs DT-02b 3/3 adverse tests,
+# stages skills/gate3_candidate_sop_402.json, and prints 4 HITL Gate 3 questions:
+.\.venv\Scripts\python.exe scripts\run_dt02_sop_skill_compiler.py --mode candidate
+
+# Phase 2 (--mode approve):
+# Verifies 3/3 DT-02b adverse guardrail tests and materializes skills/skill_sop_402.yaml
+# and skills/guardrails_sop_402.json (transitioning SYS-01 Element 6 to VERIFIED_LOCKED):
+.\.venv\Scripts\python.exe scripts\run_dt02_sop_skill_compiler.py --mode approve
+```
+
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell
 .\.venv\Scripts\pytest.exe -v -W error::DeprecationWarning -W error::FutureWarning

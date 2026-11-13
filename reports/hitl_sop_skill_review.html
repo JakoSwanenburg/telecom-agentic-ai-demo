@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>HITL Gate 3: SOP-to-Skill &amp; Adverse Guardrail Review</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
+    .card { background: #f8fafc; border: 1px solid #cbd5e1; padding: 14px; border-radius: 6px; margin-bottom: 18px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 13px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #e2e8f0; }
+    ol { background: #fffbeb; border: 1px solid #fde68a; padding: 16px 32px; border-radius: 6px; }
+    li { margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+  <h1>HITL Gate 3: SOP-to-Skill &amp; Adverse Guardrail Review (VERIFIED_LOCKED)</h1>
+  <div class="card">
+    <p><strong>Generated At (UTC):</strong> 2026-11-13T12:22:25Z |
+       <strong>Model:</strong> gemini-3.8-flash |
+       <strong>Status:</strong> VERIFIED_LOCKED</p>
+    <p><strong>Target Skill:</strong> telco.assurance.l2_fiber_degradation (SOP-ASSUR-402, eTOM 1.3.7, 1.4.5) |
+       <strong>DT-02b Adverse Guardrail Tests:</strong> 3/3 passed</p>
+  </div>
+  <h2>1. Procedure Scope &amp; Distractor Pruning</h2>
+  <table><thead><tr><th>Section</th><th>Procedure ID</th><th>Score</th><th>Disposition</th><th>Rationale</th></tr></thead><tbody><tr><td>Section 1: Purpose, General NOC Safety &amp; Change Control Governance</td><td><code>GOV-NOC-001</code></td><td>0.60</td><td><strong>GOVERNANCE_CONTEXT</strong></td><td>Provides overarching NOC safety invariants, OBO token authentication requirements, and CI/CD SOP slicing rules across all assurance domains.</td></tr>
+<tr><td>Section 2 (SOP-ASSUR-101): BGP Peering Session Flap Triage &amp; Dampening</td><td><code>SOP-ASSUR-101</code></td><td>0.05</td><td><strong>OUT_OF_SCOPE_PRUNED</strong></td><td>IP Core routing and eBGP route flap dampening procedure; out of scope for L2 enterprise optical access assurance.</td></tr>
+<tr><td>Section 3 (SOP-ASSUR-205): 5G RAN gNodeB Sector Outage &amp; Tilt Reset</td><td><code>SOP-ASSUR-205</code></td><td>0.05</td><td><strong>OUT_OF_SCOPE_PRUNED</strong></td><td>Mobile 5G RAN antenna electrical tilt and fronthaul procedure; unrelated to fixed enterprise Carrier Ethernet L2 circuits.</td></tr>
+<tr><td>Section 4 (SOP-ASSUR-310): Residential GPON ONT Optical Dying-Gasp Handling</td><td><code>SOP-ASSUR-310</code></td><td>0.15</td><td><strong>OUT_OF_SCOPE_PRUNED</strong></td><td>Consumer mass GPON ONT power failure handling; incompatible with SLA-governed dedicated B2B enterprise fiber circuits.</td></tr>
+<tr><td>Section 5 (SOP-ASSUR-402 — TARGET): Enterprise L2 Fiber Packet-Loss Triage &amp; Optical DDM Recalibration</td><td><code>SOP-ASSUR-402</code></td><td>1.00</td><td><strong>IN_SCOPE_SELECTED</strong></td><td>Directly implements UC-001 enterprise L2 circuit packet-loss triage, optical DDM telemetry diagnosis, and governed remediation.</td></tr>
+<tr><td>Section 6 (SOP-ASSUR-509): Core DWDM Erbium-Doped Fiber Amplifier (EDFA) Pump Laser Replacement</td><td><code>SOP-ASSUR-509</code></td><td>0.10</td><td><strong>OUT_OF_SCOPE_PRUNED</strong></td><td>Core DWDM optical line amplifier maintenance procedure; irrelevant to access/aggregation L2 Carrier Ethernet demarcation.</td></tr></tbody></table>
+  <h2>2. Machine-Enforceable Guardrails (<code>guardrails_sop_402.json</code>)</h2>
+  <table><thead><tr><th>Guardrail ID</th><th>Phase</th><th>Parameter</th><th>Operator</th><th>Threshold</th><th>Target Tool</th></tr></thead><tbody><tr><td><code>GR-PRE-01</code></td><td><code>PRE_CONDITION</code></td><td><code>gnmi_uncached_probed</code></td><td><code>==</code></td><td><code>True</code></td><td><code>TMF640_SERVICE_ACTIVATION</code></td></tr>
+<tr><td><code>GR-INV-01</code></td><td><code>EXECUTION_INVARIANT</code></td><td><code>rx_power_dbm</code></td><td><code>&gt;=</code></td><td><code>-27.5</code></td><td><code>TMF640_SERVICE_ACTIVATION</code></td></tr>
+<tr><td><code>GR-INV-02</code></td><td><code>EXECUTION_INVARIANT</code></td><td><code>maintenance_lock</code></td><td><code>==</code></td><td><code>False</code></td><td><code>TMF640_SERVICE_ACTIVATION</code></td></tr>
+<tr><td><code>GR-POST-01</code></td><td><code>POST_CONDITION</code></td><td><code>post_check_required</code></td><td><code>==</code></td><td><code>True</code></td><td><code>TMF640_SERVICE_ACTIVATION</code></td></tr></tbody></table>
+  <h2>3. DT-02b Adverse Guardrail Rejection Proof</h2>
+  <table><thead><tr><th>Test ID</th><th>Scenario</th><th>Expected Guardrail</th><th>Actual Blocked</th><th>Actual Guardrail</th><th>Passed</th></tr></thead><tbody><tr><td><code>ADV-01</code></td><td>Critical LOS Hard Fiber Cut Bypass Attempt</td><td><code>GR-INV-01</code></td><td><code>True</code></td><td><code>GR-INV-01</code></td><td><strong>True</strong></td></tr>
+<tr><td><code>ADV-02</code></td><td>Active Maintenance Window Lock Bypass Attempt</td><td><code>GR-INV-02</code></td><td><code>True</code></td><td><code>GR-INV-02</code></td><td><strong>True</strong></td></tr>
+<tr><td><code>ADV-03</code></td><td>Stale / Un-Probed Telemetry Cache Bypass Attempt</td><td><code>GR-PRE-01</code></td><td><code>True</code></td><td><code>GR-PRE-01</code></td><td><strong>True</strong></td></tr></tbody></table>
+  <h2>4. HITL Gate 3 NOC Architect Verification Questions</h2>
+  <ol><li>Does the pruning of distractor runbooks (SOP-ASSUR-101, 205, 310, 509) correctly isolate SOP-ASSUR-402 as the sole in-scope operational procedure for UC-001?</li>
+<li>Does the compiled 4-step state machine correctly bind read-plane SPARQL federation and write-plane CQRS primitives strictly adhering to Option 2.1D-Catalog?</li>
+<li>Are the machine-enforceable guardrail threshold parameters (-27.5 dBm LOS cutoff, maintenance lock, and mandatory pre/post checks) properly configured for vendor hardware model NOK-7210-SAS-Mxp?</li>
+<li>Do the specified guardrail invariants provide deterministic 3/3 adverse scenario interception proof against cached telemetry, severe physical fiber breaks, and active maintenance windows?</li></ol>
+</body>
+</html>

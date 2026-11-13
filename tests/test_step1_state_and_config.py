@@ -277,7 +277,7 @@ def test_dt00_clean_slate_wipe_and_sys01_inspection(tmp_path: Path) -> None:
         "EMPTY",
         "EMPTY",
         "PARTIAL_GAP",
-        "REMOVED",
+        "EMPTY",
         "ACTIVE_PRESET",
     ]
     assert report_gap.html_report_path.exists()
@@ -352,6 +352,6 @@ def test_dt00_clean_slate_wipe_and_sys01_inspection(tmp_path: Path) -> None:
         "LOADED_WITH_QUARANTINE",
         "PROMOTED",
         "COMPLETE",
-        "DEPLOYED_MCP_READY",
+        "VERIFIED_LOCKED",
         "ACTIVE_PRESET",
     ]

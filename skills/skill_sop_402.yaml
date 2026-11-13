@@ -1,0 +1,62 @@
+uc_id: UC-001
+sop_id: SOP-ASSUR-402
+skill_id: telco.assurance.l2_fiber_degradation
+etom_process_ids:
+- 1.3.7
+- 1.4.5
+bound_mcp_primitives:
+- mcp://semantic-read/query_knowledge_fabric
+- cqrs://singleton-check/probe_resource_state
+- cqrs://transactional-write/execute_governed_mutation
+- cqrs://transactional-write/commit_validated_graph_triples
+workflow_steps:
+- step_number: 1
+  step_id: STEP_1_SEMANTIC_CONTEXT
+  description: Multi-pronged federated read querying CMDB topology, SLA entitlements,
+    and hardware calibration envelope.
+  mcp_primitive_uri: mcp://semantic-read/query_knowledge_fabric
+  protocol: SPARQL_1_1_FEDERATED_READ
+  guardrail_ids: []
+- step_number: 2
+  step_id: STEP_2_SINGLETON_OPTICAL_PROBE
+  description: Un-cached live gNMI optical DDM telemetry probe and Redis port mutex
+    lock acquisition.
+  mcp_primitive_uri: cqrs://singleton-check/probe_resource_state
+  protocol: gNMI_OPTICAL_TELEMETRY
+  guardrail_ids:
+  - GR-PRE-01
+- step_number: 3
+  step_id: STEP_3_GUARDRAIL_BRANCH_EXECUTION
+  description: 'Deterministic branch evaluation: execute autonomous TMF640 DDM recalibration
+    or trigger TMF621 field dispatch.'
+  mcp_primitive_uri: cqrs://transactional-write/execute_governed_mutation
+  protocol: TMF640_SERVICE_ACTIVATION
+  guardrail_ids:
+  - GR-INV-01
+  - GR-INV-02
+- step_number: 4
+  step_id: STEP_4_POST_VERIFICATION_COMMIT
+  description: Post-recalibration telemetry verification and pySHACL-validated graph
+    resolution commit.
+  mcp_primitive_uri: cqrs://transactional-write/commit_validated_graph_triples
+  protocol: SHACL_VALIDATED_RDF_COMMIT
+  guardrail_ids:
+  - GR-POST-01
+branch_routing:
+- branch_id: BRANCH_A_SOFT_OPTICAL_DEGRADATION
+  condition_summary: reported_packet_loss_pct >= 0.5 AND -27.5 <= live_rx_dbm <= -25.0
+    AND maintenance_lock == false
+  allowed_mcp_primitive_uri: cqrs://transactional-write/execute_governed_mutation
+  allowed_protocol: TMF640_SERVICE_ACTIVATION
+  outcome_status: RECALIBRATION_COMPLETED
+- branch_id: BRANCH_B_HARD_FIBER_CUT
+  condition_summary: reported_packet_loss_pct >= 0.5 AND live_rx_dbm < -27.5
+  allowed_mcp_primitive_uri: cqrs://transactional-write/execute_governed_mutation
+  allowed_protocol: TMF621_TROUBLE_TICKET
+  outcome_status: FIELD_DISPATCH_TRIGGERED
+- branch_id: BRANCH_C_MAINTENANCE_OR_NORMAL
+  condition_summary: reported_packet_loss_pct < 0.5 OR maintenance_lock == true OR
+    live_rx_dbm > -25.0
+  allowed_mcp_primitive_uri: mcp://semantic-read/query_knowledge_fabric
+  allowed_protocol: null
+  outcome_status: MUTATION_SUPPRESSED_NO_ACTION

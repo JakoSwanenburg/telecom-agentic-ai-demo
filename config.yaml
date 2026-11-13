@@ -102,6 +102,8 @@ layer2_worker_and_sop:
   runtime_option_id: "2.2A"
   active_skill_path: "skills/skill_sop_402.yaml"
   active_guardrails_path: "skills/guardrails_sop_402.json"
+  gate3_candidate_proposal_path: "skills/gate3_candidate_sop_402.json"
+  sop_compiler_prompt_template_path: "prompts/track_a_sop_compiler_prompt.md"
   missing_primitive_spec_path: "reports/missing_primitive_spec.json"
   hitl_sop_review_report_path: "reports/hitl_sop_skill_review.html"
   mcp_catalog_path: "config/mcp_primitives_catalog.json"

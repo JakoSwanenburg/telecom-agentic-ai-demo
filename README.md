@@ -170,6 +170,16 @@ Generates:
   - `shapes/service_spec_shape.ttl` & `shapes/trouble_ticket_shape.ttl`
   - `reports/hitl_gate1_ontology_mapping_review.html` & `.md` (`LOCKED_APPROVED`)
 
+### Execute Scenario `DT-01b` (Prong 2 Multi-Tab Excel Catalog Profiler & Row-Level `pySHACL` Quarantine Gate)
+Requires Step 2 (`DT-01a`) to be `LOCKED_APPROVED` (fails fast otherwise):
+```powershell
+.\.venv\Scripts\python.exe scripts\run_dt01b_excel_quarantine.py
+```
+Generates:
+- `mappings/excel_catalog_rml.yaml` (declarative RML/mapping spec generated via `src/llm_client.py` using `ai.component_models.track_b_excel_profiler`)
+- Populated `<urn:telco:graph:ref:catalog>` inside `data/semantic_store/knowledge_graph.trig` (`18` valid B2B SKUs / `198` triples, preserving `<urn:telco:graph:tbox:sid-etom>` and keeping `<urn:telco:graph:virtual:ib>` at `0` triples)
+- `reports/shacl_quarantine_report.html`, `reports/shacl_quarantine_report.md`, and `reports/shacl_quarantine_summary.json` (`2` quarantined dirty rows)
+
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell
 .\.venv\Scripts\pytest.exe -v -W error::DeprecationWarning -W error::FutureWarning

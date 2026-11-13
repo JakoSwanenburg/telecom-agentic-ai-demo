@@ -2,7 +2,7 @@
 
 - **Gate 1 Sign-Off Status:** **`LOCKED_APPROVED`**
 - **Proposal ID:** `PROP-UC-001-GATE1` (`gemini-3.8-flash`)
-- **Executed At (UTC):** `2026-11-12T17:07:53Z`
+- **Executed At (UTC):** `2026-11-13T06:40:18Z`
 - **Evaluator Critique Result:** `PASS: 0/40 physical SQL tokens leaked into TBox; 14 OWL classes, 37 properties, and 120 skos:altLabel synonyms verified; 1 noise table(s) (T_BILLING_AUDIT_NOISE) excluded; SCD2 active-window filter, shadow enum translation, and QUDT Gbps normalization verified; <urn:telco:graph:virtual:ib> has 0 persisted triples on disk.`
 
 ---

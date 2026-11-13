@@ -1,0 +1,71 @@
+{
+  "scenario_id": "DT-01b",
+  "executed_at_utc": "2026-11-13T07:20:02Z",
+  "workbook_path": "data/raw_sources/excel/Telco_Master_Product_SLA_Catalog_2026.xlsx",
+  "target_sheet_name": "B2B_Enterprise_SLA_Matrix",
+  "header_row_index": 5,
+  "data_start_row_index": 6,
+  "excluded_distractor_tabs_count": 2,
+  "excluded_distractor_tabs": [
+    "Residential_FTTH_Plans",
+    "Deprecated_Legacy_SKUs"
+  ],
+  "total_data_rows_evaluated": 20,
+  "valid_skus_loaded_count": 18,
+  "quarantined_rows_count": 2,
+  "catalog_triples_materialized": 198,
+  "virtual_ib_triples_count": 0,
+  "rml_mapping_path": "mappings/excel_catalog_rml.yaml",
+  "quarantined_rows": [
+    {
+      "excel_row_number": 24,
+      "sku_code": "DARK-FIBER-METRO-X",
+      "raw_row_values": {
+        "Product_SKU_Code": "DARK-FIBER-METRO-X",
+        "Marketing_Name": "Unlit Metro Dark Fiber Pair (Dirty Row Test)",
+        "Service_Category": "L0_DARK_FIBER",
+        "Max_Packet_Loss_Pct": -0.5,
+        "Max_Jitter_ms": 0,
+        "MTTR_Target_Hours": 24,
+        "Eligible_Upgrade_SKU": "WAVELENGTH-10G-METRO",
+        "Auto_Remediation_Allowed": "MAYBE_LEGACY",
+        "Monthly_List_Price_EUR": 1500,
+        "Internal_Finance_GL_Code": "GL-ERR-9901",
+        "Shadow_Lifecycle_Flag": "99_INVALID",
+        "Min_Contract_Months": 36,
+        "SLA_Credit_Cap_Pct": 10,
+        "Engineering_Notes": "DIRTY DATA TEST: Negative packet loss & invalid enum for pySHACL quarantine"
+      },
+      "violated_constraint_component": "http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent; http://www.w3.org/ns/shacl#DatatypeConstraintComponent; http://www.w3.org/ns/shacl#InConstraintComponent",
+      "focus_node": "urn:telco:catalog:spec:DARK-FIBER-METRO-X",
+      "result_path": "http://telco.enterprise.org/ontology/maxPacketLossPct; http://telco.enterprise.org/ontology/autoRemediationAllowed; http://telco.enterprise.org/ontology/lifecycleStatus",
+      "shacl_message": "A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.; A ServiceSpecification must define boolean autoRemediationAllowed.; A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.",
+      "shacl_report_text": "Validation Report\nConforms: False\nResults (3):\nConstraint Violation in DatatypeConstraintComponent (http://www.w3.org/ns/shacl#DatatypeConstraintComponent):\n\tSeverity: sh:Violation\n\tSource Shape: [ sh:datatype xsd:boolean ; sh:message Literal(\"A ServiceSpecification must define boolean autoRemediationAllowed.\", lang=en) ; sh:minCount Literal(\"1\", datatype=xsd:integer) ; sh:path telco:autoRemediationAllowed ]\n\tFocus Node: <urn:telco:catalog:spec:DARK-FIBER-METRO-X>\n\tValue Node: Literal(\"MAYBE_LEGACY\")\n\tResult Path: telco:autoRemediationAllowed\n\tMessage: A ServiceSpecification must define boolean autoRemediationAllowed.\nConstraint Violation in InConstraintComponent (http://www.w3.org/ns/shacl#InConstraintComponent):\n\tSeverity: sh:Violation\n\tSource Shape: [ sh:datatype xsd:string ; sh:in ( Literal(\"ACTIVE\") Literal(\"PILOT\") Literal(\"DEPRECATED\") ) ; sh:message Literal(\"A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.\", lang=en) ; sh:minCount Literal(\"1\", datatype=xsd:integer) ; sh:path telco:lifecycleStatus ]\n\tFocus Node: <urn:telco:catalog:spec:DARK-FIBER-METRO-X>\n\tValue Node: Literal(\"99_INVALID\")\n\tResult Path: telco:lifecycleStatus\n\tMessage: A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.\nConstraint Violation in MinInclusiveConstraintComponent (http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent):\n\tSeverity: sh:Violation\n\tSource Shape: [ sh:datatype xsd:double ; sh:maxInclusive Literal(\"100.0\", datatype=xsd:decimal) ; sh:message Literal(\"A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.\", lang=en) ; sh:minCount Literal(\"1\", datatype=xsd:integer) ; sh:minInclusive Literal(\"0.0\", datatype=xsd:decimal) ; sh:path telco:maxPacketLossPct ]\n\tFocus Node: <urn:telco:catalog:spec:DARK-FIBER-METRO-X>\n\tValue Node: Literal(\"-0.5\", datatype=xsd:double)\n\tResult Path: telco:maxPacketLossPct\n\tMessage: A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0."
+    },
+    {
+      "excel_row_number": 25,
+      "sku_code": "SDWAN-LEGACY-99",
+      "raw_row_values": {
+        "Product_SKU_Code": "SDWAN-LEGACY-99",
+        "Marketing_Name": "Unmigrated Legacy Velo Box (Dirty Row Test)",
+        "Service_Category": "MANAGED_SDWAN",
+        "Max_Packet_Loss_Pct": 125,
+        "Max_Jitter_ms": -5,
+        "MTTR_Target_Hours": null,
+        "Eligible_Upgrade_SKU": "SDWAN-PRO",
+        "Auto_Remediation_Allowed": "UNKNOWN",
+        "Monthly_List_Price_EUR": -100,
+        "Internal_Finance_GL_Code": "GL-ERR-9902",
+        "Shadow_Lifecycle_Flag": "99_OBS_SHADOW",
+        "Min_Contract_Months": 12,
+        "SLA_Credit_Cap_Pct": 0,
+        "Engineering_Notes": "DIRTY DATA TEST: Loss > 100% and NULL MTTR for pySHACL quarantine"
+      },
+      "violated_constraint_component": "http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent; http://www.w3.org/ns/shacl#DatatypeConstraintComponent; http://www.w3.org/ns/shacl#InConstraintComponent",
+      "focus_node": "urn:telco:catalog:spec:SDWAN-LEGACY-99",
+      "result_path": "http://telco.enterprise.org/ontology/maxPacketLossPct; http://telco.enterprise.org/ontology/autoRemediationAllowed; http://telco.enterprise.org/ontology/lifecycleStatus",
+      "shacl_message": "A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.; A ServiceSpecification must define boolean autoRemediationAllowed.; A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.",
+      "shacl_report_text": "Validation Report\nConforms: False\nResults (3):\nConstraint Violation in DatatypeConstraintComponent (http://www.w3.org/ns/shacl#DatatypeConstraintComponent):\n\tSeverity: sh:Violation\n\tSource Shape: [ sh:datatype xsd:boolean ; sh:message Literal(\"A ServiceSpecification must define boolean autoRemediationAllowed.\", lang=en) ; sh:minCount Literal(\"1\", datatype=xsd:integer) ; sh:path telco:autoRemediationAllowed ]\n\tFocus Node: <urn:telco:catalog:spec:SDWAN-LEGACY-99>\n\tValue Node: Literal(\"UNKNOWN\")\n\tResult Path: telco:autoRemediationAllowed\n\tMessage: A ServiceSpecification must define boolean autoRemediationAllowed.\nConstraint Violation in InConstraintComponent (http://www.w3.org/ns/shacl#InConstraintComponent):\n\tSeverity: sh:Violation\n\tSource Shape: [ sh:datatype xsd:string ; sh:in ( Literal(\"ACTIVE\") Literal(\"PILOT\") Literal(\"DEPRECATED\") ) ; sh:message Literal(\"A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.\", lang=en) ; sh:minCount Literal(\"1\", datatype=xsd:integer) ; sh:path telco:lifecycleStatus ]\n\tFocus Node: <urn:telco:catalog:spec:SDWAN-LEGACY-99>\n\tValue Node: Literal(\"99_OBS_SHADOW\")\n\tResult Path: telco:lifecycleStatus\n\tMessage: A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.\nConstraint Violation in MaxInclusiveConstraintComponent (http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent):\n\tSeverity: sh:Violation\n\tSource Shape: [ sh:datatype xsd:double ; sh:maxInclusive Literal(\"100.0\", datatype=xsd:decimal) ; sh:message Literal(\"A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.\", lang=en) ; sh:minCount Literal(\"1\", datatype=xsd:integer) ; sh:minInclusive Literal(\"0.0\", datatype=xsd:decimal) ; sh:path telco:maxPacketLossPct ]\n\tFocus Node: <urn:telco:catalog:spec:SDWAN-LEGACY-99>\n\tValue Node: Literal(\"125.0\", datatype=xsd:double)\n\tResult Path: telco:maxPacketLossPct\n\tMessage: A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0."
+    }
+  ]
+}

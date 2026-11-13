@@ -31,23 +31,24 @@ from datetime import datetime, timezone
 import html
 import json
 import logging
-import os
 from pathlib import Path
 import shutil
 import sqlite3
-import subprocess
 from typing import Any, Callable, Dict, List, Literal, Optional
 import warnings
 
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=SyntaxWarning, module=r"^google\.genai\.")
-    from google import genai
     from google.genai import types as genai_types
-from google.oauth2.credentials import Credentials as OAuth2Credentials
 from rdflib import Dataset, Graph, Namespace, RDF, URIRef
 from rdflib.namespace import OWL, SKOS
 
 from src.config_loader import get_workspace_root
+from src.llm_client import (
+    create_genai_client as _create_genai_client,
+    resolve_model_for_component,
+    strip_unsupported_vertex_schema_keys as _strip_additional_properties,
+)
 from src.models import (
     AppConfig,
     CandidateOntologyAndMappingProposal,
@@ -194,103 +195,6 @@ def introspect_sqlite_database(sqlite_path: Path) -> SqliteDatabaseIntrospection
 # ============================================================================
 # 2. `google-genai` Client & Structured AI Schema Profiler (Zero Heuristic Fallback)
 # ============================================================================
-_UNSUPPORTED_VERTEX_SCHEMA_KEYS = {
-    "additionalProperties",
-    "default",
-    "minLength",
-    "maxLength",
-    "minItems",
-    "maxItems",
-    "minimum",
-    "maximum",
-    "exclusiveMinimum",
-    "exclusiveMaximum",
-}
-
-
-def _strip_additional_properties(schema_node: Any) -> Any:
-    """
-    Recursively remove JSON Schema validation keywords unsupported by Vertex AI's
-    constrained-decoding OpenAPI parser (`additionalProperties`, `default`, `minItems`,
-    `minLength`, etc.) while preserving full structural types, required fields, enums,
-    and descriptions. Full Pydantic v2 validation (`min_length`, `ge`, `gt`, `extra='forbid'`)
-    is enforced via `CandidateOntologyAndMappingProposal.model_validate_json(response.text)`.
-    """
-    if isinstance(schema_node, dict):
-        cleaned: Dict[str, Any] = {}
-        for k, v in schema_node.items():
-            if k in _UNSUPPORTED_VERTEX_SCHEMA_KEYS:
-                continue
-            cleaned[k] = _strip_additional_properties(v)
-        return cleaned
-    if isinstance(schema_node, list):
-        return [_strip_additional_properties(item) for item in schema_node]
-    return schema_node
-
-
-def _resolve_gcloud_access_token(account: str = "j.swanenburg@planet.nl") -> Optional[str]:
-    """
-    Obtain a short-lived OAuth2 access token from `gcloud auth print-access-token`
-    for local development when Application Default Credentials are not active.
-    """
-    gcloud_bin = shutil.which("gcloud.cmd") or shutil.which("gcloud")
-    if not gcloud_bin:
-        return None
-    try:
-        proc = subprocess.run(
-            [gcloud_bin, "auth", "print-access-token", f"--account={account}", "--quiet"],
-            capture_output=True,
-            text=True,
-            timeout=15,
-            check=False,
-        )
-        if proc.returncode == 0 and proc.stdout.strip():
-            return proc.stdout.strip()
-    except Exception:
-        return None
-    return None
-
-
-def _create_genai_client(config: AppConfig, logger: logging.Logger) -> genai.Client:
-    """
-    Create a `google.genai.Client` following the Gate 2 authentication rule:
-      - Option 1B: If `GEMINI_API_KEY` is set in environment variables, use it.
-      - Option 1A: Otherwise, use Vertex AI (`vertexai=True`) against
-        `config.gcp.project_id` and `config.ai.location` (`europe-west4`).
-    Fails fast if neither authentication path succeeds.
-    """
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    if api_key:
-        logger.info("Initializing google-genai client via GEMINI_API_KEY (Option 1B)")
-        return genai.Client(api_key=api_key)
-
-    logger.info(
-        "GEMINI_API_KEY not set; initializing google-genai client via Vertex AI "
-        "(project=%s, location=%s)",
-        config.gcp.project_id,
-        config.ai.location,
-    )
-    if config.project.environment == "local":
-        token = _resolve_gcloud_access_token("j.swanenburg@planet.nl")
-        if token:
-            creds = OAuth2Credentials(
-                token=token,
-                quota_project_id=config.gcp.project_id,
-            )
-            return genai.Client(
-                vertexai=True,
-                project=config.gcp.project_id,
-                location=config.ai.location,
-                credentials=creds,
-            )
-
-    return genai.Client(
-        vertexai=True,
-        project=config.gcp.project_id,
-        location=config.ai.location,
-    )
-
-
 def generate_candidate_proposal_via_llm(
     introspection: SqliteDatabaseIntrospection,
     use_case_charter_text: str,
@@ -317,7 +221,7 @@ def generate_candidate_proposal_via_llm(
         prompt_template_text = prompt_path.read_text(encoding="utf-8")
 
     client = _create_genai_client(config, logger)
-    model_id = config.layer1_orchestrator.llm_model
+    model_id = resolve_model_for_component(config, "track_b_cmdb_profiler")
 
     user_payload = (
         f"{prompt_template_text}\n\n"

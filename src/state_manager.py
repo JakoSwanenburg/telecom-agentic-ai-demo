@@ -113,6 +113,7 @@ def reset_to_clean_slate(
         Path(config.track_b_ingestion_and_er.hitl_gate2_report_path).with_suffix(".md"),
         Path(config.track_b_ingestion_and_er.shacl_quarantine_report_path),
         Path(config.track_b_ingestion_and_er.shacl_quarantine_report_path).with_suffix(".md"),
+        Path(config.track_b_ingestion_and_er.shacl_quarantine_summary_path),
         Path(config.layer1_orchestrator.export_ai_studio_schema_path),
     ]
 

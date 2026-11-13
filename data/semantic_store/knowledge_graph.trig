@@ -1,404 +1,670 @@
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix dcterms: <http://purl.org/dc/terms/> .
-@prefix qudt: <http://qudt.org/schema/qudt/> .
-@prefix unit: <http://qudt.org/vocab/unit/> .
-@prefix tmf: <http://tmforum.org/sid/> .
 @prefix etom: <http://tmforum.org/etom/> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
 @prefix telco: <http://telco.enterprise.org/ontology/> .
+@prefix tmf: <http://tmforum.org/sid/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
-# Named Graph 1: Pruned TM Forum SID & eTOM Conceptual TBox
 <urn:telco:graph:tbox:sid-etom> {
-    <http://telco.enterprise.org/ontology/CpeDeviceResource> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://telco.enterprise.org/ontology/CpeDeviceResource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://telco.enterprise.org/ontology/CpeDeviceResource> <http://www.w3.org/2000/01/rdf-schema#comment> "Physical demarcation switch or router installed at the enterprise customer site."@en .
-    <http://telco.enterprise.org/ontology/CpeDeviceResource> <http://www.w3.org/2000/01/rdf-schema#label> "Customer Premises Equipment Resource"@en .
-    <http://telco.enterprise.org/ontology/CpeDeviceResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://tmforum.org/sid/PhysicalResource> .
-    <http://telco.enterprise.org/ontology/CpeDeviceResource> <http://www.w3.org/2004/02/skos/core#altLabel> "CPE Device"@en .
-    <http://telco.enterprise.org/ontology/CpeDeviceResource> <http://www.w3.org/2004/02/skos/core#altLabel> "Enterprise NTE Demarcation Chassis"@en .
-    <http://telco.enterprise.org/ontology/CpeDeviceResource> <http://www.w3.org/2004/02/skos/core#altLabel> "On-Premises Optical Access Switch"@en .
-    <http://telco.enterprise.org/ontology/OltPortResource> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://telco.enterprise.org/ontology/OltPortResource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://telco.enterprise.org/ontology/OltPortResource> <http://www.w3.org/2000/01/rdf-schema#comment> "Optical Line Terminal transceiver port terminating the access fiber span and providing real-time gNMI DDM optical telemetry."@en .
-    <http://telco.enterprise.org/ontology/OltPortResource> <http://www.w3.org/2000/01/rdf-schema#label> "OLT Optical Port Resource"@en .
-    <http://telco.enterprise.org/ontology/OltPortResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://tmforum.org/sid/PhysicalResource> .
-    <http://telco.enterprise.org/ontology/OltPortResource> <http://www.w3.org/2004/02/skos/core#altLabel> "OLT Port"@en .
-    <http://telco.enterprise.org/ontology/OltPortResource> <http://www.w3.org/2004/02/skos/core#altLabel> "Optical Access Line Card Port"@en .
-    <http://telco.enterprise.org/ontology/OltPortResource> <http://www.w3.org/2004/02/skos/core#altLabel> "PON Optical Interface"@en .
-    <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> <http://www.w3.org/2000/01/rdf-schema#comment> "Vendor hardware manual optical Digital Diagnostic Monitoring power envelope and autonomous laser bias recalibration specification."@en .
-    <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> <http://www.w3.org/2000/01/rdf-schema#label> "Optical Calibration Profile"@en .
-    <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> <http://www.w3.org/2004/02/skos/core#altLabel> "DDM Optical Power Envelope"@en .
-    <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> <http://www.w3.org/2004/02/skos/core#altLabel> "Optical Attenuation Threshold Profile"@en .
-    <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> <http://www.w3.org/2004/02/skos/core#altLabel> "SFP+ Tx/Rx Calibration Spec"@en .
-    <http://telco.enterprise.org/ontology/PeRouterResource> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://telco.enterprise.org/ontology/PeRouterResource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://telco.enterprise.org/ontology/PeRouterResource> <http://www.w3.org/2000/01/rdf-schema#comment> "Metro or core Provider Edge router aggregating L2 Ethernet access bearers."@en .
-    <http://telco.enterprise.org/ontology/PeRouterResource> <http://www.w3.org/2000/01/rdf-schema#label> "Provider Edge Router Resource"@en .
-    <http://telco.enterprise.org/ontology/PeRouterResource> <http://www.w3.org/2000/01/rdf-schema#subClassOf> <http://tmforum.org/sid/PhysicalResource> .
-    <http://telco.enterprise.org/ontology/PeRouterResource> <http://www.w3.org/2004/02/skos/core#altLabel> "Edge Routing Node"@en .
-    <http://telco.enterprise.org/ontology/PeRouterResource> <http://www.w3.org/2004/02/skos/core#altLabel> "Metro Aggregation Router"@en .
-    <http://telco.enterprise.org/ontology/PeRouterResource> <http://www.w3.org/2004/02/skos/core#altLabel> "PE Router"@en .
-    <http://telco.enterprise.org/ontology/SlaClause> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> .
-    <http://telco.enterprise.org/ontology/SlaClause> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://telco.enterprise.org/ontology/SlaClause> <http://www.w3.org/2000/01/rdf-schema#comment> "Contractual or catalog SLA clause specifying packet-loss thresholds, mean time to repair, service credit penalties, and VIP escalation rules."@en .
-    <http://telco.enterprise.org/ontology/SlaClause> <http://www.w3.org/2000/01/rdf-schema#label> "Service Level Agreement Clause"@en .
-    <http://telco.enterprise.org/ontology/SlaClause> <http://www.w3.org/2004/02/skos/core#altLabel> "MSA Contractual Penalty Policy"@en .
-    <http://telco.enterprise.org/ontology/SlaClause> <http://www.w3.org/2004/02/skos/core#altLabel> "Quality of Service Commitment"@en .
-    <http://telco.enterprise.org/ontology/SlaClause> <http://www.w3.org/2004/02/skos/core#altLabel> "SLA Guarantee Clause"@en .
-    <http://telco.enterprise.org/ontology/accountManagerCode> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/accountManagerCode> <http://www.w3.org/2000/01/rdf-schema#comment> "Unique employee or desk identifier of the designated enterprise account manager."@en .
-    <http://telco.enterprise.org/ontology/accountManagerCode> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/Customer> .
-    <http://telco.enterprise.org/ontology/accountManagerCode> <http://www.w3.org/2000/01/rdf-schema#label> "account manager code"@en .
-    <http://telco.enterprise.org/ontology/accountManagerCode> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://telco.enterprise.org/ontology/accountManagerCode> <http://www.w3.org/2004/02/skos/core#altLabel> "account executive ID"@en .
-    <http://telco.enterprise.org/ontology/accountManagerCode> <http://www.w3.org/2004/02/skos/core#altLabel> "assigned sales representative"@en .
-    <http://telco.enterprise.org/ontology/affectedCircuit> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://telco.enterprise.org/ontology/affectedCircuit> <http://www.w3.org/2000/01/rdf-schema#comment> "References the Customer Facing Service circuit impacted by an assurance incident."@en .
-    <http://telco.enterprise.org/ontology/affectedCircuit> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/TroubleTicket> .
-    <http://telco.enterprise.org/ontology/affectedCircuit> <http://www.w3.org/2000/01/rdf-schema#label> "affected circuit"@en .
-    <http://telco.enterprise.org/ontology/affectedCircuit> <http://www.w3.org/2000/01/rdf-schema#range> <http://tmforum.org/sid/CustomerFacingService> .
-    <http://telco.enterprise.org/ontology/affectedCircuit> <http://www.w3.org/2004/02/skos/core#altLabel> "impacted CFS circuit"@en .
-    <http://telco.enterprise.org/ontology/affectedCircuit> <http://www.w3.org/2004/02/skos/core#altLabel> "trouble ticket circuit"@en .
-    <http://telco.enterprise.org/ontology/affectedResource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://telco.enterprise.org/ontology/affectedResource> <http://www.w3.org/2000/01/rdf-schema#comment> "References the physical network resource identified as the root cause of an assurance fault."@en .
-    <http://telco.enterprise.org/ontology/affectedResource> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/TroubleTicket> .
-    <http://telco.enterprise.org/ontology/affectedResource> <http://www.w3.org/2000/01/rdf-schema#label> "affected resource"@en .
-    <http://telco.enterprise.org/ontology/affectedResource> <http://www.w3.org/2000/01/rdf-schema#range> <http://tmforum.org/sid/PhysicalResource> .
-    <http://telco.enterprise.org/ontology/affectedResource> <http://www.w3.org/2004/02/skos/core#altLabel> "faulty hardware resource"@en .
-    <http://telco.enterprise.org/ontology/affectedResource> <http://www.w3.org/2004/02/skos/core#altLabel> "root cause asset"@en .
-    <http://telco.enterprise.org/ontology/autoRemediationAllowed> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/autoRemediationAllowed> <http://www.w3.org/2000/01/rdf-schema#comment> "Indicates whether autonomous optical recalibration is legally and technically permitted."@en .
-    <http://telco.enterprise.org/ontology/autoRemediationAllowed> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://telco.enterprise.org/ontology/autoRemediationAllowed> <http://www.w3.org/2000/01/rdf-schema#label> "auto-remediation allowed"@en .
-    <http://telco.enterprise.org/ontology/autoRemediationAllowed> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#boolean> .
-    <http://telco.enterprise.org/ontology/autoRemediationAllowed> <http://www.w3.org/2004/02/skos/core#altLabel> "automated triage allowed"@en .
-    <http://telco.enterprise.org/ontology/autoRemediationAllowed> <http://www.w3.org/2004/02/skos/core#altLabel> "self-healing authorization flag"@en .
-    <http://telco.enterprise.org/ontology/availabilityTargetPct> <http://qudt.org/schema/qudt/applicableUnit> <http://qudt.org/vocab/unit/PERCENT> .
-    <http://telco.enterprise.org/ontology/availabilityTargetPct> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/availabilityTargetPct> <http://www.w3.org/2000/01/rdf-schema#comment> "Annual uptime percentage guaranteed under the commercial service tier."@en .
-    <http://telco.enterprise.org/ontology/availabilityTargetPct> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://telco.enterprise.org/ontology/availabilityTargetPct> <http://www.w3.org/2000/01/rdf-schema#label> "availability target percentage"@en .
-    <http://telco.enterprise.org/ontology/availabilityTargetPct> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#double> .
-    <http://telco.enterprise.org/ontology/availabilityTargetPct> <http://www.w3.org/2004/02/skos/core#altLabel> "SLA availability target"@en .
-    <http://telco.enterprise.org/ontology/availabilityTargetPct> <http://www.w3.org/2004/02/skos/core#altLabel> "uptime commitment percentage"@en .
-    <http://telco.enterprise.org/ontology/bandwidthGbps> <http://qudt.org/schema/qudt/applicableUnit> <http://qudt.org/vocab/unit/GigaBIT-PER-SEC> .
-    <http://telco.enterprise.org/ontology/bandwidthGbps> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/bandwidthGbps> <http://www.w3.org/2000/01/rdf-schema#comment> "Contracted symmetrical bandwidth normalized to Gigabits per second."@en .
-    <http://telco.enterprise.org/ontology/bandwidthGbps> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/CustomerFacingService> .
-    <http://telco.enterprise.org/ontology/bandwidthGbps> <http://www.w3.org/2000/01/rdf-schema#label> "bandwidth in gigabits per second"@en .
-    <http://telco.enterprise.org/ontology/bandwidthGbps> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#double> .
-    <http://telco.enterprise.org/ontology/bandwidthGbps> <http://www.w3.org/2004/02/skos/core#altLabel> "circuit throughput Gbps"@en .
-    <http://telco.enterprise.org/ontology/bandwidthGbps> <http://www.w3.org/2004/02/skos/core#altLabel> "normalized capacity"@en .
-    <http://telco.enterprise.org/ontology/chamberOfCommerceReg> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/chamberOfCommerceReg> <http://www.w3.org/2000/01/rdf-schema#comment> "Official commercial trade registry or chamber of commerce number for the enterprise."@en .
-    <http://telco.enterprise.org/ontology/chamberOfCommerceReg> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/Customer> .
-    <http://telco.enterprise.org/ontology/chamberOfCommerceReg> <http://www.w3.org/2000/01/rdf-schema#label> "chamber of commerce registration"@en .
-    <http://telco.enterprise.org/ontology/chamberOfCommerceReg> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://telco.enterprise.org/ontology/chamberOfCommerceReg> <http://www.w3.org/2004/02/skos/core#altLabel> "KvK registration"@en .
-    <http://telco.enterprise.org/ontology/chamberOfCommerceReg> <http://www.w3.org/2004/02/skos/core#altLabel> "trade registry number"@en .
-    <http://telco.enterprise.org/ontology/demarcatesAtCpe> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://telco.enterprise.org/ontology/demarcatesAtCpe> <http://www.w3.org/2000/01/rdf-schema#comment> "Identifies the Customer Premises Equipment device serving as the on-site network demarcation endpoint."@en .
-    <http://telco.enterprise.org/ontology/demarcatesAtCpe> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ResourceFacingService> .
-    <http://telco.enterprise.org/ontology/demarcatesAtCpe> <http://www.w3.org/2000/01/rdf-schema#label> "demarcates at CPE"@en .
-    <http://telco.enterprise.org/ontology/demarcatesAtCpe> <http://www.w3.org/2000/01/rdf-schema#range> <http://telco.enterprise.org/ontology/CpeDeviceResource> .
-    <http://telco.enterprise.org/ontology/demarcatesAtCpe> <http://www.w3.org/2004/02/skos/core#altLabel> "customer demarcation chassis"@en .
-    <http://telco.enterprise.org/ontology/demarcatesAtCpe> <http://www.w3.org/2004/02/skos/core#altLabel> "on-premises CPE asset"@en .
-    <http://telco.enterprise.org/ontology/fiberSpanId> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/fiberSpanId> <http://www.w3.org/2000/01/rdf-schema#comment> "Outside plant optical fiber segment identifier connecting the OLT to the customer premises."@en .
-    <http://telco.enterprise.org/ontology/fiberSpanId> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ResourceFacingService> .
-    <http://telco.enterprise.org/ontology/fiberSpanId> <http://www.w3.org/2000/01/rdf-schema#label> "fiber span identifier"@en .
-    <http://telco.enterprise.org/ontology/fiberSpanId> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://telco.enterprise.org/ontology/fiberSpanId> <http://www.w3.org/2004/02/skos/core#altLabel> "fiber span reference"@en .
-    <http://telco.enterprise.org/ontology/fiberSpanId> <http://www.w3.org/2004/02/skos/core#altLabel> "optical cable route ID"@en .
-    <http://telco.enterprise.org/ontology/hasOpticalCalibrationProfile> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://telco.enterprise.org/ontology/hasOpticalCalibrationProfile> <http://www.w3.org/2000/01/rdf-schema#comment> "Associates an equipment model specification with its vendor DDM optical power thresholds and recalibration limits."@en .
-    <http://telco.enterprise.org/ontology/hasOpticalCalibrationProfile> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/PhysicalResourceSpec> .
-    <http://telco.enterprise.org/ontology/hasOpticalCalibrationProfile> <http://www.w3.org/2000/01/rdf-schema#label> "has optical calibration profile"@en .
-    <http://telco.enterprise.org/ontology/hasOpticalCalibrationProfile> <http://www.w3.org/2000/01/rdf-schema#range> <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> .
-    <http://telco.enterprise.org/ontology/hasOpticalCalibrationProfile> <http://www.w3.org/2004/02/skos/core#altLabel> "DDM calibration profile"@en .
-    <http://telco.enterprise.org/ontology/hasOpticalCalibrationProfile> <http://www.w3.org/2004/02/skos/core#altLabel> "optical power envelope"@en .
-    <http://telco.enterprise.org/ontology/hasSlaClause> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://telco.enterprise.org/ontology/hasSlaClause> <http://www.w3.org/2000/01/rdf-schema#comment> "Associates a commercial service specification tier with contractually binding SLA guarantees and penalty clauses."@en .
-    <http://telco.enterprise.org/ontology/hasSlaClause> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://telco.enterprise.org/ontology/hasSlaClause> <http://www.w3.org/2000/01/rdf-schema#label> "has SLA clause"@en .
-    <http://telco.enterprise.org/ontology/hasSlaClause> <http://www.w3.org/2000/01/rdf-schema#range> <http://telco.enterprise.org/ontology/SlaClause> .
-    <http://telco.enterprise.org/ontology/hasSlaClause> <http://www.w3.org/2004/02/skos/core#altLabel> "contractual clause"@en .
-    <http://telco.enterprise.org/ontology/hasSlaClause> <http://www.w3.org/2004/02/skos/core#altLabel> "service SLA guarantee"@en .
-    <http://telco.enterprise.org/ontology/installationDate> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/installationDate> <http://www.w3.org/2000/01/rdf-schema#comment> "Calendar date when the customer connectivity circuit was physically handed over and activated."@en .
-    <http://telco.enterprise.org/ontology/installationDate> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/CustomerFacingService> .
-    <http://telco.enterprise.org/ontology/installationDate> <http://www.w3.org/2000/01/rdf-schema#label> "installation date"@en .
-    <http://telco.enterprise.org/ontology/installationDate> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#date> .
-    <http://telco.enterprise.org/ontology/installationDate> <http://www.w3.org/2004/02/skos/core#altLabel> "handover date"@en .
-    <http://telco.enterprise.org/ontology/installationDate> <http://www.w3.org/2004/02/skos/core#altLabel> "service activation date"@en .
-    <http://telco.enterprise.org/ontology/lifecycleStatus> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/lifecycleStatus> <http://www.w3.org/2000/01/rdf-schema#comment> "Catalog publication state of the service specification such as ACTIVE or DEPRECATED."@en .
-    <http://telco.enterprise.org/ontology/lifecycleStatus> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://telco.enterprise.org/ontology/lifecycleStatus> <http://www.w3.org/2000/01/rdf-schema#label> "lifecycle status"@en .
-    <http://telco.enterprise.org/ontology/lifecycleStatus> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://telco.enterprise.org/ontology/lifecycleStatus> <http://www.w3.org/2004/02/skos/core#altLabel> "catalog tier status"@en .
-    <http://telco.enterprise.org/ontology/lifecycleStatus> <http://www.w3.org/2004/02/skos/core#altLabel> "specification lifecycle state"@en .
-    <http://telco.enterprise.org/ontology/maxPacketLossPct> <http://qudt.org/schema/qudt/applicableUnit> <http://qudt.org/vocab/unit/PERCENT> .
-    <http://telco.enterprise.org/ontology/maxPacketLossPct> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/maxPacketLossPct> <http://www.w3.org/2000/01/rdf-schema#comment> "Contractual frame loss ratio ceiling allowed before SLA violation occurs."@en .
-    <http://telco.enterprise.org/ontology/maxPacketLossPct> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://telco.enterprise.org/ontology/maxPacketLossPct> <http://www.w3.org/2000/01/rdf-schema#label> "maximum packet loss percentage"@en .
-    <http://telco.enterprise.org/ontology/maxPacketLossPct> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#double> .
-    <http://telco.enterprise.org/ontology/maxPacketLossPct> <http://www.w3.org/2004/02/skos/core#altLabel> "frame loss ceiling"@en .
-    <http://telco.enterprise.org/ontology/maxPacketLossPct> <http://www.w3.org/2004/02/skos/core#altLabel> "packet loss threshold"@en .
-    <http://telco.enterprise.org/ontology/portIdentifier> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/portIdentifier> <http://www.w3.org/2000/01/rdf-schema#comment> "Physical port name or slot designation on an optical network device."@en .
-    <http://telco.enterprise.org/ontology/portIdentifier> <http://www.w3.org/2000/01/rdf-schema#domain> <http://telco.enterprise.org/ontology/OltPortResource> .
-    <http://telco.enterprise.org/ontology/portIdentifier> <http://www.w3.org/2000/01/rdf-schema#label> "port identifier"@en .
-    <http://telco.enterprise.org/ontology/portIdentifier> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://telco.enterprise.org/ontology/portIdentifier> <http://www.w3.org/2004/02/skos/core#altLabel> "chassis port index"@en .
-    <http://telco.enterprise.org/ontology/portIdentifier> <http://www.w3.org/2004/02/skos/core#altLabel> "optical interface name"@en .
-    <http://telco.enterprise.org/ontology/recommendedUpgradeSpec> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://telco.enterprise.org/ontology/recommendedUpgradeSpec> <http://www.w3.org/2000/01/rdf-schema#comment> "Points to the next tier commercial service specification recommended when bandwidth or packet loss thresholds are exceeded."@en .
-    <http://telco.enterprise.org/ontology/recommendedUpgradeSpec> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://telco.enterprise.org/ontology/recommendedUpgradeSpec> <http://www.w3.org/2000/01/rdf-schema#label> "recommended upgrade specification"@en .
-    <http://telco.enterprise.org/ontology/recommendedUpgradeSpec> <http://www.w3.org/2000/01/rdf-schema#range> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://telco.enterprise.org/ontology/recommendedUpgradeSpec> <http://www.w3.org/2004/02/skos/core#altLabel> "higher tier SKU"@en .
-    <http://telco.enterprise.org/ontology/recommendedUpgradeSpec> <http://www.w3.org/2004/02/skos/core#altLabel> "upgrade catalog path"@en .
-    <http://telco.enterprise.org/ontology/rxLosCutThresholdDbm> <http://qudt.org/schema/qudt/applicableUnit> <http://qudt.org/vocab/unit/MilliWATT-DeciBEL> .
-    <http://telco.enterprise.org/ontology/rxLosCutThresholdDbm> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/rxLosCutThresholdDbm> <http://www.w3.org/2000/01/rdf-schema#comment> "Optical power level in dBm indicating a physical fiber break and complete loss of signal."@en .
-    <http://telco.enterprise.org/ontology/rxLosCutThresholdDbm> <http://www.w3.org/2000/01/rdf-schema#domain> <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> .
-    <http://telco.enterprise.org/ontology/rxLosCutThresholdDbm> <http://www.w3.org/2000/01/rdf-schema#label> "loss of signal threshold in dBm"@en .
-    <http://telco.enterprise.org/ontology/rxLosCutThresholdDbm> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#double> .
-    <http://telco.enterprise.org/ontology/rxLosCutThresholdDbm> <http://www.w3.org/2004/02/skos/core#altLabel> "LOS cut threshold"@en .
-    <http://telco.enterprise.org/ontology/rxLosCutThresholdDbm> <http://www.w3.org/2004/02/skos/core#altLabel> "hard fiber break power level"@en .
-    <http://telco.enterprise.org/ontology/rxOpticalPowerMinDbm> <http://qudt.org/schema/qudt/applicableUnit> <http://qudt.org/vocab/unit/MilliWATT-DeciBEL> .
-    <http://telco.enterprise.org/ontology/rxOpticalPowerMinDbm> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/rxOpticalPowerMinDbm> <http://www.w3.org/2000/01/rdf-schema#comment> "Minimum acceptable optical receive power level in dBm before soft attenuation alerts trigger."@en .
-    <http://telco.enterprise.org/ontology/rxOpticalPowerMinDbm> <http://www.w3.org/2000/01/rdf-schema#domain> <http://telco.enterprise.org/ontology/OpticalCalibrationProfile> .
-    <http://telco.enterprise.org/ontology/rxOpticalPowerMinDbm> <http://www.w3.org/2000/01/rdf-schema#label> "minimum Rx optical power in dBm"@en .
-    <http://telco.enterprise.org/ontology/rxOpticalPowerMinDbm> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#double> .
-    <http://telco.enterprise.org/ontology/rxOpticalPowerMinDbm> <http://www.w3.org/2004/02/skos/core#altLabel> "low optical Rx boundary"@en .
-    <http://telco.enterprise.org/ontology/rxOpticalPowerMinDbm> <http://www.w3.org/2004/02/skos/core#altLabel> "minimum receive sensitivity"@en .
-    <http://telco.enterprise.org/ontology/terminatesOnRouter> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://telco.enterprise.org/ontology/terminatesOnRouter> <http://www.w3.org/2000/01/rdf-schema#comment> "Identifies the Provider Edge aggregation router hosting the L2 circuit endpoint."@en .
-    <http://telco.enterprise.org/ontology/terminatesOnRouter> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ResourceFacingService> .
-    <http://telco.enterprise.org/ontology/terminatesOnRouter> <http://www.w3.org/2000/01/rdf-schema#label> "terminates on router"@en .
-    <http://telco.enterprise.org/ontology/terminatesOnRouter> <http://www.w3.org/2000/01/rdf-schema#range> <http://telco.enterprise.org/ontology/PeRouterResource> .
-    <http://telco.enterprise.org/ontology/terminatesOnRouter> <http://www.w3.org/2004/02/skos/core#altLabel> "aggregating PE router"@en .
-    <http://telco.enterprise.org/ontology/terminatesOnRouter> <http://www.w3.org/2004/02/skos/core#altLabel> "edge router host"@en .
-    <http://telco.enterprise.org/ontology/usesOltPort> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://telco.enterprise.org/ontology/usesOltPort> <http://www.w3.org/2000/01/rdf-schema#comment> "Identifies the physical Optical Line Terminal transceiver port providing access connectivity for the resource service."@en .
-    <http://telco.enterprise.org/ontology/usesOltPort> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ResourceFacingService> .
-    <http://telco.enterprise.org/ontology/usesOltPort> <http://www.w3.org/2000/01/rdf-schema#label> "uses OLT port"@en .
-    <http://telco.enterprise.org/ontology/usesOltPort> <http://www.w3.org/2000/01/rdf-schema#range> <http://telco.enterprise.org/ontology/OltPortResource> .
-    <http://telco.enterprise.org/ontology/usesOltPort> <http://www.w3.org/2004/02/skos/core#altLabel> "optical line interface"@en .
-    <http://telco.enterprise.org/ontology/usesOltPort> <http://www.w3.org/2004/02/skos/core#altLabel> "terminates on OLT port"@en .
-    <http://telco.enterprise.org/ontology/vlanTag> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://telco.enterprise.org/ontology/vlanTag> <http://www.w3.org/2000/01/rdf-schema#comment> "IEEE 802.1Q Ethernet encapsulation identifier assigned to the Layer 2 bearer."@en .
-    <http://telco.enterprise.org/ontology/vlanTag> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ResourceFacingService> .
-    <http://telco.enterprise.org/ontology/vlanTag> <http://www.w3.org/2000/01/rdf-schema#label> "VLAN tag"@en .
-    <http://telco.enterprise.org/ontology/vlanTag> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#integer> .
-    <http://telco.enterprise.org/ontology/vlanTag> <http://www.w3.org/2004/02/skos/core#altLabel> "dot1q VLAN ID"@en .
-    <http://telco.enterprise.org/ontology/vlanTag> <http://www.w3.org/2004/02/skos/core#altLabel> "outer VLAN tag"@en .
-    <http://tmforum.org/etom/BusinessProcess> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> .
-    <http://tmforum.org/etom/BusinessProcess> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://tmforum.org/etom/BusinessProcess> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/etom/BusinessProcess> <http://www.w3.org/2000/01/rdf-schema#comment> "An operational activity defined within the TM Forum eTOM business process framework governing service assurance and resource triage."@en .
-    <http://tmforum.org/etom/BusinessProcess> <http://www.w3.org/2000/01/rdf-schema#label> "Business Process"@en .
-    <http://tmforum.org/etom/BusinessProcess> <http://www.w3.org/2004/02/skos/core#altLabel> "Operational Workflow Task"@en .
-    <http://tmforum.org/etom/BusinessProcess> <http://www.w3.org/2004/02/skos/core#altLabel> "Standard Operating Procedure"@en .
-    <http://tmforum.org/etom/BusinessProcess> <http://www.w3.org/2004/02/skos/core#altLabel> "eTOM Process Definition"@en .
-    <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> <http://purl.org/dc/terms/identifier> "1.3.7" .
-    <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://tmforum.org/etom/BusinessProcess> .
-    <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> .
-    <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> <http://www.w3.org/2000/01/rdf-schema#comment> "Customer-facing service problem reception, SLA triage, root-cause correlation, and customer status notification."@en .
-    <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> <http://www.w3.org/2000/01/rdf-schema#label> "eTOM 1.3.7 Problem Handling"@en .
-    <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> <http://www.w3.org/2004/02/skos/core#altLabel> "CFS SLA Assurance Triage"@en .
-    <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> <http://www.w3.org/2004/02/skos/core#altLabel> "Customer Problem Handling"@en .
-    <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> <http://purl.org/dc/terms/identifier> "1.4.5" .
-    <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://tmforum.org/etom/BusinessProcess> .
-    <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#NamedIndividual> .
-    <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> <http://www.w3.org/2000/01/rdf-schema#comment> "Network resource fault localization, optical transceiver DDM diagnostics, autonomous self-healing, and field technician dispatch."@en .
-    <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> <http://www.w3.org/2000/01/rdf-schema#label> "eTOM 1.4.5 Resource Trouble Management"@en .
-    <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> <http://www.w3.org/2004/02/skos/core#altLabel> "Network Fault Isolation & Remediation"@en .
-    <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> <http://www.w3.org/2004/02/skos/core#altLabel> "Resource Trouble Management"@en .
-    <http://tmforum.org/sid/Customer> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> .
-    <http://tmforum.org/sid/Customer> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/sid/Customer> <http://www.w3.org/2000/01/rdf-schema#comment> "An enterprise party or organization that subscribes to commercial telecom products and holds an active Master Service Agreement."@en .
-    <http://tmforum.org/sid/Customer> <http://www.w3.org/2000/01/rdf-schema#label> "Customer"@en .
-    <http://tmforum.org/sid/Customer> <http://www.w3.org/2004/02/skos/core#altLabel> "B2B Account"@en .
-    <http://tmforum.org/sid/Customer> <http://www.w3.org/2004/02/skos/core#altLabel> "Corporate Client"@en .
-    <http://tmforum.org/sid/Customer> <http://www.w3.org/2004/02/skos/core#altLabel> "Enterprise Subscriber"@en .
-    <http://tmforum.org/sid/CustomerFacingService> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> .
-    <http://tmforum.org/sid/CustomerFacingService> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/sid/CustomerFacingService> <http://www.w3.org/2000/01/rdf-schema#comment> "An active Layer 2 Ethernet or wavelength connectivity circuit directly visible to and contracted by an enterprise customer."@en .
-    <http://tmforum.org/sid/CustomerFacingService> <http://www.w3.org/2000/01/rdf-schema#label> "Customer Facing Service"@en .
-    <http://tmforum.org/sid/CustomerFacingService> <http://www.w3.org/2004/02/skos/core#altLabel> "CFS Circuit"@en .
-    <http://tmforum.org/sid/CustomerFacingService> <http://www.w3.org/2004/02/skos/core#altLabel> "Carrier Ethernet Service"@en .
-    <http://tmforum.org/sid/CustomerFacingService> <http://www.w3.org/2004/02/skos/core#altLabel> "Enterprise L2 Fiber Circuit"@en .
-    <http://tmforum.org/sid/PhysicalResource> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://tmforum.org/sid/PhysicalResource> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/sid/PhysicalResource> <http://www.w3.org/2000/01/rdf-schema#comment> "A physical network equipment asset deployed in the provider core, access plant, or customer demarcation point."@en .
-    <http://tmforum.org/sid/PhysicalResource> <http://www.w3.org/2000/01/rdf-schema#label> "Physical Resource"@en .
-    <http://tmforum.org/sid/PhysicalResource> <http://www.w3.org/2004/02/skos/core#altLabel> "Network Inventory Element"@en .
-    <http://tmforum.org/sid/PhysicalResource> <http://www.w3.org/2004/02/skos/core#altLabel> "Physical Hardware Asset"@en .
-    <http://tmforum.org/sid/PhysicalResource> <http://www.w3.org/2004/02/skos/core#altLabel> "Telecom Network Device"@en .
-    <http://tmforum.org/sid/PhysicalResourceSpec> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://tmforum.org/sid/PhysicalResourceSpec> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/sid/PhysicalResourceSpec> <http://www.w3.org/2000/01/rdf-schema#comment> "Vendor equipment model specification defining hardware capabilities, supported optical transceivers, and DDM calibration thresholds."@en .
-    <http://tmforum.org/sid/PhysicalResourceSpec> <http://www.w3.org/2000/01/rdf-schema#label> "Physical Resource Specification"@en .
-    <http://tmforum.org/sid/PhysicalResourceSpec> <http://www.w3.org/2004/02/skos/core#altLabel> "Chassis Hardware Model"@en .
-    <http://tmforum.org/sid/PhysicalResourceSpec> <http://www.w3.org/2004/02/skos/core#altLabel> "Hardware Model SKU"@en .
-    <http://tmforum.org/sid/PhysicalResourceSpec> <http://www.w3.org/2004/02/skos/core#altLabel> "Vendor Equipment Specification"@en .
-    <http://tmforum.org/sid/Product> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> .
-    <http://tmforum.org/sid/Product> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/sid/Product> <http://www.w3.org/2000/01/rdf-schema#comment> "A procured commercial telecom offering binding a customer agreement to one or more CustomerFacingServices."@en .
-    <http://tmforum.org/sid/Product> <http://www.w3.org/2000/01/rdf-schema#label> "Product"@en .
-    <http://tmforum.org/sid/Product> <http://www.w3.org/2004/02/skos/core#altLabel> "Commercial Product Instance"@en .
-    <http://tmforum.org/sid/Product> <http://www.w3.org/2004/02/skos/core#altLabel> "Enterprise Connectivity Subscription"@en .
-    <http://tmforum.org/sid/Product> <http://www.w3.org/2004/02/skos/core#altLabel> "Subscribed Telecom Offering"@en .
-    <http://tmforum.org/sid/ResourceFacingService> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://tmforum.org/sid/ResourceFacingService> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/sid/ResourceFacingService> <http://www.w3.org/2000/01/rdf-schema#comment> "Internal network transport and access bearer service realizing a CustomerFacingService across PE routers, OLT ports, fiber spans, and CPE devices."@en .
-    <http://tmforum.org/sid/ResourceFacingService> <http://www.w3.org/2000/01/rdf-schema#label> "Resource Facing Service"@en .
-    <http://tmforum.org/sid/ResourceFacingService> <http://www.w3.org/2004/02/skos/core#altLabel> "L2 Optical Bearer Service"@en .
-    <http://tmforum.org/sid/ResourceFacingService> <http://www.w3.org/2004/02/skos/core#altLabel> "Network Transport Bearer"@en .
-    <http://tmforum.org/sid/ResourceFacingService> <http://www.w3.org/2004/02/skos/core#altLabel> "RFS Access Bearer"@en .
-    <http://tmforum.org/sid/ServiceSpecification> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> .
-    <http://tmforum.org/sid/ServiceSpecification> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/sid/ServiceSpecification> <http://www.w3.org/2000/01/rdf-schema#comment> "Standardized commercial catalog SKU defining bandwidth tier, SLA packet-loss ceiling, availability target, and autonomous remediation eligibility."@en .
-    <http://tmforum.org/sid/ServiceSpecification> <http://www.w3.org/2000/01/rdf-schema#label> "Service Specification"@en .
-    <http://tmforum.org/sid/ServiceSpecification> <http://www.w3.org/2004/02/skos/core#altLabel> "Catalog Service Tier"@en .
-    <http://tmforum.org/sid/ServiceSpecification> <http://www.w3.org/2004/02/skos/core#altLabel> "Commercial Product SKU"@en .
-    <http://tmforum.org/sid/ServiceSpecification> <http://www.w3.org/2004/02/skos/core#altLabel> "SLA Service Specification"@en .
-    <http://tmforum.org/sid/TroubleTicket> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_3_7_ProblemHandling> .
-    <http://tmforum.org/sid/TroubleTicket> <http://telco.enterprise.org/ontology/alignedEtomProcess> <http://tmforum.org/etom/Process_1_4_5_ResourceTroubleManagement> .
-    <http://tmforum.org/sid/TroubleTicket> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Class> .
-    <http://tmforum.org/sid/TroubleTicket> <http://www.w3.org/2000/01/rdf-schema#comment> "TMF621 operational assurance ticket tracking network incidents, automated remediations, or field fiber splicing dispatches."@en .
-    <http://tmforum.org/sid/TroubleTicket> <http://www.w3.org/2000/01/rdf-schema#label> "Trouble Ticket"@en .
-    <http://tmforum.org/sid/TroubleTicket> <http://www.w3.org/2004/02/skos/core#altLabel> "Field Dispatch Trouble Ticket"@en .
-    <http://tmforum.org/sid/TroubleTicket> <http://www.w3.org/2004/02/skos/core#altLabel> "NOC Assurance Ticket"@en .
-    <http://tmforum.org/sid/TroubleTicket> <http://www.w3.org/2004/02/skos/core#altLabel> "TMF621 Incident Record"@en .
-    <http://tmforum.org/sid/customerId> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/customerId> <http://www.w3.org/2000/01/rdf-schema#comment> "Canonical business identifier for an enterprise customer account."@en .
-    <http://tmforum.org/sid/customerId> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/Customer> .
-    <http://tmforum.org/sid/customerId> <http://www.w3.org/2000/01/rdf-schema#label> "customer identifier"@en .
-    <http://tmforum.org/sid/customerId> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/customerId> <http://www.w3.org/2004/02/skos/core#altLabel> "customer account reference"@en .
-    <http://tmforum.org/sid/customerId> <http://www.w3.org/2004/02/skos/core#altLabel> "external customer ID"@en .
-    <http://tmforum.org/sid/hasCustomer> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://tmforum.org/sid/hasCustomer> <http://www.w3.org/2000/01/rdf-schema#comment> "Associates an active Customer Facing Service with the contracted enterprise subscriber."@en .
-    <http://tmforum.org/sid/hasCustomer> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/CustomerFacingService> .
-    <http://tmforum.org/sid/hasCustomer> <http://www.w3.org/2000/01/rdf-schema#label> "has customer"@en .
-    <http://tmforum.org/sid/hasCustomer> <http://www.w3.org/2000/01/rdf-schema#range> <http://tmforum.org/sid/Customer> .
-    <http://tmforum.org/sid/hasCustomer> <http://www.w3.org/2004/02/skos/core#altLabel> "service owner"@en .
-    <http://tmforum.org/sid/hasCustomer> <http://www.w3.org/2004/02/skos/core#altLabel> "subscriber relationship"@en .
-    <http://tmforum.org/sid/hasResourceSpecification> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://tmforum.org/sid/hasResourceSpecification> <http://www.w3.org/2000/01/rdf-schema#comment> "Links a physical hardware asset to its vendor model hardware specification."@en .
-    <http://tmforum.org/sid/hasResourceSpecification> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/PhysicalResource> .
-    <http://tmforum.org/sid/hasResourceSpecification> <http://www.w3.org/2000/01/rdf-schema#label> "has resource specification"@en .
-    <http://tmforum.org/sid/hasResourceSpecification> <http://www.w3.org/2000/01/rdf-schema#range> <http://tmforum.org/sid/PhysicalResourceSpec> .
-    <http://tmforum.org/sid/hasResourceSpecification> <http://www.w3.org/2004/02/skos/core#altLabel> "equipment model specification"@en .
-    <http://tmforum.org/sid/hasResourceSpecification> <http://www.w3.org/2004/02/skos/core#altLabel> "hardware spec"@en .
-    <http://tmforum.org/sid/isDescribedBy> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://tmforum.org/sid/isDescribedBy> <http://www.w3.org/2000/01/rdf-schema#comment> "Associates a Customer Facing Service instance with its commercial service specification catalog tier."@en .
-    <http://tmforum.org/sid/isDescribedBy> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/CustomerFacingService> .
-    <http://tmforum.org/sid/isDescribedBy> <http://www.w3.org/2000/01/rdf-schema#label> "is described by"@en .
-    <http://tmforum.org/sid/isDescribedBy> <http://www.w3.org/2000/01/rdf-schema#range> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://tmforum.org/sid/isDescribedBy> <http://www.w3.org/2004/02/skos/core#altLabel> "product tier specification"@en .
-    <http://tmforum.org/sid/isDescribedBy> <http://www.w3.org/2004/02/skos/core#altLabel> "service catalog specification"@en .
-    <http://tmforum.org/sid/marketSegment> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/marketSegment> <http://www.w3.org/2000/01/rdf-schema#comment> "Commercial market classification tier such as enterprise VIP or public sector."@en .
-    <http://tmforum.org/sid/marketSegment> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/Customer> .
-    <http://tmforum.org/sid/marketSegment> <http://www.w3.org/2000/01/rdf-schema#label> "market segment"@en .
-    <http://tmforum.org/sid/marketSegment> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/marketSegment> <http://www.w3.org/2004/02/skos/core#altLabel> "commercial segment"@en .
-    <http://tmforum.org/sid/marketSegment> <http://www.w3.org/2004/02/skos/core#altLabel> "customer tier classification"@en .
-    <http://tmforum.org/sid/operationalStatus> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/operationalStatus> <http://www.w3.org/2000/01/rdf-schema#comment> "Normalized lifecycle state of the connectivity service, such as ACTIVE or MAINTENANCE."@en .
-    <http://tmforum.org/sid/operationalStatus> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/CustomerFacingService> .
-    <http://tmforum.org/sid/operationalStatus> <http://www.w3.org/2000/01/rdf-schema#label> "operational status"@en .
-    <http://tmforum.org/sid/operationalStatus> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/operationalStatus> <http://www.w3.org/2004/02/skos/core#altLabel> "canonical service state"@en .
-    <http://tmforum.org/sid/operationalStatus> <http://www.w3.org/2004/02/skos/core#altLabel> "circuit operational status"@en .
-    <http://tmforum.org/sid/partyLegalName> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/partyLegalName> <http://www.w3.org/2000/01/rdf-schema#comment> "Officially registered legal entity name of the enterprise customer."@en .
-    <http://tmforum.org/sid/partyLegalName> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/Customer> .
-    <http://tmforum.org/sid/partyLegalName> <http://www.w3.org/2000/01/rdf-schema#label> "party legal name"@en .
-    <http://tmforum.org/sid/partyLegalName> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/partyLegalName> <http://www.w3.org/2004/02/skos/core#altLabel> "corporate legal name"@en .
-    <http://tmforum.org/sid/partyLegalName> <http://www.w3.org/2004/02/skos/core#altLabel> "registered company name"@en .
-    <http://tmforum.org/sid/resourceId> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/resourceId> <http://www.w3.org/2000/01/rdf-schema#comment> "Unique hardware inventory asset tag or management identifier."@en .
-    <http://tmforum.org/sid/resourceId> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/PhysicalResource> .
-    <http://tmforum.org/sid/resourceId> <http://www.w3.org/2000/01/rdf-schema#label> "resource identifier"@en .
-    <http://tmforum.org/sid/resourceId> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/resourceId> <http://www.w3.org/2004/02/skos/core#altLabel> "device identifier"@en .
-    <http://tmforum.org/sid/resourceId> <http://www.w3.org/2004/02/skos/core#altLabel> "network element asset tag"@en .
-    <http://tmforum.org/sid/resourceName> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/resourceName> <http://www.w3.org/2000/01/rdf-schema#comment> "DNS hostname or network management label for the physical hardware asset."@en .
-    <http://tmforum.org/sid/resourceName> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/PhysicalResource> .
-    <http://tmforum.org/sid/resourceName> <http://www.w3.org/2000/01/rdf-schema#label> "resource name"@en .
-    <http://tmforum.org/sid/resourceName> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/resourceName> <http://www.w3.org/2004/02/skos/core#altLabel> "equipment hostname"@en .
-    <http://tmforum.org/sid/resourceName> <http://www.w3.org/2004/02/skos/core#altLabel> "system network label"@en .
-    <http://tmforum.org/sid/rfsId> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/rfsId> <http://www.w3.org/2000/01/rdf-schema#comment> "Internal system identifier for the underlying network transport bearer."@en .
-    <http://tmforum.org/sid/rfsId> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ResourceFacingService> .
-    <http://tmforum.org/sid/rfsId> <http://www.w3.org/2000/01/rdf-schema#label> "resource facing service identifier"@en .
-    <http://tmforum.org/sid/rfsId> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/rfsId> <http://www.w3.org/2004/02/skos/core#altLabel> "RFS instance ID"@en .
-    <http://tmforum.org/sid/rfsId> <http://www.w3.org/2004/02/skos/core#altLabel> "bearer service identifier"@en .
-    <http://tmforum.org/sid/serviceId> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/serviceId> <http://www.w3.org/2000/01/rdf-schema#comment> "Unique telecom circuit reference code assigned to a customer-facing service."@en .
-    <http://tmforum.org/sid/serviceId> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/CustomerFacingService> .
-    <http://tmforum.org/sid/serviceId> <http://www.w3.org/2000/01/rdf-schema#label> "service identifier"@en .
-    <http://tmforum.org/sid/serviceId> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/serviceId> <http://www.w3.org/2004/02/skos/core#altLabel> "circuit identifier"@en .
-    <http://tmforum.org/sid/serviceId> <http://www.w3.org/2004/02/skos/core#altLabel> "service instance ID"@en .
-    <http://tmforum.org/sid/severity> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/severity> <http://www.w3.org/2000/01/rdf-schema#comment> "Impact severity classification of the assurance incident such as CRITICAL or MAJOR."@en .
-    <http://tmforum.org/sid/severity> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/TroubleTicket> .
-    <http://tmforum.org/sid/severity> <http://www.w3.org/2000/01/rdf-schema#label> "severity"@en .
-    <http://tmforum.org/sid/severity> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/severity> <http://www.w3.org/2004/02/skos/core#altLabel> "incident urgency"@en .
-    <http://tmforum.org/sid/severity> <http://www.w3.org/2004/02/skos/core#altLabel> "ticket severity level"@en .
-    <http://tmforum.org/sid/skuCode> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/skuCode> <http://www.w3.org/2000/01/rdf-schema#comment> "Commercial catalog product code identifying the service level tier."@en .
-    <http://tmforum.org/sid/skuCode> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ServiceSpecification> .
-    <http://tmforum.org/sid/skuCode> <http://www.w3.org/2000/01/rdf-schema#label> "SKU code"@en .
-    <http://tmforum.org/sid/skuCode> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/skuCode> <http://www.w3.org/2004/02/skos/core#altLabel> "catalog product SKU"@en .
-    <http://tmforum.org/sid/skuCode> <http://www.w3.org/2004/02/skos/core#altLabel> "service tier code"@en .
-    <http://tmforum.org/sid/status> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/status> <http://www.w3.org/2000/01/rdf-schema#comment> "Operational resolution state of the trouble ticket such as OPEN, IN_PROGRESS, or RESOLVED."@en .
-    <http://tmforum.org/sid/status> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/TroubleTicket> .
-    <http://tmforum.org/sid/status> <http://www.w3.org/2000/01/rdf-schema#label> "status"@en .
-    <http://tmforum.org/sid/status> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/status> <http://www.w3.org/2004/02/skos/core#altLabel> "incident workflow status"@en .
-    <http://tmforum.org/sid/status> <http://www.w3.org/2004/02/skos/core#altLabel> "ticket resolution state"@en .
-    <http://tmforum.org/sid/supportsService> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#ObjectProperty> .
-    <http://tmforum.org/sid/supportsService> <http://www.w3.org/2000/01/rdf-schema#comment> "Links an underlying Resource Facing Service transport bearer to the Customer Facing Service circuit it realizes."@en .
-    <http://tmforum.org/sid/supportsService> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/ResourceFacingService> .
-    <http://tmforum.org/sid/supportsService> <http://www.w3.org/2000/01/rdf-schema#label> "supports service"@en .
-    <http://tmforum.org/sid/supportsService> <http://www.w3.org/2000/01/rdf-schema#range> <http://tmforum.org/sid/CustomerFacingService> .
-    <http://tmforum.org/sid/supportsService> <http://www.w3.org/2004/02/skos/core#altLabel> "realizes customer service"@en .
-    <http://tmforum.org/sid/supportsService> <http://www.w3.org/2004/02/skos/core#altLabel> "underlying transport bearer"@en .
-    <http://tmforum.org/sid/ticketId> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#DatatypeProperty> .
-    <http://tmforum.org/sid/ticketId> <http://www.w3.org/2000/01/rdf-schema#comment> "Unique reference number assigned to an operational trouble ticket."@en .
-    <http://tmforum.org/sid/ticketId> <http://www.w3.org/2000/01/rdf-schema#domain> <http://tmforum.org/sid/TroubleTicket> .
-    <http://tmforum.org/sid/ticketId> <http://www.w3.org/2000/01/rdf-schema#label> "ticket identifier"@en .
-    <http://tmforum.org/sid/ticketId> <http://www.w3.org/2000/01/rdf-schema#range> <http://www.w3.org/2001/XMLSchema#string> .
-    <http://tmforum.org/sid/ticketId> <http://www.w3.org/2004/02/skos/core#altLabel> "incident number"@en .
-    <http://tmforum.org/sid/ticketId> <http://www.w3.org/2004/02/skos/core#altLabel> "trouble ticket reference"@en .
-    <urn:telco:graph:tbox:sid-etom> <http://purl.org/dc/terms/identifier> "PROP-UC-001-GATE1" .
-    <urn:telco:graph:tbox:sid-etom> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://www.w3.org/2002/07/owl#Ontology> .
-    <urn:telco:graph:tbox:sid-etom> <http://www.w3.org/2000/01/rdf-schema#comment> "Conceptual semantic model aligning Enterprise Layer 2 Carrier Ethernet customer service inventory, optical transport topology, and automated trouble triage with TM Forum SID GB922 and eTOM GB921 business processes."@en .
-    <urn:telco:graph:tbox:sid-etom> <http://www.w3.org/2000/01/rdf-schema#label> "Enterprise L2 Fiber Assurance & Network Inventory Ontology"@en .
+    telco:accountManagerCode a owl:DatatypeProperty ;
+        rdfs:label "account manager code"@en ;
+        rdfs:comment "Unique employee or desk identifier of the designated enterprise account manager."@en ;
+        rdfs:domain tmf:Customer ;
+        rdfs:range xsd:string ;
+        skos:altLabel "account executive ID"@en,
+            "assigned sales representative"@en .
+
+    telco:affectedCircuit a owl:ObjectProperty ;
+        rdfs:label "affected circuit"@en ;
+        rdfs:comment "References the Customer Facing Service circuit impacted by an assurance incident."@en ;
+        rdfs:domain tmf:TroubleTicket ;
+        rdfs:range tmf:CustomerFacingService ;
+        skos:altLabel "impacted CFS circuit"@en,
+            "trouble ticket circuit"@en .
+
+    telco:affectedResource a owl:ObjectProperty ;
+        rdfs:label "affected resource"@en ;
+        rdfs:comment "References the physical network resource identified as the root cause of an assurance fault."@en ;
+        rdfs:domain tmf:TroubleTicket ;
+        rdfs:range tmf:PhysicalResource ;
+        skos:altLabel "faulty hardware resource"@en,
+            "root cause asset"@en .
+
+    telco:autoRemediationAllowed a owl:DatatypeProperty ;
+        rdfs:label "auto-remediation allowed"@en ;
+        rdfs:comment "Indicates whether autonomous optical recalibration is legally and technically permitted."@en ;
+        rdfs:domain tmf:ServiceSpecification ;
+        rdfs:range xsd:boolean ;
+        skos:altLabel "automated triage allowed"@en,
+            "self-healing authorization flag"@en .
+
+    telco:availabilityTargetPct a owl:DatatypeProperty ;
+        rdfs:label "availability target percentage"@en ;
+        qudt:applicableUnit unit:PERCENT ;
+        rdfs:comment "Annual uptime percentage guaranteed under the commercial service tier."@en ;
+        rdfs:domain tmf:ServiceSpecification ;
+        rdfs:range xsd:double ;
+        skos:altLabel "SLA availability target"@en,
+            "uptime commitment percentage"@en .
+
+    telco:bandwidthGbps a owl:DatatypeProperty ;
+        rdfs:label "bandwidth in gigabits per second"@en ;
+        qudt:applicableUnit unit:GigaBIT-PER-SEC ;
+        rdfs:comment "Contracted symmetrical bandwidth normalized to Gigabits per second."@en ;
+        rdfs:domain tmf:CustomerFacingService ;
+        rdfs:range xsd:double ;
+        skos:altLabel "circuit throughput Gbps"@en,
+            "normalized capacity"@en .
+
+    telco:chamberOfCommerceReg a owl:DatatypeProperty ;
+        rdfs:label "chamber of commerce registration"@en ;
+        rdfs:comment "Official commercial trade registry or chamber of commerce number for the enterprise."@en ;
+        rdfs:domain tmf:Customer ;
+        rdfs:range xsd:string ;
+        skos:altLabel "KvK registration"@en,
+            "trade registry number"@en .
+
+    telco:demarcatesAtCpe a owl:ObjectProperty ;
+        rdfs:label "demarcates at CPE"@en ;
+        rdfs:comment "Identifies the Customer Premises Equipment device serving as the on-site network demarcation endpoint."@en ;
+        rdfs:domain tmf:ResourceFacingService ;
+        rdfs:range telco:CpeDeviceResource ;
+        skos:altLabel "customer demarcation chassis"@en,
+            "on-premises CPE asset"@en .
+
+    telco:fiberSpanId a owl:DatatypeProperty ;
+        rdfs:label "fiber span identifier"@en ;
+        rdfs:comment "Outside plant optical fiber segment identifier connecting the OLT to the customer premises."@en ;
+        rdfs:domain tmf:ResourceFacingService ;
+        rdfs:range xsd:string ;
+        skos:altLabel "fiber span reference"@en,
+            "optical cable route ID"@en .
+
+    telco:hasOpticalCalibrationProfile a owl:ObjectProperty ;
+        rdfs:label "has optical calibration profile"@en ;
+        rdfs:comment "Associates an equipment model specification with its vendor DDM optical power thresholds and recalibration limits."@en ;
+        rdfs:domain tmf:PhysicalResourceSpec ;
+        rdfs:range telco:OpticalCalibrationProfile ;
+        skos:altLabel "DDM calibration profile"@en,
+            "optical power envelope"@en .
+
+    telco:hasSlaClause a owl:ObjectProperty ;
+        rdfs:label "has SLA clause"@en ;
+        rdfs:comment "Associates a commercial service specification tier with contractually binding SLA guarantees and penalty clauses."@en ;
+        rdfs:domain tmf:ServiceSpecification ;
+        rdfs:range telco:SlaClause ;
+        skos:altLabel "contractual clause"@en,
+            "service SLA guarantee"@en .
+
+    telco:installationDate a owl:DatatypeProperty ;
+        rdfs:label "installation date"@en ;
+        rdfs:comment "Calendar date when the customer connectivity circuit was physically handed over and activated."@en ;
+        rdfs:domain tmf:CustomerFacingService ;
+        rdfs:range xsd:date ;
+        skos:altLabel "handover date"@en,
+            "service activation date"@en .
+
+    telco:lifecycleStatus a owl:DatatypeProperty ;
+        rdfs:label "lifecycle status"@en ;
+        rdfs:comment "Catalog publication state of the service specification such as ACTIVE or DEPRECATED."@en ;
+        rdfs:domain tmf:ServiceSpecification ;
+        rdfs:range xsd:string ;
+        skos:altLabel "catalog tier status"@en,
+            "specification lifecycle state"@en .
+
+    telco:maxPacketLossPct a owl:DatatypeProperty ;
+        rdfs:label "maximum packet loss percentage"@en ;
+        qudt:applicableUnit unit:PERCENT ;
+        rdfs:comment "Contractual frame loss ratio ceiling allowed before SLA violation occurs."@en ;
+        rdfs:domain tmf:ServiceSpecification ;
+        rdfs:range xsd:double ;
+        skos:altLabel "frame loss ceiling"@en,
+            "packet loss threshold"@en .
+
+    telco:portIdentifier a owl:DatatypeProperty ;
+        rdfs:label "port identifier"@en ;
+        rdfs:comment "Physical port name or slot designation on an optical network device."@en ;
+        rdfs:domain telco:OltPortResource ;
+        rdfs:range xsd:string ;
+        skos:altLabel "chassis port index"@en,
+            "optical interface name"@en .
+
+    telco:recommendedUpgradeSpec a owl:ObjectProperty ;
+        rdfs:label "recommended upgrade specification"@en ;
+        rdfs:comment "Points to the next tier commercial service specification recommended when bandwidth or packet loss thresholds are exceeded."@en ;
+        rdfs:domain tmf:ServiceSpecification ;
+        rdfs:range tmf:ServiceSpecification ;
+        skos:altLabel "higher tier SKU"@en,
+            "upgrade catalog path"@en .
+
+    telco:rxLosCutThresholdDbm a owl:DatatypeProperty ;
+        rdfs:label "loss of signal threshold in dBm"@en ;
+        qudt:applicableUnit unit:MilliWATT-DeciBEL ;
+        rdfs:comment "Optical power level in dBm indicating a physical fiber break and complete loss of signal."@en ;
+        rdfs:domain telco:OpticalCalibrationProfile ;
+        rdfs:range xsd:double ;
+        skos:altLabel "LOS cut threshold"@en,
+            "hard fiber break power level"@en .
+
+    telco:rxOpticalPowerMinDbm a owl:DatatypeProperty ;
+        rdfs:label "minimum Rx optical power in dBm"@en ;
+        qudt:applicableUnit unit:MilliWATT-DeciBEL ;
+        rdfs:comment "Minimum acceptable optical receive power level in dBm before soft attenuation alerts trigger."@en ;
+        rdfs:domain telco:OpticalCalibrationProfile ;
+        rdfs:range xsd:double ;
+        skos:altLabel "low optical Rx boundary"@en,
+            "minimum receive sensitivity"@en .
+
+    telco:terminatesOnRouter a owl:ObjectProperty ;
+        rdfs:label "terminates on router"@en ;
+        rdfs:comment "Identifies the Provider Edge aggregation router hosting the L2 circuit endpoint."@en ;
+        rdfs:domain tmf:ResourceFacingService ;
+        rdfs:range telco:PeRouterResource ;
+        skos:altLabel "aggregating PE router"@en,
+            "edge router host"@en .
+
+    telco:usesOltPort a owl:ObjectProperty ;
+        rdfs:label "uses OLT port"@en ;
+        rdfs:comment "Identifies the physical Optical Line Terminal transceiver port providing access connectivity for the resource service."@en ;
+        rdfs:domain tmf:ResourceFacingService ;
+        rdfs:range telco:OltPortResource ;
+        skos:altLabel "optical line interface"@en,
+            "terminates on OLT port"@en .
+
+    telco:vlanTag a owl:DatatypeProperty ;
+        rdfs:label "VLAN tag"@en ;
+        rdfs:comment "IEEE 802.1Q Ethernet encapsulation identifier assigned to the Layer 2 bearer."@en ;
+        rdfs:domain tmf:ResourceFacingService ;
+        rdfs:range xsd:integer ;
+        skos:altLabel "dot1q VLAN ID"@en,
+            "outer VLAN tag"@en .
+
+    tmf:Product a owl:Class ;
+        rdfs:label "Product"@en ;
+        telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling ;
+        rdfs:comment "A procured commercial telecom offering binding a customer agreement to one or more CustomerFacingServices."@en ;
+        skos:altLabel "Commercial Product Instance"@en,
+            "Enterprise Connectivity Subscription"@en,
+            "Subscribed Telecom Offering"@en .
+
+    tmf:customerId a owl:DatatypeProperty ;
+        rdfs:label "customer identifier"@en ;
+        rdfs:comment "Canonical business identifier for an enterprise customer account."@en ;
+        rdfs:domain tmf:Customer ;
+        rdfs:range xsd:string ;
+        skos:altLabel "customer account reference"@en,
+            "external customer ID"@en .
+
+    tmf:hasCustomer a owl:ObjectProperty ;
+        rdfs:label "has customer"@en ;
+        rdfs:comment "Associates an active Customer Facing Service with the contracted enterprise subscriber."@en ;
+        rdfs:domain tmf:CustomerFacingService ;
+        rdfs:range tmf:Customer ;
+        skos:altLabel "service owner"@en,
+            "subscriber relationship"@en .
+
+    tmf:hasResourceSpecification a owl:ObjectProperty ;
+        rdfs:label "has resource specification"@en ;
+        rdfs:comment "Links a physical hardware asset to its vendor model hardware specification."@en ;
+        rdfs:domain tmf:PhysicalResource ;
+        rdfs:range tmf:PhysicalResourceSpec ;
+        skos:altLabel "equipment model specification"@en,
+            "hardware spec"@en .
+
+    tmf:isDescribedBy a owl:ObjectProperty ;
+        rdfs:label "is described by"@en ;
+        rdfs:comment "Associates a Customer Facing Service instance with its commercial service specification catalog tier."@en ;
+        rdfs:domain tmf:CustomerFacingService ;
+        rdfs:range tmf:ServiceSpecification ;
+        skos:altLabel "product tier specification"@en,
+            "service catalog specification"@en .
+
+    tmf:marketSegment a owl:DatatypeProperty ;
+        rdfs:label "market segment"@en ;
+        rdfs:comment "Commercial market classification tier such as enterprise VIP or public sector."@en ;
+        rdfs:domain tmf:Customer ;
+        rdfs:range xsd:string ;
+        skos:altLabel "commercial segment"@en,
+            "customer tier classification"@en .
+
+    tmf:operationalStatus a owl:DatatypeProperty ;
+        rdfs:label "operational status"@en ;
+        rdfs:comment "Normalized lifecycle state of the connectivity service, such as ACTIVE or MAINTENANCE."@en ;
+        rdfs:domain tmf:CustomerFacingService ;
+        rdfs:range xsd:string ;
+        skos:altLabel "canonical service state"@en,
+            "circuit operational status"@en .
+
+    tmf:partyLegalName a owl:DatatypeProperty ;
+        rdfs:label "party legal name"@en ;
+        rdfs:comment "Officially registered legal entity name of the enterprise customer."@en ;
+        rdfs:domain tmf:Customer ;
+        rdfs:range xsd:string ;
+        skos:altLabel "corporate legal name"@en,
+            "registered company name"@en .
+
+    tmf:resourceId a owl:DatatypeProperty ;
+        rdfs:label "resource identifier"@en ;
+        rdfs:comment "Unique hardware inventory asset tag or management identifier."@en ;
+        rdfs:domain tmf:PhysicalResource ;
+        rdfs:range xsd:string ;
+        skos:altLabel "device identifier"@en,
+            "network element asset tag"@en .
+
+    tmf:resourceName a owl:DatatypeProperty ;
+        rdfs:label "resource name"@en ;
+        rdfs:comment "DNS hostname or network management label for the physical hardware asset."@en ;
+        rdfs:domain tmf:PhysicalResource ;
+        rdfs:range xsd:string ;
+        skos:altLabel "equipment hostname"@en,
+            "system network label"@en .
+
+    tmf:rfsId a owl:DatatypeProperty ;
+        rdfs:label "resource facing service identifier"@en ;
+        rdfs:comment "Internal system identifier for the underlying network transport bearer."@en ;
+        rdfs:domain tmf:ResourceFacingService ;
+        rdfs:range xsd:string ;
+        skos:altLabel "RFS instance ID"@en,
+            "bearer service identifier"@en .
+
+    tmf:serviceId a owl:DatatypeProperty ;
+        rdfs:label "service identifier"@en ;
+        rdfs:comment "Unique telecom circuit reference code assigned to a customer-facing service."@en ;
+        rdfs:domain tmf:CustomerFacingService ;
+        rdfs:range xsd:string ;
+        skos:altLabel "circuit identifier"@en,
+            "service instance ID"@en .
+
+    tmf:severity a owl:DatatypeProperty ;
+        rdfs:label "severity"@en ;
+        rdfs:comment "Impact severity classification of the assurance incident such as CRITICAL or MAJOR."@en ;
+        rdfs:domain tmf:TroubleTicket ;
+        rdfs:range xsd:string ;
+        skos:altLabel "incident urgency"@en,
+            "ticket severity level"@en .
+
+    tmf:skuCode a owl:DatatypeProperty ;
+        rdfs:label "SKU code"@en ;
+        rdfs:comment "Commercial catalog product code identifying the service level tier."@en ;
+        rdfs:domain tmf:ServiceSpecification ;
+        rdfs:range xsd:string ;
+        skos:altLabel "catalog product SKU"@en,
+            "service tier code"@en .
+
+    tmf:status a owl:DatatypeProperty ;
+        rdfs:label "status"@en ;
+        rdfs:comment "Operational resolution state of the trouble ticket such as OPEN, IN_PROGRESS, or RESOLVED."@en ;
+        rdfs:domain tmf:TroubleTicket ;
+        rdfs:range xsd:string ;
+        skos:altLabel "incident workflow status"@en,
+            "ticket resolution state"@en .
+
+    tmf:supportsService a owl:ObjectProperty ;
+        rdfs:label "supports service"@en ;
+        rdfs:comment "Links an underlying Resource Facing Service transport bearer to the Customer Facing Service circuit it realizes."@en ;
+        rdfs:domain tmf:ResourceFacingService ;
+        rdfs:range tmf:CustomerFacingService ;
+        skos:altLabel "realizes customer service"@en,
+            "underlying transport bearer"@en .
+
+    tmf:ticketId a owl:DatatypeProperty ;
+        rdfs:label "ticket identifier"@en ;
+        rdfs:comment "Unique reference number assigned to an operational trouble ticket."@en ;
+        rdfs:domain tmf:TroubleTicket ;
+        rdfs:range xsd:string ;
+        skos:altLabel "incident number"@en,
+            "trouble ticket reference"@en .
+
+    <urn:telco:graph:tbox:sid-etom> a owl:Ontology ;
+        rdfs:label "Enterprise L2 Fiber Assurance & Network Inventory Ontology"@en ;
+        dcterms:identifier "PROP-UC-001-GATE1" ;
+        rdfs:comment "Conceptual semantic model aligning Enterprise Layer 2 Carrier Ethernet customer service inventory, optical transport topology, and automated trouble triage with TM Forum SID GB922 and eTOM GB921 business processes."@en .
+
+    telco:CpeDeviceResource a owl:Class ;
+        rdfs:label "Customer Premises Equipment Resource"@en ;
+        telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "Physical demarcation switch or router installed at the enterprise customer site."@en ;
+        rdfs:subClassOf tmf:PhysicalResource ;
+        skos:altLabel "CPE Device"@en,
+            "Enterprise NTE Demarcation Chassis"@en,
+            "On-Premises Optical Access Switch"@en .
+
+    telco:PeRouterResource a owl:Class ;
+        rdfs:label "Provider Edge Router Resource"@en ;
+        telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "Metro or core Provider Edge router aggregating L2 Ethernet access bearers."@en ;
+        rdfs:subClassOf tmf:PhysicalResource ;
+        skos:altLabel "Edge Routing Node"@en,
+            "Metro Aggregation Router"@en,
+            "PE Router"@en .
+
+    telco:SlaClause a owl:Class ;
+        rdfs:label "Service Level Agreement Clause"@en ;
+        telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling ;
+        rdfs:comment "Contractual or catalog SLA clause specifying packet-loss thresholds, mean time to repair, service credit penalties, and VIP escalation rules."@en ;
+        skos:altLabel "MSA Contractual Penalty Policy"@en,
+            "Quality of Service Commitment"@en,
+            "SLA Guarantee Clause"@en .
+
+    telco:OltPortResource a owl:Class ;
+        rdfs:label "OLT Optical Port Resource"@en ;
+        telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "Optical Line Terminal transceiver port terminating the access fiber span and providing real-time gNMI DDM optical telemetry."@en ;
+        rdfs:subClassOf tmf:PhysicalResource ;
+        skos:altLabel "OLT Port"@en,
+            "Optical Access Line Card Port"@en,
+            "PON Optical Interface"@en .
+
+    etom:BusinessProcess a owl:Class ;
+        rdfs:label "Business Process"@en ;
+        telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling,
+            etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "An operational activity defined within the TM Forum eTOM business process framework governing service assurance and resource triage."@en ;
+        skos:altLabel "Operational Workflow Task"@en,
+            "Standard Operating Procedure"@en,
+            "eTOM Process Definition"@en .
+
+    tmf:PhysicalResourceSpec a owl:Class ;
+        rdfs:label "Physical Resource Specification"@en ;
+        telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "Vendor equipment model specification defining hardware capabilities, supported optical transceivers, and DDM calibration thresholds."@en ;
+        skos:altLabel "Chassis Hardware Model"@en,
+            "Hardware Model SKU"@en,
+            "Vendor Equipment Specification"@en .
+
+    telco:OpticalCalibrationProfile a owl:Class ;
+        rdfs:label "Optical Calibration Profile"@en ;
+        telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "Vendor hardware manual optical Digital Diagnostic Monitoring power envelope and autonomous laser bias recalibration specification."@en ;
+        skos:altLabel "DDM Optical Power Envelope"@en,
+            "Optical Attenuation Threshold Profile"@en,
+            "SFP+ Tx/Rx Calibration Spec"@en .
+
+    tmf:TroubleTicket a owl:Class ;
+        rdfs:label "Trouble Ticket"@en ;
+        telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling,
+            etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "TMF621 operational assurance ticket tracking network incidents, automated remediations, or field fiber splicing dispatches."@en ;
+        skos:altLabel "Field Dispatch Trouble Ticket"@en,
+            "NOC Assurance Ticket"@en,
+            "TMF621 Incident Record"@en .
+
+    tmf:Customer a owl:Class ;
+        rdfs:label "Customer"@en ;
+        telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling ;
+        rdfs:comment "An enterprise party or organization that subscribes to commercial telecom products and holds an active Master Service Agreement."@en ;
+        skos:altLabel "B2B Account"@en,
+            "Corporate Client"@en,
+            "Enterprise Subscriber"@en .
+
+    etom:Process_1_3_7_ProblemHandling a etom:BusinessProcess,
+            owl:NamedIndividual ;
+        rdfs:label "eTOM 1.3.7 Problem Handling"@en ;
+        dcterms:identifier "1.3.7" ;
+        rdfs:comment "Customer-facing service problem reception, SLA triage, root-cause correlation, and customer status notification."@en ;
+        skos:altLabel "CFS SLA Assurance Triage"@en,
+            "Customer Problem Handling"@en .
+
+    tmf:PhysicalResource a owl:Class ;
+        rdfs:label "Physical Resource"@en ;
+        telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "A physical network equipment asset deployed in the provider core, access plant, or customer demarcation point."@en ;
+        skos:altLabel "Network Inventory Element"@en,
+            "Physical Hardware Asset"@en,
+            "Telecom Network Device"@en .
+
+    tmf:ResourceFacingService a owl:Class ;
+        rdfs:label "Resource Facing Service"@en ;
+        telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement ;
+        rdfs:comment "Internal network transport and access bearer service realizing a CustomerFacingService across PE routers, OLT ports, fiber spans, and CPE devices."@en ;
+        skos:altLabel "L2 Optical Bearer Service"@en,
+            "Network Transport Bearer"@en,
+            "RFS Access Bearer"@en .
+
+    tmf:CustomerFacingService a owl:Class ;
+        rdfs:label "Customer Facing Service"@en ;
+        telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling ;
+        rdfs:comment "An active Layer 2 Ethernet or wavelength connectivity circuit directly visible to and contracted by an enterprise customer."@en ;
+        skos:altLabel "CFS Circuit"@en,
+            "Carrier Ethernet Service"@en,
+            "Enterprise L2 Fiber Circuit"@en .
+
+    etom:Process_1_4_5_ResourceTroubleManagement a etom:BusinessProcess,
+            owl:NamedIndividual ;
+        rdfs:label "eTOM 1.4.5 Resource Trouble Management"@en ;
+        dcterms:identifier "1.4.5" ;
+        rdfs:comment "Network resource fault localization, optical transceiver DDM diagnostics, autonomous self-healing, and field technician dispatch."@en ;
+        skos:altLabel "Network Fault Isolation & Remediation"@en,
+            "Resource Trouble Management"@en .
+
+    tmf:ServiceSpecification a owl:Class ;
+        rdfs:label "Service Specification"@en ;
+        telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling ;
+        rdfs:comment "Standardized commercial catalog SKU defining bandwidth tier, SLA packet-loss ceiling, availability target, and autonomous remediation eligibility."@en ;
+        skos:altLabel "Catalog Service Tier"@en,
+            "Commercial Product SKU"@en,
+            "SLA Service Specification"@en .
 }
 
-# Named Graph 2: Zero-Copy Virtual SQL CMDB Graph (0 persisted triples on disk)
-<urn:telco:graph:virtual:ib> {
+<urn:telco:graph:ref:catalog> {
+    <urn:telco:catalog:spec:5G-SLICE-EMBB> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:5G-SLICE-URLLC> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 1.5e+01 ;
+        telco:maxPacketLossPct 5e-01 ;
+        telco:minContractMonths 12 ;
+        telco:mttrHours 1.2e+01 ;
+        telco:slaCreditCapPct 5e+00 ;
+        tmf:skuCode "5G-SLICE-EMBB" ;
+        tmf:specName "Enterprise 5G Fixed Wireless Backup eMBB" .
+
+    <urn:telco:catalog:spec:CLOUD-CONNECT-10G> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:ETH-100G-PLATINUM> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 2e+00 ;
+        telco:maxPacketLossPct 1e-01 ;
+        telco:minContractMonths 24 ;
+        telco:mttrHours 4e+00 ;
+        telco:slaCreditCapPct 1.5e+01 ;
+        tmf:skuCode "CLOUD-CONNECT-10G" ;
+        tmf:specName "Direct Cloud Express Interconnect 10G" .
+
+    <urn:telco:catalog:spec:DIA-1G-BIZ> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed false ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:DIA-10G-BIZ> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 6e+00 ;
+        telco:maxPacketLossPct 3e-01 ;
+        telco:minContractMonths 12 ;
+        telco:mttrHours 8e+00 ;
+        telco:slaCreditCapPct 1e+01 ;
+        tmf:skuCode "DIA-1G-BIZ" ;
+        tmf:specName "Dedicated Internet Access 1G Business" .
+
+    <urn:telco:catalog:spec:ETH-1G-SILVER> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:ETH-10G-GOLD> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 5e+00 ;
+        telco:maxPacketLossPct 2.5e-01 ;
+        telco:minContractMonths 24 ;
+        telco:mttrHours 8e+00 ;
+        telco:slaCreditCapPct 1e+01 ;
+        tmf:skuCode "ETH-1G-SILVER" ;
+        tmf:specName "Enterprise Carrier Ethernet 1G Silver" .
+
+    <urn:telco:catalog:spec:ETH-2.5G-MID> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:ETH-10G-GOLD> ;
+        telco:lifecycleStatus "PILOT" ;
+        telco:maxJitterMs 4e+00 ;
+        telco:maxPacketLossPct 2e-01 ;
+        telco:minContractMonths 24 ;
+        telco:mttrHours 6e+00 ;
+        telco:slaCreditCapPct 1e+01 ;
+        tmf:skuCode "ETH-2.5G-MID" ;
+        tmf:specName "Enterprise Carrier Ethernet 2.5G Mid-Tier" .
+
+    <urn:telco:catalog:spec:GOV-SEC-ETH-10G> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed false ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:ETH-100G-PLATINUM> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 1e+00 ;
+        telco:maxPacketLossPct 5e-02 ;
+        telco:minContractMonths 60 ;
+        telco:mttrHours 2e+00 ;
+        telco:slaCreditCapPct 2.5e+01 ;
+        tmf:skuCode "GOV-SEC-ETH-10G" ;
+        tmf:specName "Government Defense Encrypted 10G Ethernet" .
+
+    <urn:telco:catalog:spec:MPLS-VPN-STD> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed false ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:MPLS-VPN-PREM> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 1e+01 ;
+        telco:maxPacketLossPct 5e-01 ;
+        telco:minContractMonths 24 ;
+        telco:mttrHours 1.2e+01 ;
+        telco:slaCreditCapPct 1e+01 ;
+        tmf:skuCode "MPLS-VPN-STD" ;
+        tmf:specName "Corporate IP-VPN MPLS Standard" .
+
+    <urn:telco:catalog:spec:WAVELENGTH-10G-METRO> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed false ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:WAVELENGTH-100G-METRO> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 1e-01 ;
+        telco:maxPacketLossPct 1e-03 ;
+        telco:minContractMonths 36 ;
+        telco:mttrHours 4e+00 ;
+        telco:slaCreditCapPct 2e+01 ;
+        tmf:skuCode "WAVELENGTH-10G-METRO" ;
+        tmf:specName "DWDM Optical Wavelength 10G Metro" .
+
+    <urn:telco:catalog:spec:5G-SLICE-URLLC> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:NONE> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 1.5e+00 ;
+        telco:maxPacketLossPct 5e-02 ;
+        telco:minContractMonths 24 ;
+        telco:mttrHours 4e+00 ;
+        telco:slaCreditCapPct 1.5e+01 ;
+        tmf:skuCode "5G-SLICE-URLLC" ;
+        tmf:specName "Enterprise Private 5G Network Slice URLLC" .
+
+    <urn:telco:catalog:spec:DIA-100G-CORE> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed false ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:NONE> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 1e+00 ;
+        telco:maxPacketLossPct 2e-02 ;
+        telco:minContractMonths 36 ;
+        telco:mttrHours 2e+00 ;
+        telco:slaCreditCapPct 2e+01 ;
+        tmf:skuCode "DIA-100G-CORE" ;
+        tmf:specName "Dedicated Internet Access 100G Carrier" .
+
+    <urn:telco:catalog:spec:DIA-10G-BIZ> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:DIA-100G-CORE> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 2.5e+00 ;
+        telco:maxPacketLossPct 1e-01 ;
+        telco:minContractMonths 24 ;
+        telco:mttrHours 4e+00 ;
+        telco:slaCreditCapPct 1.5e+01 ;
+        tmf:skuCode "DIA-10G-BIZ" ;
+        tmf:specName "Dedicated Internet Access 10G Enterprise" .
+
+    <urn:telco:catalog:spec:ETH-400G-ULTRA> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed false ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:NONE> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 2e-01 ;
+        telco:maxPacketLossPct 5e-03 ;
+        telco:minContractMonths 60 ;
+        telco:mttrHours 2e+00 ;
+        telco:slaCreditCapPct 3e+01 ;
+        tmf:skuCode "ETH-400G-ULTRA" ;
+        tmf:specName "HyperScale Metro Ethernet 400G Ultra" .
+
+    <urn:telco:catalog:spec:MPLS-VPN-PREM> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:SDWAN-PRO> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 3e+00 ;
+        telco:maxPacketLossPct 1e-01 ;
+        telco:minContractMonths 36 ;
+        telco:mttrHours 4e+00 ;
+        telco:slaCreditCapPct 1.5e+01 ;
+        tmf:skuCode "MPLS-VPN-PREM" ;
+        tmf:specName "Corporate IP-VPN MPLS Premium Voice/Video" .
+
+    <urn:telco:catalog:spec:SDWAN-ENTERPRISE-AI> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:NONE> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 2.5e+00 ;
+        telco:maxPacketLossPct 5e-02 ;
+        telco:minContractMonths 36 ;
+        telco:mttrHours 4e+00 ;
+        telco:slaCreditCapPct 2e+01 ;
+        tmf:skuCode "SDWAN-ENTERPRISE-AI" ;
+        tmf:specName "Managed Enterprise SD-WAN AI-Assured" .
+
+    <urn:telco:catalog:spec:SDWAN-PRO> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:SDWAN-ENTERPRISE-AI> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 8e+00 ;
+        telco:maxPacketLossPct 2e-01 ;
+        telco:minContractMonths 24 ;
+        telco:mttrHours 6e+00 ;
+        telco:slaCreditCapPct 1.2e+01 ;
+        tmf:skuCode "SDWAN-PRO" ;
+        tmf:specName "Managed Enterprise SD-WAN Pro Dual-Underlay" .
+
+    <urn:telco:catalog:spec:WAVELENGTH-100G-METRO> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed false ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:NONE> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 5e-02 ;
+        telco:maxPacketLossPct 1e-03 ;
+        telco:minContractMonths 60 ;
+        telco:mttrHours 2e+00 ;
+        telco:slaCreditCapPct 2.5e+01 ;
+        tmf:skuCode "WAVELENGTH-100G-METRO" ;
+        tmf:specName "DWDM Optical Wavelength 100G Metro" .
+
+    <urn:telco:catalog:spec:ETH-10G-GOLD> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:ETH-100G-PLATINUM> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 2e+00 ;
+        telco:maxPacketLossPct 1e-01 ;
+        telco:minContractMonths 36 ;
+        telco:mttrHours 4e+00 ;
+        telco:slaCreditCapPct 1.5e+01 ;
+        tmf:skuCode "ETH-10G-GOLD" ;
+        tmf:specName "Enterprise Carrier Ethernet 10G Gold" .
+
+    <urn:telco:catalog:spec:ETH-100G-PLATINUM> a tmf:ServiceSpecification ;
+        telco:autoRemediationAllowed true ;
+        telco:eligibleUpgradeSpec <urn:telco:catalog:spec:ETH-400G-ULTRA> ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:maxJitterMs 5e-01 ;
+        telco:maxPacketLossPct 1e-02 ;
+        telco:minContractMonths 36 ;
+        telco:mttrHours 2e+00 ;
+        telco:slaCreditCapPct 2.5e+01 ;
+        tmf:skuCode "ETH-100G-PLATINUM" ;
+        tmf:specName "Enterprise Carrier Ethernet 100G Platinum" .
 }
+

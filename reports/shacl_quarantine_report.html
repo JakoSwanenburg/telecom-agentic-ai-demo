@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>DT-01b Prong 2 Excel Catalog &amp; pySHACL Quarantine Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
+    h1, h2 { color: #0f172a; }
+    .metrics { background: #f8fafc; border: 1px solid #cbd5e1; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 24px; font-size: 13px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; vertical-align: top; }
+    th { background: #e2e8f0; }
+    pre { margin: 0; white-space: pre-wrap; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <h1>Scenario DT-01b: Prong 2 Excel Catalog &amp; Row-Level pySHACL Quarantine Report</h1>
+  <div class="metrics">
+    <p><strong>Executed At (UTC):</strong> <code>2026-11-13T07:20:02Z</code></p>
+    <p><strong>Target Worksheet:</strong> <code>B2B_Enterprise_SLA_Matrix</code>
+       (Header Row: 5, Data Start Row: 6)</p>
+    <p><strong>Excluded Distractor Tabs:</strong> 2
+       (<code>Residential_FTTH_Plans, Deprecated_Legacy_SKUs</code>)</p>
+    <p><strong>Valid B2B SKUs Promoted:</strong> 18
+       (198 triples in <code>&lt;urn:telco:graph:ref:catalog&gt;</code>)</p>
+    <p><strong>Quarantined Rows Blocked:</strong> 2</p>
+    <p><strong>Virtual IB Persisted Triples:</strong> 0</p>
+  </div>
+
+  <h2>(a) Worksheet Tab &amp; Banner Filtering Audit</h2>
+  <table>
+    <thead><tr><th>Worksheet</th><th>Classification</th><th>Header Row</th><th>Data Start Row</th><th>Banner Rows</th><th>Rationale</th></tr></thead>
+    <tbody><tr><td><code>Residential_FTTH_Plans</code></td><td><strong>EXCLUDED_DISTRACTOR_TAB</strong></td><td>5</td><td>6</td><td>[1, 2, 3, 4]</td><td>Consumer broadband and residential GPON/XGS-PON product catalog, explicitly out of scope for B2B enterprise SLA assurance under UC-001.</td></tr>
+<tr><td><code>B2B_Enterprise_SLA_Matrix</code></td><td><strong>TARGET_INGEST_TAB</strong></td><td>5</td><td>6</td><td>[1, 2, 3, 4]</td><td>Authoritative commercial catalog defining B2B Enterprise Carrier Ethernet and IP-VPN tiers, packet-loss thresholds, MTTR targets, and autonomous optical remediation governance matching the UC-001 charter.</td></tr>
+<tr><td><code>Deprecated_Legacy_SKUs</code></td><td><strong>EXCLUDED_DISTRACTOR_TAB</strong></td><td>5</td><td>6</td><td>[1, 2, 3, 4]</td><td>Historical archive of decommissioned legacy technologies (Frame Relay, ISDN, PDH/SDH, ATM) retired from active provisioning and assurance workflows.</td></tr></tbody>
+  </table>
+
+  <h2>(b) Column-to-TBox RML Mapping Table</h2>
+  <table>
+    <thead><tr><th>Col #</th><th>Source Header</th><th>Status</th><th>Target Property</th><th>Datatype</th><th>Rationale</th></tr></thead>
+    <tbody><tr><td>1</td><td><code>Product_SKU_Code</code></td><td><code>MAPPED</code></td><td><code>tmf:skuCode</code></td><td><code>xsd:string</code></td><td>Primary commercial SKU identifier uniquely identifying each service specification instance in the catalog.</td></tr>
+<tr><td>2</td><td><code>Marketing_Name</code></td><td><code>MAPPED</code></td><td><code>tmf:specName</code></td><td><code>xsd:string</code></td><td>Commercial marketing title and display label for the service specification.</td></tr>
+<tr><td>3</td><td><code>Service_Category</code></td><td><code>EXCLUDED_NOISE</code></td><td><code>-</code></td><td><code>-</code></td><td>Internal organizational category tag not represented in the locked Conceptual TBox.</td></tr>
+<tr><td>4</td><td><code>Max_Packet_Loss_Pct</code></td><td><code>MAPPED</code></td><td><code>telco:maxPacketLossPct</code></td><td><code>xsd:double</code></td><td>Contractual packet loss percentage ceiling governing closed-loop triage under eTOM 1.3.7.</td></tr>
+<tr><td>5</td><td><code>Max_Jitter_ms</code></td><td><code>MAPPED</code></td><td><code>telco:maxJitterMs</code></td><td><code>xsd:double</code></td><td>Maximum allowed network delay variation (jitter) in milliseconds.</td></tr>
+<tr><td>6</td><td><code>MTTR_Target_Hours</code></td><td><code>MAPPED</code></td><td><code>telco:mttrHours</code></td><td><code>xsd:double</code></td><td>Mean Time to Repair (MTTR) SLA target in operational hours.</td></tr>
+<tr><td>7</td><td><code>Eligible_Upgrade_SKU</code></td><td><code>MAPPED</code></td><td><code>telco:eligibleUpgradeSpec</code></td><td><code>-</code></td><td>Commercial upgrade path referencing the next tier service specification entity IRI.</td></tr>
+<tr><td>8</td><td><code>Auto_Remediation_Allowed</code></td><td><code>MAPPED</code></td><td><code>telco:autoRemediationAllowed</code></td><td><code>xsd:boolean</code></td><td>Governance flag indicating whether autonomous optical recalibration is legally and technically authorized.</td></tr>
+<tr><td>9</td><td><code>Monthly_List_Price_EUR</code></td><td><code>EXCLUDED_NOISE</code></td><td><code>-</code></td><td><code>-</code></td><td>Financial commercial billing list price, excluded from technical assurance ontology per charter boundaries.</td></tr>
+<tr><td>10</td><td><code>Internal_Finance_GL_Code</code></td><td><code>EXCLUDED_NOISE</code></td><td><code>-</code></td><td><code>-</code></td><td>Internal ERP general ledger accounting code, excluded as non-semantic enterprise noise.</td></tr>
+<tr><td>11</td><td><code>Shadow_Lifecycle_Flag</code></td><td><code>MAPPED</code></td><td><code>telco:lifecycleStatus</code></td><td><code>xsd:string</code></td><td>Catalog publication status mapped from internal lifecycle codes into canonical statuses.</td></tr>
+<tr><td>12</td><td><code>Min_Contract_Months</code></td><td><code>MAPPED</code></td><td><code>telco:minContractMonths</code></td><td><code>xsd:integer</code></td><td>Minimum contractual commitment duration in integer months.</td></tr>
+<tr><td>13</td><td><code>SLA_Credit_Cap_Pct</code></td><td><code>MAPPED</code></td><td><code>telco:slaCreditCapPct</code></td><td><code>xsd:double</code></td><td>Contractual service credit penalty cap expressed as a percentage.</td></tr>
+<tr><td>14</td><td><code>Engineering_Notes</code></td><td><code>EXCLUDED_NOISE</code></td><td><code>-</code></td><td><code>-</code></td><td>Free-form administrative NOC notes excluded from the structured knowledge graph.</td></tr></tbody>
+  </table>
+
+  <h2>(c) Promoted B2B SKUs Summary (18 Valid SKUs)</h2>
+  <table>
+    <thead><tr><th>Row</th><th>SKU</th><th>Subject IRI</th><th>Triples</th><th>Max Packet Loss %</th><th>Availability %</th><th>Auto-Remediation</th><th>Lifecycle</th></tr></thead>
+    <tbody><tr><td>6</td><td><code>ETH-1G-SILVER</code></td><td><code>urn:telco:catalog:spec:ETH-1G-SILVER</code></td><td>11</td><td>0.25</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>7</td><td><code>ETH-10G-GOLD</code></td><td><code>urn:telco:catalog:spec:ETH-10G-GOLD</code></td><td>11</td><td>0.1</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>8</td><td><code>ETH-100G-PLATINUM</code></td><td><code>urn:telco:catalog:spec:ETH-100G-PLATINUM</code></td><td>11</td><td>0.01</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>9</td><td><code>ETH-400G-ULTRA</code></td><td><code>urn:telco:catalog:spec:ETH-400G-ULTRA</code></td><td>11</td><td>0.005</td><td>-</td><td>False</td><td><code>ACTIVE</code></td></tr>
+<tr><td>10</td><td><code>MPLS-VPN-STD</code></td><td><code>urn:telco:catalog:spec:MPLS-VPN-STD</code></td><td>11</td><td>0.5</td><td>-</td><td>False</td><td><code>ACTIVE</code></td></tr>
+<tr><td>11</td><td><code>MPLS-VPN-PREM</code></td><td><code>urn:telco:catalog:spec:MPLS-VPN-PREM</code></td><td>11</td><td>0.1</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>12</td><td><code>SDWAN-PRO</code></td><td><code>urn:telco:catalog:spec:SDWAN-PRO</code></td><td>11</td><td>0.2</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>13</td><td><code>SDWAN-ENTERPRISE-AI</code></td><td><code>urn:telco:catalog:spec:SDWAN-ENTERPRISE-AI</code></td><td>11</td><td>0.05</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>14</td><td><code>DIA-1G-BIZ</code></td><td><code>urn:telco:catalog:spec:DIA-1G-BIZ</code></td><td>11</td><td>0.3</td><td>-</td><td>False</td><td><code>ACTIVE</code></td></tr>
+<tr><td>15</td><td><code>DIA-10G-BIZ</code></td><td><code>urn:telco:catalog:spec:DIA-10G-BIZ</code></td><td>11</td><td>0.1</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>16</td><td><code>DIA-100G-CORE</code></td><td><code>urn:telco:catalog:spec:DIA-100G-CORE</code></td><td>11</td><td>0.02</td><td>-</td><td>False</td><td><code>ACTIVE</code></td></tr>
+<tr><td>17</td><td><code>WAVELENGTH-10G-METRO</code></td><td><code>urn:telco:catalog:spec:WAVELENGTH-10G-METRO</code></td><td>11</td><td>0.001</td><td>-</td><td>False</td><td><code>ACTIVE</code></td></tr>
+<tr><td>18</td><td><code>WAVELENGTH-100G-METRO</code></td><td><code>urn:telco:catalog:spec:WAVELENGTH-100G-METRO</code></td><td>11</td><td>0.001</td><td>-</td><td>False</td><td><code>ACTIVE</code></td></tr>
+<tr><td>19</td><td><code>5G-SLICE-URLLC</code></td><td><code>urn:telco:catalog:spec:5G-SLICE-URLLC</code></td><td>11</td><td>0.05</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>20</td><td><code>5G-SLICE-EMBB</code></td><td><code>urn:telco:catalog:spec:5G-SLICE-EMBB</code></td><td>11</td><td>0.5</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>21</td><td><code>GOV-SEC-ETH-10G</code></td><td><code>urn:telco:catalog:spec:GOV-SEC-ETH-10G</code></td><td>11</td><td>0.05</td><td>-</td><td>False</td><td><code>ACTIVE</code></td></tr>
+<tr><td>22</td><td><code>CLOUD-CONNECT-10G</code></td><td><code>urn:telco:catalog:spec:CLOUD-CONNECT-10G</code></td><td>11</td><td>0.1</td><td>-</td><td>True</td><td><code>ACTIVE</code></td></tr>
+<tr><td>23</td><td><code>ETH-2.5G-MID</code></td><td><code>urn:telco:catalog:spec:ETH-2.5G-MID</code></td><td>11</td><td>0.2</td><td>-</td><td>True</td><td><code>PILOT</code></td></tr></tbody>
+  </table>
+
+  <h2>(d) Detailed pySHACL Row Quarantine Table (2 Quarantined Rows)</h2>
+  <table>
+    <thead><tr><th>Row</th><th>SKU</th><th>Violated Constraint</th><th>Path</th><th>Message</th><th>Raw Values</th><th>pySHACL Validation Report</th></tr></thead>
+    <tbody><tr><td>24</td><td><code>DARK-FIBER-METRO-X</code></td><td><code>http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent; http://www.w3.org/ns/shacl#DatatypeConstraintComponent; http://www.w3.org/ns/shacl#InConstraintComponent</code></td><td><code>http://telco.enterprise.org/ontology/maxPacketLossPct; http://telco.enterprise.org/ontology/autoRemediationAllowed; http://telco.enterprise.org/ontology/lifecycleStatus</code></td><td>A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.; A ServiceSpecification must define boolean autoRemediationAllowed.; A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.</td><td><pre>{
+  &quot;Product_SKU_Code&quot;: &quot;DARK-FIBER-METRO-X&quot;,
+  &quot;Marketing_Name&quot;: &quot;Unlit Metro Dark Fiber Pair (Dirty Row Test)&quot;,
+  &quot;Service_Category&quot;: &quot;L0_DARK_FIBER&quot;,
+  &quot;Max_Packet_Loss_Pct&quot;: -0.5,
+  &quot;Max_Jitter_ms&quot;: 0,
+  &quot;MTTR_Target_Hours&quot;: 24,
+  &quot;Eligible_Upgrade_SKU&quot;: &quot;WAVELENGTH-10G-METRO&quot;,
+  &quot;Auto_Remediation_Allowed&quot;: &quot;MAYBE_LEGACY&quot;,
+  &quot;Monthly_List_Price_EUR&quot;: 1500,
+  &quot;Internal_Finance_GL_Code&quot;: &quot;GL-ERR-9901&quot;,
+  &quot;Shadow_Lifecycle_Flag&quot;: &quot;99_INVALID&quot;,
+  &quot;Min_Contract_Months&quot;: 36,
+  &quot;SLA_Credit_Cap_Pct&quot;: 10,
+  &quot;Engineering_Notes&quot;: &quot;DIRTY DATA TEST: Negative packet loss &amp; invalid enum for pySHACL quarantine&quot;
+}</pre></td><td><pre>Validation Report
+Conforms: False
+Results (3):
+Constraint Violation in DatatypeConstraintComponent (http://www.w3.org/ns/shacl#DatatypeConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: [ sh:datatype xsd:boolean ; sh:message Literal(&quot;A ServiceSpecification must define boolean autoRemediationAllowed.&quot;, lang=en) ; sh:minCount Literal(&quot;1&quot;, datatype=xsd:integer) ; sh:path telco:autoRemediationAllowed ]
+	Focus Node: &lt;urn:telco:catalog:spec:DARK-FIBER-METRO-X&gt;
+	Value Node: Literal(&quot;MAYBE_LEGACY&quot;)
+	Result Path: telco:autoRemediationAllowed
+	Message: A ServiceSpecification must define boolean autoRemediationAllowed.
+Constraint Violation in InConstraintComponent (http://www.w3.org/ns/shacl#InConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: [ sh:datatype xsd:string ; sh:in ( Literal(&quot;ACTIVE&quot;) Literal(&quot;PILOT&quot;) Literal(&quot;DEPRECATED&quot;) ) ; sh:message Literal(&quot;A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.&quot;, lang=en) ; sh:minCount Literal(&quot;1&quot;, datatype=xsd:integer) ; sh:path telco:lifecycleStatus ]
+	Focus Node: &lt;urn:telco:catalog:spec:DARK-FIBER-METRO-X&gt;
+	Value Node: Literal(&quot;99_INVALID&quot;)
+	Result Path: telco:lifecycleStatus
+	Message: A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.
+Constraint Violation in MinInclusiveConstraintComponent (http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: [ sh:datatype xsd:double ; sh:maxInclusive Literal(&quot;100.0&quot;, datatype=xsd:decimal) ; sh:message Literal(&quot;A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.&quot;, lang=en) ; sh:minCount Literal(&quot;1&quot;, datatype=xsd:integer) ; sh:minInclusive Literal(&quot;0.0&quot;, datatype=xsd:decimal) ; sh:path telco:maxPacketLossPct ]
+	Focus Node: &lt;urn:telco:catalog:spec:DARK-FIBER-METRO-X&gt;
+	Value Node: Literal(&quot;-0.5&quot;, datatype=xsd:double)
+	Result Path: telco:maxPacketLossPct
+	Message: A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.</pre></td></tr>
+<tr><td>25</td><td><code>SDWAN-LEGACY-99</code></td><td><code>http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent; http://www.w3.org/ns/shacl#DatatypeConstraintComponent; http://www.w3.org/ns/shacl#InConstraintComponent</code></td><td><code>http://telco.enterprise.org/ontology/maxPacketLossPct; http://telco.enterprise.org/ontology/autoRemediationAllowed; http://telco.enterprise.org/ontology/lifecycleStatus</code></td><td>A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.; A ServiceSpecification must define boolean autoRemediationAllowed.; A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.</td><td><pre>{
+  &quot;Product_SKU_Code&quot;: &quot;SDWAN-LEGACY-99&quot;,
+  &quot;Marketing_Name&quot;: &quot;Unmigrated Legacy Velo Box (Dirty Row Test)&quot;,
+  &quot;Service_Category&quot;: &quot;MANAGED_SDWAN&quot;,
+  &quot;Max_Packet_Loss_Pct&quot;: 125,
+  &quot;Max_Jitter_ms&quot;: -5,
+  &quot;MTTR_Target_Hours&quot;: null,
+  &quot;Eligible_Upgrade_SKU&quot;: &quot;SDWAN-PRO&quot;,
+  &quot;Auto_Remediation_Allowed&quot;: &quot;UNKNOWN&quot;,
+  &quot;Monthly_List_Price_EUR&quot;: -100,
+  &quot;Internal_Finance_GL_Code&quot;: &quot;GL-ERR-9902&quot;,
+  &quot;Shadow_Lifecycle_Flag&quot;: &quot;99_OBS_SHADOW&quot;,
+  &quot;Min_Contract_Months&quot;: 12,
+  &quot;SLA_Credit_Cap_Pct&quot;: 0,
+  &quot;Engineering_Notes&quot;: &quot;DIRTY DATA TEST: Loss &gt; 100% and NULL MTTR for pySHACL quarantine&quot;
+}</pre></td><td><pre>Validation Report
+Conforms: False
+Results (3):
+Constraint Violation in DatatypeConstraintComponent (http://www.w3.org/ns/shacl#DatatypeConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: [ sh:datatype xsd:boolean ; sh:message Literal(&quot;A ServiceSpecification must define boolean autoRemediationAllowed.&quot;, lang=en) ; sh:minCount Literal(&quot;1&quot;, datatype=xsd:integer) ; sh:path telco:autoRemediationAllowed ]
+	Focus Node: &lt;urn:telco:catalog:spec:SDWAN-LEGACY-99&gt;
+	Value Node: Literal(&quot;UNKNOWN&quot;)
+	Result Path: telco:autoRemediationAllowed
+	Message: A ServiceSpecification must define boolean autoRemediationAllowed.
+Constraint Violation in InConstraintComponent (http://www.w3.org/ns/shacl#InConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: [ sh:datatype xsd:string ; sh:in ( Literal(&quot;ACTIVE&quot;) Literal(&quot;PILOT&quot;) Literal(&quot;DEPRECATED&quot;) ) ; sh:message Literal(&quot;A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.&quot;, lang=en) ; sh:minCount Literal(&quot;1&quot;, datatype=xsd:integer) ; sh:path telco:lifecycleStatus ]
+	Focus Node: &lt;urn:telco:catalog:spec:SDWAN-LEGACY-99&gt;
+	Value Node: Literal(&quot;99_OBS_SHADOW&quot;)
+	Result Path: telco:lifecycleStatus
+	Message: A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED.
+Constraint Violation in MaxInclusiveConstraintComponent (http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent):
+	Severity: sh:Violation
+	Source Shape: [ sh:datatype xsd:double ; sh:maxInclusive Literal(&quot;100.0&quot;, datatype=xsd:decimal) ; sh:message Literal(&quot;A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.&quot;, lang=en) ; sh:minCount Literal(&quot;1&quot;, datatype=xsd:integer) ; sh:minInclusive Literal(&quot;0.0&quot;, datatype=xsd:decimal) ; sh:path telco:maxPacketLossPct ]
+	Focus Node: &lt;urn:telco:catalog:spec:SDWAN-LEGACY-99&gt;
+	Value Node: Literal(&quot;125.0&quot;, datatype=xsd:double)
+	Result Path: telco:maxPacketLossPct
+	Message: A ServiceSpecification must define maximum packet loss percentage between 0.0 and 100.0.</pre></td></tr></tbody>
+  </table>
+</body>
+</html>

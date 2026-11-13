@@ -99,6 +99,7 @@ class AiSettings(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     model_name: str = Field(..., min_length=1)
+    component_models: Dict[str, str] = Field(default_factory=dict)
     location: str = Field(default="europe-west4", min_length=1)
     temperature: float = Field(default=0.0, ge=0.0, le=2.0)
     max_output_tokens: int = Field(default=4096, ge=1)
@@ -206,6 +207,9 @@ class TrackBIngestionAndErSettings(BaseModel):
     profiler_prompt_template_path: str = Field(
         default="prompts/s1_cmdb_schema_profiler_prompt.md", min_length=1
     )
+    excel_profiler_prompt_template_path: str = Field(
+        default="prompts/s2_excel_catalog_profiler_prompt.md", min_length=1
+    )
     hitl_gate1_report_path: str = Field(
         default="reports/hitl_gate1_ontology_mapping_review.html", min_length=1
     )
@@ -214,6 +218,9 @@ class TrackBIngestionAndErSettings(BaseModel):
     )
     shacl_quarantine_report_path: str = Field(
         default="reports/shacl_quarantine_report.html", min_length=1
+    )
+    shacl_quarantine_summary_path: str = Field(
+        default="reports/shacl_quarantine_summary.json", min_length=1
     )
 
 
@@ -753,5 +760,165 @@ class Dt01aExecutionResult(BaseModel):
     hitl_html_report_path: Path
     hitl_markdown_report_path: Path
     golden_ref_updated: bool
+
+
+# ============================================================================
+# Step 3 (DT-01b): Multi-Tab Excel Catalog Profiler & pySHACL Quarantine Models
+# ============================================================================
+class ExcelSheetIntrospection(BaseModel):
+    """Dynamic structural snapshot of a single Excel worksheet without hardcoded assumptions."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sheet_name: str = Field(..., min_length=1)
+    max_row: int = Field(..., ge=0)
+    max_col: int = Field(..., ge=0)
+    merged_cell_ranges: List[str] = Field(default_factory=list)
+    preview_rows: List[List[str]] = Field(default_factory=list)
+
+
+class ExcelWorkbookIntrospection(BaseModel):
+    """Complete dynamic structural introspection payload for an Excel workbook."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    workbook_path: str = Field(..., min_length=1)
+    sheet_count: int = Field(..., ge=1)
+    sheets: List[ExcelSheetIntrospection] = Field(..., min_length=1)
+
+
+class ExcelWorksheetClassification(BaseModel):
+    """LLM classification decision for a single Excel worksheet tab."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    sheet_name: str = Field(..., min_length=1)
+    classification: Literal["TARGET_INGEST_TAB", "EXCLUDED_DISTRACTOR_TAB"]
+    rationale: str = Field(..., min_length=1)
+    header_row_index: Optional[int] = Field(default=None, ge=1)
+    data_start_row_index: Optional[int] = Field(default=None, ge=1)
+    banner_rows_detected: List[int] = Field(default_factory=list)
+
+
+class ExcelValueMapEntry(BaseModel):
+    """Single deterministic value translation entry for an Excel column."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_value: str = Field(..., min_length=1)
+    target_value: str = Field(..., min_length=1)
+
+
+class ExcelColumnMappingSpec(BaseModel):
+    """Column-to-TBox property mapping specification for the target Excel worksheet."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_column_header: str = Field(..., min_length=1)
+    column_index: int = Field(..., ge=1)
+    mapping_status: Literal["MAPPED", "EXCLUDED_NOISE"]
+    target_property_qname: Optional[str] = None
+    datatype_qname: Optional[str] = None
+    is_sku_identifier: bool = False
+    is_iri_reference: bool = False
+    iri_reference_template: Optional[str] = None
+    value_map: List[ExcelValueMapEntry] = Field(default_factory=list)
+    rationale: str = Field(..., min_length=1)
+
+
+class ExcelCatalogMappingProposal(BaseModel):
+    """Structured LLM proposal for Prong 2 Excel Catalog profiling and RML generation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    target_sheet_name: str = Field(..., min_length=1)
+    target_class_qname: str = Field(..., min_length=1)
+    canonical_iri_template: str = Field(..., min_length=1)
+    sku_column_header: str = Field(..., min_length=1)
+    header_row_index: int = Field(..., ge=1)
+    data_start_row_index: int = Field(..., ge=1)
+    worksheet_classifications: List[ExcelWorksheetClassification] = Field(
+        ..., min_length=1
+    )
+    column_mappings: List[ExcelColumnMappingSpec] = Field(..., min_length=1)
+    mapping_rationale: str = Field(..., min_length=1)
+
+
+class QuarantinedRowRecord(BaseModel):
+    """Detailed audit record for a single Excel row blocked by pySHACL validation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    excel_row_number: int = Field(..., ge=1)
+    sku_code: Optional[str] = None
+    raw_row_values: Dict[str, Any]
+    violated_constraint_component: str = Field(..., min_length=1)
+    focus_node: str = Field(..., min_length=1)
+    result_path: Optional[str] = None
+    shacl_message: str = Field(..., min_length=1)
+    shacl_report_text: str = Field(..., min_length=1)
+
+
+class PromotedSkuSummary(BaseModel):
+    """Audit summary of a valid B2B SKU promoted to <urn:telco:graph:ref:catalog>."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    excel_row_number: int = Field(..., ge=1)
+    sku_code: str = Field(..., min_length=1)
+    subject_iri: str = Field(..., min_length=1)
+    triple_count: int = Field(..., ge=1)
+    max_packet_loss_pct: Optional[float] = None
+    availability_target_pct: Optional[float] = None
+    lifecycle_status: Optional[str] = None
+    auto_remediation_allowed: Optional[bool] = None
+
+
+class ShaclQuarantineSummary(BaseModel):
+    """Machine-readable quarantine metrics persisted for SYS-01 and downstream inspection."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    scenario_id: Literal["DT-01b"] = "DT-01b"
+    executed_at_utc: str = Field(..., min_length=1)
+    workbook_path: str = Field(..., min_length=1)
+    target_sheet_name: str = Field(..., min_length=1)
+    header_row_index: int = Field(..., ge=1)
+    data_start_row_index: int = Field(..., ge=1)
+    excluded_distractor_tabs_count: int = Field(..., ge=0)
+    excluded_distractor_tabs: List[str] = Field(default_factory=list)
+    total_data_rows_evaluated: int = Field(..., ge=0)
+    valid_skus_loaded_count: int = Field(..., ge=0)
+    quarantined_rows_count: int = Field(..., ge=0)
+    catalog_triples_materialized: int = Field(..., ge=0)
+    virtual_ib_triples_count: int = Field(..., ge=0)
+    rml_mapping_path: str = Field(..., min_length=1)
+    quarantined_rows: List[QuarantinedRowRecord] = Field(default_factory=list)
+
+
+class Dt01bExecutionResult(BaseModel):
+    """Complete validated summary returned by Scenario `DT-01b`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    scenario_id: Literal["DT-01b"] = "DT-01b"
+    executed_at_utc: str = Field(..., min_length=1)
+    model_used: str = Field(..., min_length=1)
+    workbook_path: Path
+    rml_mapping_path: Path
+    trig_dataset_path: Path
+    quarantine_html_report_path: Path
+    quarantine_markdown_report_path: Path
+    quarantine_summary_json_path: Path
+    target_sheet_name: str = Field(..., min_length=1)
+    excluded_distractor_tabs_count: int = Field(..., ge=0)
+    total_data_rows_evaluated: int = Field(..., ge=0)
+    valid_skus_loaded_count: int = Field(..., ge=0)
+    quarantined_rows_count: int = Field(..., ge=0)
+    catalog_triples_materialized: int = Field(..., ge=0)
+    virtual_ib_triples_count: int = Field(..., ge=0)
+    promoted_skus: List[PromotedSkuSummary] = Field(default_factory=list)
+    quarantined_rows: List[QuarantinedRowRecord] = Field(default_factory=list)
+
 
 

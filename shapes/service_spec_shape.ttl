@@ -8,7 +8,7 @@
 telco:ServiceSpecificationShape a sh:NodeShape ;
     sh:targetClass tmf:ServiceSpecification ;
     rdfs:label "Service Specification SHACL Validation Shape"@en ;
-    rdfs:comment "Enforces required catalog SKU code, valid packet loss and availability percentages, and lifecycle status."@en ;
+    rdfs:comment "Enforces required catalog SKU code, valid packet loss and optional availability percentages, boolean auto-remediation flag, optional SLA credit cap and contract term, and lifecycle status."@en ;
     sh:property [
         sh:path tmf:skuCode ;
         sh:datatype xsd:string ;
@@ -27,15 +27,36 @@ telco:ServiceSpecificationShape a sh:NodeShape ;
     sh:property [
         sh:path telco:availabilityTargetPct ;
         sh:datatype xsd:double ;
-        sh:minCount 1 ;
+        sh:minCount 0 ;
         sh:minInclusive 0.0 ;
         sh:maxInclusive 100.0 ;
-        sh:message "A ServiceSpecification must define availability target percentage between 0.0 and 100.0."@en ;
+        sh:message "If provided, availability target percentage must be a double between 0.0 and 100.0."@en ;
+    ] ;
+    sh:property [
+        sh:path telco:autoRemediationAllowed ;
+        sh:datatype xsd:boolean ;
+        sh:minCount 1 ;
+        sh:message "A ServiceSpecification must define boolean autoRemediationAllowed."@en ;
+    ] ;
+    sh:property [
+        sh:path telco:slaCreditCapPct ;
+        sh:datatype xsd:double ;
+        sh:minCount 0 ;
+        sh:minInclusive 0.0 ;
+        sh:maxInclusive 100.0 ;
+        sh:message "If provided, SLA credit cap percentage must be a double between 0.0 and 100.0."@en ;
+    ] ;
+    sh:property [
+        sh:path telco:minContractMonths ;
+        sh:datatype xsd:integer ;
+        sh:minCount 0 ;
+        sh:minInclusive 1 ;
+        sh:message "If provided, minimum contract months must be a positive integer."@en ;
     ] ;
     sh:property [
         sh:path telco:lifecycleStatus ;
         sh:datatype xsd:string ;
         sh:minCount 1 ;
-        sh:in ( "ACTIVE" "DEPRECATED" ) ;
-        sh:message "A ServiceSpecification must have lifecycle status of either ACTIVE or DEPRECATED."@en ;
+        sh:in ( "ACTIVE" "PILOT" "DEPRECATED" ) ;
+        sh:message "A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED."@en ;
     ] .

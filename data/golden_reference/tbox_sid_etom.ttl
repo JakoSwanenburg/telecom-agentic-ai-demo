@@ -1,0 +1,457 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix qudt: <http://qudt.org/schema/qudt/> .
+@prefix unit: <http://qudt.org/vocab/unit/> .
+@prefix tmf: <http://tmforum.org/sid/> .
+@prefix etom: <http://tmforum.org/etom/> .
+@prefix telco: <http://telco.enterprise.org/ontology/> .
+
+<urn:telco:graph:tbox:sid-etom> a owl:Ontology ;
+    rdfs:label "Enterprise L2 Fiber Assurance & Network Inventory Ontology"@en ;
+    dcterms:identifier "PROP-UC-001-GATE1" ;
+    rdfs:comment "Conceptual semantic model aligning Enterprise Layer 2 Carrier Ethernet customer service inventory, optical transport topology, and automated trouble triage with TM Forum SID GB922 and eTOM GB921 business processes."@en .
+
+# ============================================================================
+# TM Forum eTOM (GB921) Business Process Individuals
+# ============================================================================
+etom:Process_1_3_7_ProblemHandling a etom:BusinessProcess , owl:NamedIndividual ;
+    rdfs:label "eTOM 1.3.7 Problem Handling"@en ;
+    dcterms:identifier "1.3.7" ;
+    rdfs:comment "Customer-facing service problem reception, SLA triage, root-cause correlation, and customer status notification."@en ;
+    skos:altLabel "Customer Problem Handling"@en ,
+                  "CFS SLA Assurance Triage"@en .
+
+etom:Process_1_4_5_ResourceTroubleManagement a etom:BusinessProcess , owl:NamedIndividual ;
+    rdfs:label "eTOM 1.4.5 Resource Trouble Management"@en ;
+    dcterms:identifier "1.4.5" ;
+    rdfs:comment "Network resource fault localization, optical transceiver DDM diagnostics, autonomous self-healing, and field technician dispatch."@en ;
+    skos:altLabel "Resource Trouble Management"@en ,
+                  "Network Fault Isolation & Remediation"@en .
+
+# ============================================================================
+# Pruned TM Forum SID (GB922) & Telecom Assurance OWL Classes
+# ============================================================================
+tmf:Customer a owl:Class ;
+    rdfs:label "Customer"@en ;
+    rdfs:comment "An enterprise party or organization that subscribes to commercial telecom products and holds an active Master Service Agreement."@en ;
+    skos:altLabel "Enterprise Subscriber"@en ,
+                  "B2B Account"@en ,
+                  "Corporate Client"@en ;
+    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
+
+tmf:Product a owl:Class ;
+    rdfs:label "Product"@en ;
+    rdfs:comment "A procured commercial telecom offering binding a customer agreement to one or more CustomerFacingServices."@en ;
+    skos:altLabel "Commercial Product Instance"@en ,
+                  "Subscribed Telecom Offering"@en ,
+                  "Enterprise Connectivity Subscription"@en ;
+    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
+
+tmf:CustomerFacingService a owl:Class ;
+    rdfs:label "Customer Facing Service"@en ;
+    rdfs:comment "An active Layer 2 Ethernet or wavelength connectivity circuit directly visible to and contracted by an enterprise customer."@en ;
+    skos:altLabel "CFS Circuit"@en ,
+                  "Enterprise L2 Fiber Circuit"@en ,
+                  "Carrier Ethernet Service"@en ;
+    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
+
+tmf:ServiceSpecification a owl:Class ;
+    rdfs:label "Service Specification"@en ;
+    rdfs:comment "Standardized commercial catalog SKU defining bandwidth tier, SLA packet-loss ceiling, availability target, and autonomous remediation eligibility."@en ;
+    skos:altLabel "Commercial Product SKU"@en ,
+                  "Catalog Service Tier"@en ,
+                  "SLA Service Specification"@en ;
+    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
+
+tmf:ResourceFacingService a owl:Class ;
+    rdfs:label "Resource Facing Service"@en ;
+    rdfs:comment "Internal network transport and access bearer service realizing a CustomerFacingService across PE routers, OLT ports, fiber spans, and CPE devices."@en ;
+    skos:altLabel "RFS Access Bearer"@en ,
+                  "Network Transport Bearer"@en ,
+                  "L2 Optical Bearer Service"@en ;
+    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+
+tmf:PhysicalResource a owl:Class ;
+    rdfs:label "Physical Resource"@en ;
+    rdfs:comment "A physical network equipment asset deployed in the provider core, access plant, or customer demarcation point."@en ;
+    skos:altLabel "Network Inventory Element"@en ,
+                  "Physical Hardware Asset"@en ,
+                  "Telecom Network Device"@en ;
+    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+
+telco:OltPortResource a owl:Class ;
+    rdfs:subClassOf tmf:PhysicalResource ;
+    rdfs:label "OLT Optical Port Resource"@en ;
+    rdfs:comment "Optical Line Terminal transceiver port terminating the access fiber span and providing real-time gNMI DDM optical telemetry."@en ;
+    skos:altLabel "OLT Port"@en ,
+                  "Optical Access Line Card Port"@en ,
+                  "PON Optical Interface"@en ;
+    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+
+telco:CpeDeviceResource a owl:Class ;
+    rdfs:subClassOf tmf:PhysicalResource ;
+    rdfs:label "Customer Premises Equipment Resource"@en ;
+    rdfs:comment "Physical demarcation switch or router installed at the enterprise customer site."@en ;
+    skos:altLabel "CPE Device"@en ,
+                  "Enterprise NTE Demarcation Chassis"@en ,
+                  "On-Premises Optical Access Switch"@en ;
+    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+
+telco:PeRouterResource a owl:Class ;
+    rdfs:subClassOf tmf:PhysicalResource ;
+    rdfs:label "Provider Edge Router Resource"@en ;
+    rdfs:comment "Metro or core Provider Edge router aggregating L2 Ethernet access bearers."@en ;
+    skos:altLabel "PE Router"@en ,
+                  "Metro Aggregation Router"@en ,
+                  "Edge Routing Node"@en ;
+    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+
+tmf:PhysicalResourceSpec a owl:Class ;
+    rdfs:label "Physical Resource Specification"@en ;
+    rdfs:comment "Vendor equipment model specification defining hardware capabilities, supported optical transceivers, and DDM calibration thresholds."@en ;
+    skos:altLabel "Hardware Model SKU"@en ,
+                  "Vendor Equipment Specification"@en ,
+                  "Chassis Hardware Model"@en ;
+    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+
+tmf:TroubleTicket a owl:Class ;
+    rdfs:label "Trouble Ticket"@en ;
+    rdfs:comment "TMF621 operational assurance ticket tracking network incidents, automated remediations, or field fiber splicing dispatches."@en ;
+    skos:altLabel "NOC Assurance Ticket"@en ,
+                  "TMF621 Incident Record"@en ,
+                  "Field Dispatch Trouble Ticket"@en ;
+    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling ,
+                             etom:Process_1_4_5_ResourceTroubleManagement .
+
+telco:SlaClause a owl:Class ;
+    rdfs:label "Service Level Agreement Clause"@en ;
+    rdfs:comment "Contractual or catalog SLA clause specifying packet-loss thresholds, mean time to repair, service credit penalties, and VIP escalation rules."@en ;
+    skos:altLabel "SLA Guarantee Clause"@en ,
+                  "MSA Contractual Penalty Policy"@en ,
+                  "Quality of Service Commitment"@en ;
+    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling .
+
+telco:OpticalCalibrationProfile a owl:Class ;
+    rdfs:label "Optical Calibration Profile"@en ;
+    rdfs:comment "Vendor hardware manual optical Digital Diagnostic Monitoring power envelope and autonomous laser bias recalibration specification."@en ;
+    skos:altLabel "DDM Optical Power Envelope"@en ,
+                  "SFP+ Tx/Rx Calibration Spec"@en ,
+                  "Optical Attenuation Threshold Profile"@en ;
+    telco:alignedEtomProcess etom:Process_1_4_5_ResourceTroubleManagement .
+
+etom:BusinessProcess a owl:Class ;
+    rdfs:label "Business Process"@en ;
+    rdfs:comment "An operational activity defined within the TM Forum eTOM business process framework governing service assurance and resource triage."@en ;
+    skos:altLabel "eTOM Process Definition"@en ,
+                  "Operational Workflow Task"@en ,
+                  "Standard Operating Procedure"@en ;
+    telco:alignedEtomProcess etom:Process_1_3_7_ProblemHandling ,
+                             etom:Process_1_4_5_ResourceTroubleManagement .
+
+# ============================================================================
+# OWL Object & Datatype Properties
+# ============================================================================
+tmf:hasCustomer a owl:ObjectProperty ;
+    rdfs:domain tmf:CustomerFacingService ;
+    rdfs:range tmf:Customer ;
+    rdfs:label "has customer"@en ;
+    rdfs:comment "Associates an active Customer Facing Service with the contracted enterprise subscriber."@en ;
+    skos:altLabel "subscriber relationship"@en ,
+                  "service owner"@en .
+
+tmf:isDescribedBy a owl:ObjectProperty ;
+    rdfs:domain tmf:CustomerFacingService ;
+    rdfs:range tmf:ServiceSpecification ;
+    rdfs:label "is described by"@en ;
+    rdfs:comment "Associates a Customer Facing Service instance with its commercial service specification catalog tier."@en ;
+    skos:altLabel "service catalog specification"@en ,
+                  "product tier specification"@en .
+
+tmf:supportsService a owl:ObjectProperty ;
+    rdfs:domain tmf:ResourceFacingService ;
+    rdfs:range tmf:CustomerFacingService ;
+    rdfs:label "supports service"@en ;
+    rdfs:comment "Links an underlying Resource Facing Service transport bearer to the Customer Facing Service circuit it realizes."@en ;
+    skos:altLabel "realizes customer service"@en ,
+                  "underlying transport bearer"@en .
+
+telco:usesOltPort a owl:ObjectProperty ;
+    rdfs:domain tmf:ResourceFacingService ;
+    rdfs:range telco:OltPortResource ;
+    rdfs:label "uses OLT port"@en ;
+    rdfs:comment "Identifies the physical Optical Line Terminal transceiver port providing access connectivity for the resource service."@en ;
+    skos:altLabel "terminates on OLT port"@en ,
+                  "optical line interface"@en .
+
+telco:terminatesOnRouter a owl:ObjectProperty ;
+    rdfs:domain tmf:ResourceFacingService ;
+    rdfs:range telco:PeRouterResource ;
+    rdfs:label "terminates on router"@en ;
+    rdfs:comment "Identifies the Provider Edge aggregation router hosting the L2 circuit endpoint."@en ;
+    skos:altLabel "aggregating PE router"@en ,
+                  "edge router host"@en .
+
+telco:demarcatesAtCpe a owl:ObjectProperty ;
+    rdfs:domain tmf:ResourceFacingService ;
+    rdfs:range telco:CpeDeviceResource ;
+    rdfs:label "demarcates at CPE"@en ;
+    rdfs:comment "Identifies the Customer Premises Equipment device serving as the on-site network demarcation endpoint."@en ;
+    skos:altLabel "customer demarcation chassis"@en ,
+                  "on-premises CPE asset"@en .
+
+tmf:hasResourceSpecification a owl:ObjectProperty ;
+    rdfs:domain tmf:PhysicalResource ;
+    rdfs:range tmf:PhysicalResourceSpec ;
+    rdfs:label "has resource specification"@en ;
+    rdfs:comment "Links a physical hardware asset to its vendor model hardware specification."@en ;
+    skos:altLabel "equipment model specification"@en ,
+                  "hardware spec"@en .
+
+telco:hasOpticalCalibrationProfile a owl:ObjectProperty ;
+    rdfs:domain tmf:PhysicalResourceSpec ;
+    rdfs:range telco:OpticalCalibrationProfile ;
+    rdfs:label "has optical calibration profile"@en ;
+    rdfs:comment "Associates an equipment model specification with its vendor DDM optical power thresholds and recalibration limits."@en ;
+    skos:altLabel "DDM calibration profile"@en ,
+                  "optical power envelope"@en .
+
+telco:hasSlaClause a owl:ObjectProperty ;
+    rdfs:domain tmf:ServiceSpecification ;
+    rdfs:range telco:SlaClause ;
+    rdfs:label "has SLA clause"@en ;
+    rdfs:comment "Associates a commercial service specification tier with contractually binding SLA guarantees and penalty clauses."@en ;
+    skos:altLabel "service SLA guarantee"@en ,
+                  "contractual clause"@en .
+
+telco:recommendedUpgradeSpec a owl:ObjectProperty ;
+    rdfs:domain tmf:ServiceSpecification ;
+    rdfs:range tmf:ServiceSpecification ;
+    rdfs:label "recommended upgrade specification"@en ;
+    rdfs:comment "Points to the next tier commercial service specification recommended when bandwidth or packet loss thresholds are exceeded."@en ;
+    skos:altLabel "upgrade catalog path"@en ,
+                  "higher tier SKU"@en .
+
+telco:affectedCircuit a owl:ObjectProperty ;
+    rdfs:domain tmf:TroubleTicket ;
+    rdfs:range tmf:CustomerFacingService ;
+    rdfs:label "affected circuit"@en ;
+    rdfs:comment "References the Customer Facing Service circuit impacted by an assurance incident."@en ;
+    skos:altLabel "impacted CFS circuit"@en ,
+                  "trouble ticket circuit"@en .
+
+telco:affectedResource a owl:ObjectProperty ;
+    rdfs:domain tmf:TroubleTicket ;
+    rdfs:range tmf:PhysicalResource ;
+    rdfs:label "affected resource"@en ;
+    rdfs:comment "References the physical network resource identified as the root cause of an assurance fault."@en ;
+    skos:altLabel "faulty hardware resource"@en ,
+                  "root cause asset"@en .
+
+tmf:customerId a owl:DatatypeProperty ;
+    rdfs:domain tmf:Customer ;
+    rdfs:range xsd:string ;
+    rdfs:label "customer identifier"@en ;
+    rdfs:comment "Canonical business identifier for an enterprise customer account."@en ;
+    skos:altLabel "customer account reference"@en ,
+                  "external customer ID"@en .
+
+tmf:partyLegalName a owl:DatatypeProperty ;
+    rdfs:domain tmf:Customer ;
+    rdfs:range xsd:string ;
+    rdfs:label "party legal name"@en ;
+    rdfs:comment "Officially registered legal entity name of the enterprise customer."@en ;
+    skos:altLabel "registered company name"@en ,
+                  "corporate legal name"@en .
+
+tmf:marketSegment a owl:DatatypeProperty ;
+    rdfs:domain tmf:Customer ;
+    rdfs:range xsd:string ;
+    rdfs:label "market segment"@en ;
+    rdfs:comment "Commercial market classification tier such as enterprise VIP or public sector."@en ;
+    skos:altLabel "customer tier classification"@en ,
+                  "commercial segment"@en .
+
+telco:accountManagerCode a owl:DatatypeProperty ;
+    rdfs:domain tmf:Customer ;
+    rdfs:range xsd:string ;
+    rdfs:label "account manager code"@en ;
+    rdfs:comment "Unique employee or desk identifier of the designated enterprise account manager."@en ;
+    skos:altLabel "assigned sales representative"@en ,
+                  "account executive ID"@en .
+
+telco:chamberOfCommerceReg a owl:DatatypeProperty ;
+    rdfs:domain tmf:Customer ;
+    rdfs:range xsd:string ;
+    rdfs:label "chamber of commerce registration"@en ;
+    rdfs:comment "Official commercial trade registry or chamber of commerce number for the enterprise."@en ;
+    skos:altLabel "trade registry number"@en ,
+                  "KvK registration"@en .
+
+tmf:serviceId a owl:DatatypeProperty ;
+    rdfs:domain tmf:CustomerFacingService ;
+    rdfs:range xsd:string ;
+    rdfs:label "service identifier"@en ;
+    rdfs:comment "Unique telecom circuit reference code assigned to a customer-facing service."@en ;
+    skos:altLabel "circuit identifier"@en ,
+                  "service instance ID"@en .
+
+tmf:operationalStatus a owl:DatatypeProperty ;
+    rdfs:domain tmf:CustomerFacingService ;
+    rdfs:range xsd:string ;
+    rdfs:label "operational status"@en ;
+    rdfs:comment "Normalized lifecycle state of the connectivity service, such as ACTIVE or MAINTENANCE."@en ;
+    skos:altLabel "canonical service state"@en ,
+                  "circuit operational status"@en .
+
+telco:bandwidthGbps a owl:DatatypeProperty ;
+    rdfs:domain tmf:CustomerFacingService ;
+    rdfs:range xsd:double ;
+    qudt:applicableUnit unit:GigaBIT-PER-SEC ;
+    rdfs:label "bandwidth in gigabits per second"@en ;
+    rdfs:comment "Contracted symmetrical bandwidth normalized to Gigabits per second."@en ;
+    skos:altLabel "circuit throughput Gbps"@en ,
+                  "normalized capacity"@en .
+
+telco:installationDate a owl:DatatypeProperty ;
+    rdfs:domain tmf:CustomerFacingService ;
+    rdfs:range xsd:date ;
+    rdfs:label "installation date"@en ;
+    rdfs:comment "Calendar date when the customer connectivity circuit was physically handed over and activated."@en ;
+    skos:altLabel "service activation date"@en ,
+                  "handover date"@en .
+
+tmf:rfsId a owl:DatatypeProperty ;
+    rdfs:domain tmf:ResourceFacingService ;
+    rdfs:range xsd:string ;
+    rdfs:label "resource facing service identifier"@en ;
+    rdfs:comment "Internal system identifier for the underlying network transport bearer."@en ;
+    skos:altLabel "bearer service identifier"@en ,
+                  "RFS instance ID"@en .
+
+telco:vlanTag a owl:DatatypeProperty ;
+    rdfs:domain tmf:ResourceFacingService ;
+    rdfs:range xsd:integer ;
+    rdfs:label "VLAN tag"@en ;
+    rdfs:comment "IEEE 802.1Q Ethernet encapsulation identifier assigned to the Layer 2 bearer."@en ;
+    skos:altLabel "dot1q VLAN ID"@en ,
+                  "outer VLAN tag"@en .
+
+telco:fiberSpanId a owl:DatatypeProperty ;
+    rdfs:domain tmf:ResourceFacingService ;
+    rdfs:range xsd:string ;
+    rdfs:label "fiber span identifier"@en ;
+    rdfs:comment "Outside plant optical fiber segment identifier connecting the OLT to the customer premises."@en ;
+    skos:altLabel "optical cable route ID"@en ,
+                  "fiber span reference"@en .
+
+tmf:resourceId a owl:DatatypeProperty ;
+    rdfs:domain tmf:PhysicalResource ;
+    rdfs:range xsd:string ;
+    rdfs:label "resource identifier"@en ;
+    rdfs:comment "Unique hardware inventory asset tag or management identifier."@en ;
+    skos:altLabel "network element asset tag"@en ,
+                  "device identifier"@en .
+
+tmf:resourceName a owl:DatatypeProperty ;
+    rdfs:domain tmf:PhysicalResource ;
+    rdfs:range xsd:string ;
+    rdfs:label "resource name"@en ;
+    rdfs:comment "DNS hostname or network management label for the physical hardware asset."@en ;
+    skos:altLabel "equipment hostname"@en ,
+                  "system network label"@en .
+
+telco:portIdentifier a owl:DatatypeProperty ;
+    rdfs:domain telco:OltPortResource ;
+    rdfs:range xsd:string ;
+    rdfs:label "port identifier"@en ;
+    rdfs:comment "Physical port name or slot designation on an optical network device."@en ;
+    skos:altLabel "optical interface name"@en ,
+                  "chassis port index"@en .
+
+tmf:skuCode a owl:DatatypeProperty ;
+    rdfs:domain tmf:ServiceSpecification ;
+    rdfs:range xsd:string ;
+    rdfs:label "SKU code"@en ;
+    rdfs:comment "Commercial catalog product code identifying the service level tier."@en ;
+    skos:altLabel "catalog product SKU"@en ,
+                  "service tier code"@en .
+
+telco:maxPacketLossPct a owl:DatatypeProperty ;
+    rdfs:domain tmf:ServiceSpecification ;
+    rdfs:range xsd:double ;
+    qudt:applicableUnit unit:PERCENT ;
+    rdfs:label "maximum packet loss percentage"@en ;
+    rdfs:comment "Contractual frame loss ratio ceiling allowed before SLA violation occurs."@en ;
+    skos:altLabel "frame loss ceiling"@en ,
+                  "packet loss threshold"@en .
+
+telco:availabilityTargetPct a owl:DatatypeProperty ;
+    rdfs:domain tmf:ServiceSpecification ;
+    rdfs:range xsd:double ;
+    qudt:applicableUnit unit:PERCENT ;
+    rdfs:label "availability target percentage"@en ;
+    rdfs:comment "Annual uptime percentage guaranteed under the commercial service tier."@en ;
+    skos:altLabel "uptime commitment percentage"@en ,
+                  "SLA availability target"@en .
+
+telco:lifecycleStatus a owl:DatatypeProperty ;
+    rdfs:domain tmf:ServiceSpecification ;
+    rdfs:range xsd:string ;
+    rdfs:label "lifecycle status"@en ;
+    rdfs:comment "Catalog publication state of the service specification such as ACTIVE or DEPRECATED."@en ;
+    skos:altLabel "catalog tier status"@en ,
+                  "specification lifecycle state"@en .
+
+telco:autoRemediationAllowed a owl:DatatypeProperty ;
+    rdfs:domain tmf:ServiceSpecification ;
+    rdfs:range xsd:boolean ;
+    rdfs:label "auto-remediation allowed"@en ;
+    rdfs:comment "Indicates whether autonomous optical recalibration is legally and technically permitted."@en ;
+    skos:altLabel "self-healing authorization flag"@en ,
+                  "automated triage allowed"@en .
+
+telco:rxOpticalPowerMinDbm a owl:DatatypeProperty ;
+    rdfs:domain telco:OpticalCalibrationProfile ;
+    rdfs:range xsd:double ;
+    qudt:applicableUnit unit:MilliWATT-DeciBEL ;
+    rdfs:label "minimum Rx optical power in dBm"@en ;
+    rdfs:comment "Minimum acceptable optical receive power level in dBm before soft attenuation alerts trigger."@en ;
+    skos:altLabel "low optical Rx boundary"@en ,
+                  "minimum receive sensitivity"@en .
+
+telco:rxLosCutThresholdDbm a owl:DatatypeProperty ;
+    rdfs:domain telco:OpticalCalibrationProfile ;
+    rdfs:range xsd:double ;
+    qudt:applicableUnit unit:MilliWATT-DeciBEL ;
+    rdfs:label "loss of signal threshold in dBm"@en ;
+    rdfs:comment "Optical power level in dBm indicating a physical fiber break and complete loss of signal."@en ;
+    skos:altLabel "LOS cut threshold"@en ,
+                  "hard fiber break power level"@en .
+
+tmf:ticketId a owl:DatatypeProperty ;
+    rdfs:domain tmf:TroubleTicket ;
+    rdfs:range xsd:string ;
+    rdfs:label "ticket identifier"@en ;
+    rdfs:comment "Unique reference number assigned to an operational trouble ticket."@en ;
+    skos:altLabel "incident number"@en ,
+                  "trouble ticket reference"@en .
+
+tmf:severity a owl:DatatypeProperty ;
+    rdfs:domain tmf:TroubleTicket ;
+    rdfs:range xsd:string ;
+    rdfs:label "severity"@en ;
+    rdfs:comment "Impact severity classification of the assurance incident such as CRITICAL or MAJOR."@en ;
+    skos:altLabel "ticket severity level"@en ,
+                  "incident urgency"@en .
+
+tmf:status a owl:DatatypeProperty ;
+    rdfs:domain tmf:TroubleTicket ;
+    rdfs:range xsd:string ;
+    rdfs:label "status"@en ;
+    rdfs:comment "Operational resolution state of the trouble ticket such as OPEN, IN_PROGRESS, or RESOLVED."@en ;
+    skos:altLabel "incident workflow status"@en ,
+                  "ticket resolution state"@en .

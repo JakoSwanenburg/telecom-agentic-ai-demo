@@ -1349,12 +1349,45 @@
           "path_iri": "telco:availabilityTargetPct",
           "datatype_iri": "xsd:double",
           "node_kind_iri": null,
-          "min_count": 1,
+          "min_count": 0,
           "max_count": null,
           "min_inclusive": 0.0,
           "max_inclusive": 100.0,
           "allowed_values": [],
-          "message": "A ServiceSpecification must define availability target percentage between 0.0 and 100.0."
+          "message": "If provided, availability target percentage must be a double between 0.0 and 100.0."
+        },
+        {
+          "path_iri": "telco:autoRemediationAllowed",
+          "datatype_iri": "xsd:boolean",
+          "node_kind_iri": null,
+          "min_count": 1,
+          "max_count": null,
+          "min_inclusive": null,
+          "max_inclusive": null,
+          "allowed_values": [],
+          "message": "A ServiceSpecification must define boolean autoRemediationAllowed."
+        },
+        {
+          "path_iri": "telco:slaCreditCapPct",
+          "datatype_iri": "xsd:double",
+          "node_kind_iri": null,
+          "min_count": 0,
+          "max_count": null,
+          "min_inclusive": 0.0,
+          "max_inclusive": 100.0,
+          "allowed_values": [],
+          "message": "If provided, SLA credit cap percentage must be a double between 0.0 and 100.0."
+        },
+        {
+          "path_iri": "telco:minContractMonths",
+          "datatype_iri": "xsd:integer",
+          "node_kind_iri": null,
+          "min_count": 0,
+          "max_count": null,
+          "min_inclusive": 1.0,
+          "max_inclusive": null,
+          "allowed_values": [],
+          "message": "If provided, minimum contract months must be a positive integer."
         },
         {
           "path_iri": "telco:lifecycleStatus",
@@ -1366,9 +1399,10 @@
           "max_inclusive": null,
           "allowed_values": [
             "ACTIVE",
+            "PILOT",
             "DEPRECATED"
           ],
-          "message": "A ServiceSpecification must have lifecycle status of either ACTIVE or DEPRECATED."
+          "message": "A ServiceSpecification must have lifecycle status of ACTIVE, PILOT, or DEPRECATED."
         }
       ]
     },

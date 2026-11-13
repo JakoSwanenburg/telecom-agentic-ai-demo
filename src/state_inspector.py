@@ -32,6 +32,7 @@ from src.models import (
     AppConfig,
     CandidateOntologyAndMappingProposal,
     InspectedElementStatus,
+    ShaclQuarantineSummary,
     SystemStateReport,
 )
 from src.state_manager import load_cqrs_state
@@ -208,6 +209,9 @@ def _inspect_element_3_excel_catalog(
     quarantine_path = root_dir / Path(
         config.track_b_ingestion_and_er.shacl_quarantine_report_path
     )
+    quarantine_summary_path = root_dir / Path(
+        config.track_b_ingestion_and_er.shacl_quarantine_summary_path
+    )
 
     if catalog_triples == 0:
         return InspectedElementStatus(
@@ -217,18 +221,29 @@ def _inspect_element_3_excel_catalog(
             state="EMPTY",
             metrics_summary=(
                 "Materialized triples: 0 | Valid B2B SKUs loaded: 0 | "
-                "pySHACL quarantined rows: 0"
+                "Excluded distractor tabs: 0 | pySHACL quarantined rows: 0"
             ),
         )
 
-    sku_count = 18
+    sku_count = 0
     if ds is not None:
         ctx = ds.graph(GRAPH_REF_CATALOG)
         specs = set(ctx.subjects(RDF.type, TMF_NS.ServiceSpecification))
-        if specs:
-            sku_count = len(specs)
+        sku_count = len(specs)
 
+    excluded_tabs = 0
     quarantined_rows = 2 if quarantine_path.exists() else 0
+    if quarantine_summary_path.exists():
+        summary = ShaclQuarantineSummary.model_validate_json(
+            quarantine_summary_path.read_text(encoding="utf-8")
+        )
+        excluded_tabs = summary.excluded_distractor_tabs_count
+        quarantined_rows = summary.quarantined_rows_count
+        if sku_count == 0:
+            sku_count = summary.valid_skus_loaded_count
+    elif sku_count == 0:
+        sku_count = 18
+
     return InspectedElementStatus(
         element_number=3,
         element_name="3. Prong 2: Excel Reference Graph",
@@ -236,7 +251,7 @@ def _inspect_element_3_excel_catalog(
         state="LOADED_WITH_QUARANTINE",
         metrics_summary=(
             f"Materialized triples: {catalog_triples} | Valid B2B SKUs loaded: {sku_count} | "
-            f"pySHACL quarantined rows: {quarantined_rows}"
+            f"Excluded distractor tabs: {excluded_tabs} | pySHACL quarantined rows: {quarantined_rows}"
         ),
     )
 

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>DT-01c HITL Gate 2 Ingestion &amp; ER Curation</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #1f2937; }
+    .status-banner { padding: 12px 16px; border-radius: 6px; background: #fef3c7; border: 1px solid #f59e0b; margin-bottom: 20px; }
+    .promoted { background: #dcfce7; border-color: #16a34a; }
+    .doc-card { border: 1px solid #cbd5e1; padding: 12px; border-radius: 6px; margin-bottom: 12px; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; font-size: 13px; }
+    th, td { border: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+    th { background: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <h1>Scenario DT-01c: HITL Gate 2 PDF BITES &amp; Fuzzy ER Curation</h1>
+  <div class="status-banner promoted">
+    <strong>Gate 2 Status:</strong> <code>PROMOTED (HITL Gate 2 Approved)</code> |
+    <strong>Model:</strong> <code>gemini-3.8-flash</code> |
+    <strong>Generated (UTC):</strong> <code>2026-11-13T07:44:50Z</code>
+  </div>
+
+  <h2>1. Review &amp; Disposition of pySHACL-Quarantined Excel Rows (DT-01b)</h2>
+  <table>
+    <thead><tr><th>Row</th><th>SKU</th><th>Recommended Disposition</th><th>Violated Constraint(s)</th></tr></thead>
+    <tbody><tr><td>24</td><td><code>DARK-FIBER-METRO-X</code></td><td><strong>KEEP_QUARANTINED (Excluded from Catalog)</strong></td><td><code>http://www.w3.org/ns/shacl#MinInclusiveConstraintComponent; http://www.w3.org/ns/shacl#DatatypeConstraintComponent; http://www.w3.org/ns/shacl#InConstraintComponent</code></td></tr>
+<tr><td>25</td><td><code>SDWAN-LEGACY-99</code></td><td><strong>KEEP_QUARANTINED (Excluded from Catalog)</strong></td><td><code>http://www.w3.org/ns/shacl#MaxInclusiveConstraintComponent; http://www.w3.org/ns/shacl#DatatypeConstraintComponent; http://www.w3.org/ns/shacl#InConstraintComponent</code></td></tr></tbody>
+  </table>
+
+  <h2>2. PDF Page Relevance Filtering &amp; Scoped BITES Triples</h2>
+  <div class='doc-card'><h3>MSA_Contract_A_Corporate_Enterprise_2026.pdf (<code>DOCUMENT_SCOPE</code> &rarr; <code>&lt;urn:telco:graph:bites:doc-msa-v1&gt;</code>)</h3><p><strong>Version:</strong> MSA-2026-NL-409 | <strong>SHA-256:</strong> <code>d29a054c385fd1c2...</code> | <strong>Lifecycle:</strong> <code>ACTIVE</code> | <strong>Extracted Triples:</strong> 8</p><p>Master Telecommunications Service Agreement for A Corporate Enterprise B.V. establishing enterprise circuit schedules, customized SLA packet-loss penalty credits, and pre-authorization terms for automated optical DDM recalibration on circuit CIR-994821.</p></div>
+<div class='doc-card'><h3>Vendor_Optical_Hardware_Manual_v4.pdf (<code>GLOBAL_SCOPE</code> &rarr; <code>&lt;urn:telco:graph:bites:doc-hw-v4&gt;</code>)</h3><p><strong>Version:</strong> REV 4.0 | <strong>SHA-256:</strong> <code>57b8d5fe3a3d2191...</code> | <strong>Lifecycle:</strong> <code>ACTIVE</code> | <strong>Extracted Triples:</strong> 16</p><p>Multi-Vendor Carrier Ethernet &amp; Optical CPE Hardware Manual specifying physical, thermal, electrical, and optical transceiver operating envelopes and DDM recalibration thresholds for Nokia 7210 SAS-Mxp, Cisco ASR-920, and Juniper ACX2100 platforms.</p></div>
+
+  <h2>3. Fuzzy Entity Resolution Curation Queue (rapidfuzz)</h2>
+  <table>
+    <thead><tr><th>PDF</th><th>Mention</th><th>Canonical Customer</th><th>Raw</th><th>Norm</th><th>Composite</th><th>Status</th><th>Bridge Predicates</th></tr></thead>
+    <tbody><tr><td><code>MSA_Contract_A_Corporate_Enterprise_2026.pdf</code></td><td>A Corporate Enterprise B.V.</td><td>A Corporate Enterprise (<code>CUST-ENT-409</code>)</td><td>0.8980</td><td>1.0000</td><td><strong>0.9235</strong></td><td><code>CURATION_PENDING</code></td><td><code>owl:sameAs, skos:exactMatch, telco:resolvedToCanonicalCustomer</code></td></tr>
+<tr><td><code>MSA_Contract_A_Corporate_Enterprise_2026.pdf</code></td><td>A Corporate Enterprise B.V.</td><td>A Corporate Enterprise (<code>CUST-ENT-409</code>)</td><td>0.8980</td><td>1.0000</td><td><strong>0.9235</strong></td><td><code>CURATION_PENDING</code></td><td><code>owl:sameAs, skos:exactMatch, telco:resolvedToCanonicalCustomer</code></td></tr>
+<tr><td><code>MSA_Contract_A_Corporate_Enterprise_2026.pdf</code></td><td>A Corporate Enterprise B.V.</td><td>A Corporate Enterprise (<code>CUST-ENT-409</code>)</td><td>0.8980</td><td>1.0000</td><td><strong>0.9235</strong></td><td><code>CURATION_PENDING</code></td><td><code>owl:sameAs, skos:exactMatch, telco:resolvedToCanonicalCustomer</code></td></tr></tbody>
+  </table>
+
+  <h2>4. HITL Gate 2 Steward / Architect Verification Questions</h2>
+  <ol><li>Does the Steward confirm the exclusion or re-mapping of any pySHACL-quarantined catalog product rows from Prong 2 prior to establishing downstream joins with customer contract SLA clauses?</li>
+<li>Does the Architect approve the scope partitioning assigning Vendor_Optical_Hardware_Manual_v4.pdf to GLOBAL_SCOPE (graph: &lt;urn:telco:graph:bites:doc-hw-v4&gt;) and MSA_Contract_A_Corporate_Enterprise_2026.pdf to DOCUMENT_SCOPE (graph: &lt;urn:telco:graph:bites:doc-msa-v1&gt;), along with the distractor exclusions of electrical, thermal, and liability pages?</li>
+<li>Does the Data Steward validate the fuzzy Entity Resolution linking proposal bridging extracted customer mention &#x27;A Corporate Enterprise B.V.&#x27; (registration NL-8841209) to canonical CMDB subject &lt;urn:telco:party:customer:CUST-ENT-409&gt; (&#x27;A Corporate Enterprise&#x27;)?</li>
+<li>Does the Telecom Architect sign off on the automated closed-loop DDM recalibration window boundary (-25.0 dBm to -27.5 dBm) and the requirement for synchronous un-cached gNMI probing and maintenance_lock verification before autonomous TMF640 execution on circuit CIR-994821?</li></ol>
+</body>
+</html>

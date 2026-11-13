@@ -210,6 +210,14 @@ class TrackBIngestionAndErSettings(BaseModel):
     excel_profiler_prompt_template_path: str = Field(
         default="prompts/s2_excel_catalog_profiler_prompt.md", min_length=1
     )
+    pdf_bites_prompt_template_path: str = Field(
+        default="prompts/s3_pdf_bites_extractor_prompt.md", min_length=1
+    )
+    gate2_candidate_proposal_path: str = Field(
+        default="data/semantic_store/gate2_candidate_proposal.json", min_length=1
+    )
+    er_review_band_min: float = Field(default=0.85, ge=0.0, le=1.0)
+    er_review_band_max: float = Field(default=0.95, ge=0.0, le=1.0)
     hitl_gate1_report_path: str = Field(
         default="reports/hitl_gate1_ontology_mapping_review.html", min_length=1
     )
@@ -919,6 +927,174 @@ class Dt01bExecutionResult(BaseModel):
     virtual_ib_triples_count: int = Field(..., ge=0)
     promoted_skus: List[PromotedSkuSummary] = Field(default_factory=list)
     quarantined_rows: List[QuarantinedRowRecord] = Field(default_factory=list)
+
+
+# ============================================================================
+# Step 4 (DT-01c): PDF BITES Extractor, Fuzzy ER & HITL Gate 2 Models
+# ============================================================================
+class PdfPageIntrospection(BaseModel):
+    """Dynamic page-level text snapshot extracted from a PDF via pypdf."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    page_number: int = Field(..., ge=1)
+    char_count: int = Field(..., ge=0)
+    extracted_text: str
+
+
+class PdfDocumentIntrospection(BaseModel):
+    """Dynamic document-level metadata and pages for a single PDF."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    pdf_filename: str = Field(..., min_length=1)
+    relative_path: str = Field(..., min_length=1)
+    sha256_hash: str = Field(..., min_length=64, max_length=64)
+    page_count: int = Field(..., ge=1)
+    pages: List[PdfPageIntrospection] = Field(..., min_length=1)
+
+
+class PdfCorpusIntrospection(BaseModel):
+    """Complete dynamic PDF corpus introspection payload."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    pdf_dir: str = Field(..., min_length=1)
+    document_count: int = Field(..., ge=1)
+    documents: List[PdfDocumentIntrospection] = Field(..., min_length=1)
+
+
+class CanonicalCustomerRecord(BaseModel):
+    """Canonical customer discovered dynamically from CMDB SQLite via cmdb_r2rml.ttl."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    customer_id: str = Field(..., min_length=1)
+    customer_name: str = Field(..., min_length=1)
+    subject_iri: str = Field(..., min_length=1)
+    registration_number: Optional[str] = None
+
+
+class PdfPageRelevanceDecision(BaseModel):
+    """Relevance classification decision for a single PDF page."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    page_number: int = Field(..., ge=1)
+    classification: Literal["RELEVANT_EXTRACTED", "EXCLUDED_DISTRACTOR_PAGE"]
+    section_title: str = Field(..., min_length=1)
+    rationale: str = Field(..., min_length=1)
+
+
+class ExtractedBitesTriple(BaseModel):
+    """Schema-validated RDF triple extracted from a relevant PDF page."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    subject_iri: str = Field(..., min_length=1)
+    predicate_qname: str = Field(..., min_length=1)
+    object_value: str = Field(..., min_length=1)
+    object_kind: Literal["IRI", "LITERAL"]
+    datatype_qname: Optional[str] = None
+    source_page_number: int = Field(..., ge=1)
+    evidence_snippet: str = Field(..., min_length=1)
+
+
+class CustomerMentionCandidate(BaseModel):
+    """Unlinked customer/organization mention extracted from a DOCUMENT_SCOPE PDF."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    mention_text: str = Field(..., min_length=1)
+    registration_number: Optional[str] = None
+    source_page_number: int = Field(..., ge=1)
+    context_snippet: str = Field(..., min_length=1)
+    mention_subject_iri: str = Field(..., min_length=1)
+
+
+class PdfDocumentExtractionProposal(BaseModel):
+    """Structured BITES extraction proposal for a single PDF document."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    pdf_filename: str = Field(..., min_length=1)
+    sha256_hash: str = Field(..., min_length=64, max_length=64)
+    assigned_scope: Literal["GLOBAL_SCOPE", "DOCUMENT_SCOPE"]
+    target_named_graph_uri: str = Field(..., min_length=1)
+    document_version: str = Field(..., min_length=1)
+    document_summary: str = Field(..., min_length=1)
+    page_decisions: List[PdfPageRelevanceDecision] = Field(..., min_length=1)
+    extracted_triples: List[ExtractedBitesTriple] = Field(..., min_length=1)
+    customer_mentions: List[CustomerMentionCandidate] = Field(default_factory=list)
+
+
+class PdfBitesLlmProposal(BaseModel):
+    """Structured Gemini output schema for Step 4 PDF BITES extraction."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    document_extractions: List[PdfDocumentExtractionProposal] = Field(..., min_length=1)
+    architect_verification_questions: List[str] = Field(..., min_length=4)
+
+
+class FuzzyErMatchProposal(BaseModel):
+    """Deterministic rapidfuzz Entity Resolution match between PDF mention and CMDB entity."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    source_pdf_filename: str = Field(..., min_length=1)
+    mention_text: str = Field(..., min_length=1)
+    mention_subject_iri: str = Field(..., min_length=1)
+    registration_number: Optional[str] = None
+    canonical_customer_id: str = Field(..., min_length=1)
+    canonical_customer_name: str = Field(..., min_length=1)
+    canonical_subject_iri: str = Field(..., min_length=1)
+    raw_similarity: float = Field(..., ge=0.0, le=1.0)
+    normalized_similarity: float = Field(..., ge=0.0, le=1.0)
+    composite_confidence: float = Field(..., ge=0.0, le=1.0)
+    curation_status: Literal["CURATION_PENDING", "AUTO_MATCHED", "REJECTED"]
+    proposed_bridge_predicates: List[str] = Field(default_factory=list)
+
+
+class BitAndErGate2CandidateProposal(BaseModel):
+    """Complete HITL Gate 2 candidate proposal persisted to gate2_candidate_proposal.json."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    scenario_id: Literal["DT-01c"] = "DT-01c"
+    generated_at_utc: str = Field(..., min_length=1)
+    model_used: str = Field(..., min_length=1)
+    document_extractions: List[PdfDocumentExtractionProposal] = Field(..., min_length=1)
+    fuzzy_er_matches: List[FuzzyErMatchProposal] = Field(default_factory=list)
+    quarantined_excel_rows_count: int = Field(..., ge=0)
+    architect_verification_questions: List[str] = Field(..., min_length=4)
+
+
+class Dt01cExecutionResult(BaseModel):
+    """Complete validated summary returned by Scenario `DT-01c`."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    scenario_id: Literal["DT-01c"] = "DT-01c"
+    gate2_mode: Literal["candidate", "approve"]
+    gate2_status: Literal["CURATION_PENDING", "PROMOTED"]
+    executed_at_utc: str = Field(..., min_length=1)
+    model_used: str = Field(..., min_length=1)
+    active_pdfs_count: int = Field(..., ge=1)
+    global_scope_triples_count: int = Field(..., ge=0)
+    document_scope_triples_count: int = Field(..., ge=0)
+    doc_lifecycle_triples_count: int = Field(..., ge=0)
+    er_bridge_triples_count: int = Field(..., ge=0)
+    er_links_count: int = Field(..., ge=0)
+    quarantined_excel_rows_count: int = Field(..., ge=0)
+    virtual_ib_triples_count: int = Field(..., ge=0)
+    candidate_proposal_path: Path
+    trig_dataset_path: Path
+    gate2_html_report_path: Path
+    gate2_markdown_report_path: Path
+    architect_verification_questions: List[str] = Field(..., min_length=4)
+    golden_ref_updated: bool = False
+
 
 
 

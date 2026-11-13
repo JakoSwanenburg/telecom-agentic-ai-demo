@@ -1,0 +1,388 @@
+{
+  "scenario_id": "DT-01c",
+  "generated_at_utc": "2026-11-13T07:44:50Z",
+  "model_used": "gemini-3.8-flash",
+  "document_extractions": [
+    {
+      "pdf_filename": "MSA_Contract_A_Corporate_Enterprise_2026.pdf",
+      "sha256_hash": "d29a054c385fd1c2fe1e8cb3820f1cd5f85c2fbe607c1847e3a3e1a963296217",
+      "assigned_scope": "DOCUMENT_SCOPE",
+      "target_named_graph_uri": "urn:telco:graph:bites:doc-msa-v1",
+      "document_version": "MSA-2026-NL-409",
+      "document_summary": "Master Telecommunications Service Agreement for A Corporate Enterprise B.V. establishing enterprise circuit schedules, customized SLA packet-loss penalty credits, and pre-authorization terms for automated optical DDM recalibration on circuit CIR-994821.",
+      "page_decisions": [
+        {
+          "page_number": 1,
+          "classification": "EXCLUDED_DISTRACTOR_PAGE",
+          "section_title": "Clause 1: Contracting Parties, Clause 2: Term, Clause 3: Invoicing",
+          "rationale": "Covers commercial contracting preamble, term length, corporate headquarters address, and SEPA invoicing/currency terms, which are administrative and financial out-of-scope noise."
+        },
+        {
+          "page_number": 2,
+          "classification": "EXCLUDED_DISTRACTOR_PAGE",
+          "section_title": "Clause 4: Limitation of Liability, Clause 5: Force Majeure",
+          "rationale": "Contains general legal liability limitations and force majeure definitions without actionable technical SLA thresholds or assurance triage rules."
+        },
+        {
+          "page_number": 3,
+          "classification": "RELEVANT_EXTRACTED",
+          "section_title": "Clause 6 (Annex A): Subscribed Enterprise Circuit Schedule",
+          "rationale": "Specifies contracted enterprise circuit inventory including CIR-994821 mapped to catalog product SKU ETH-10G-GOLD and terminating CPE hardware model NOK-7210-SAS-Mxp."
+        },
+        {
+          "page_number": 4,
+          "classification": "RELEVANT_EXTRACTED",
+          "section_title": "Clause 7 (Annex B): Bespoke SLA Penalty & Autonomous Maintenance Rules for Circuit CIR-994821",
+          "rationale": "Specifies bespoke packet-loss SLA thresholds (0.1% for 30 minutes, 15% credit), explicit pre-authorization for automated DDM recalibration within -25.0 to -27.5 dBm when maintenance lock is false, and field dispatch cutoff below -27.5 dBm."
+        }
+      ],
+      "extracted_triples": [
+        {
+          "subject_iri": "urn:telco:service:cfs:CIR-994821",
+          "predicate_qname": "rdf:type",
+          "object_value": "tmf:CustomerFacingService",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 3,
+          "evidence_snippet": "Site 1 (HQ) | CIR-994821 | Den Haag Beatrixlaan 400 | ETH-10G-GOLD | 10 Gbps"
+        },
+        {
+          "subject_iri": "urn:telco:service:cfs:CIR-994821",
+          "predicate_qname": "tmf:serviceId",
+          "object_value": "CIR-994821",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:string",
+          "source_page_number": 3,
+          "evidence_snippet": "Circuit ID: CIR-994821"
+        },
+        {
+          "subject_iri": "urn:telco:service:cfs:CIR-994821",
+          "predicate_qname": "telco:bandwidthGbps",
+          "object_value": "10.0",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:double",
+          "source_page_number": 3,
+          "evidence_snippet": "Committed BW: 10 Gbps"
+        },
+        {
+          "subject_iri": "urn:telco:sla:clause:CIR-994821-loss-recal",
+          "predicate_qname": "rdf:type",
+          "object_value": "telco:SlaClause",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "7.1 Enhanced Packet-Loss SLA & 15% Monthly Service Credit Penalty: Notwithstanding standard Gold tier terms, for primary headquarters circuit CIR-994821"
+        },
+        {
+          "subject_iri": "urn:telco:sla:clause:CIR-994821-loss-recal",
+          "predicate_qname": "rdfs:label",
+          "object_value": "CIR-994821 Bespoke SLA & Optical Recalibration Policy",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:string",
+          "source_page_number": 4,
+          "evidence_snippet": "Clause 7 (Annex B): Bespoke SLA Penalty & Autonomous Maintenance Rules for Circuit CIR-994821"
+        },
+        {
+          "subject_iri": "urn:telco:spec:service:ETH-10G-GOLD",
+          "predicate_qname": "telco:hasSlaClause",
+          "object_value": "urn:telco:sla:clause:CIR-994821-loss-recal",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "Product Spec: ETH-10G-GOLD"
+        },
+        {
+          "subject_iri": "urn:telco:sla:clause:CIR-994821-loss-recal",
+          "predicate_qname": "telco:maxPacketLossPct",
+          "object_value": "0.1",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:double",
+          "source_page_number": 4,
+          "evidence_snippet": "if frame/packet loss exceeds 0.1% continuously for more than thirty (30) minutes during any calendar month"
+        },
+        {
+          "subject_iri": "urn:telco:spec:service:ETH-10G-GOLD",
+          "predicate_qname": "telco:autoRemediationAllowed",
+          "object_value": "true",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:boolean",
+          "source_page_number": 4,
+          "evidence_snippet": "A Corporate Enterprise B.V. expressly grants Provider pre-authorized permission to execute automated, non-intrusive Digital Diagnostics Monitoring (DDM) optical transceiver recalibration"
+        }
+      ],
+      "customer_mentions": [
+        {
+          "mention_text": "A Corporate Enterprise B.V.",
+          "registration_number": "NL-8841209",
+          "source_page_number": 1,
+          "context_snippet": "Legal Counterparty: A Corporate Enterprise B.V. (KvK Registration: NL-8841209)... tracked in Provider OSS/CMDB systems under customer code CUST-ENT-409 / 'A Corporate Enterprise'",
+          "mention_subject_iri": "urn:telco:bites:mention:customer-corp-ent-409"
+        },
+        {
+          "mention_text": "A Corporate Enterprise B.V.",
+          "registration_number": "NL-8841209",
+          "source_page_number": 3,
+          "context_snippet": "Clause 6 (Annex A): Subscribed Enterprise Circuit Schedule\nA Corporate Enterprise B.V. (Registration NL-8841209 / CUST-ENT-409) subscribes to the following five (5) active corporate connectivity circuits",
+          "mention_subject_iri": "urn:telco:bites:mention:customer-corp-ent-409"
+        },
+        {
+          "mention_text": "A Corporate Enterprise B.V.",
+          "registration_number": null,
+          "source_page_number": 4,
+          "context_snippet": "A Corporate Enterprise B.V. shall automatically receive a bespoke Service Level Agreement penalty credit equal to fifteen percent (15%) of the Monthly Recurring Charge for circuit CIR-994821.",
+          "mention_subject_iri": "urn:telco:bites:mention:customer-corp-ent-409"
+        }
+      ]
+    },
+    {
+      "pdf_filename": "Vendor_Optical_Hardware_Manual_v4.pdf",
+      "sha256_hash": "57b8d5fe3a3d219147b5f150130d9dd7196df77e124d1d34db6db12aa4b15efa",
+      "assigned_scope": "GLOBAL_SCOPE",
+      "target_named_graph_uri": "urn:telco:graph:bites:doc-hw-v4",
+      "document_version": "REV 4.0",
+      "document_summary": "Multi-Vendor Carrier Ethernet & Optical CPE Hardware Manual specifying physical, thermal, electrical, and optical transceiver operating envelopes and DDM recalibration thresholds for Nokia 7210 SAS-Mxp, Cisco ASR-920, and Juniper ACX2100 platforms.",
+      "page_decisions": [
+        {
+          "page_number": 1,
+          "classification": "EXCLUDED_DISTRACTOR_PAGE",
+          "section_title": "Chapter 1: General Safety, Rack Mounting & Power Supply Specifications",
+          "rationale": "Focuses on physical chassis installation, rack mounting, EIA-310 standards, grounding lugs, and DC/AC power supplies, which are out-of-scope physical facility details."
+        },
+        {
+          "page_number": 2,
+          "classification": "EXCLUDED_DISTRACTOR_PAGE",
+          "section_title": "Chapter 2: Environmental, Thermal & Fan Tray Thresholds",
+          "rationale": "Covers ambient temperature ratings, fan tray FRU part numbers, PWM fan speeds, and ASIC thermal shutdown limits, which do not govern optical attenuation calibration."
+        },
+        {
+          "page_number": 3,
+          "classification": "EXCLUDED_DISTRACTOR_PAGE",
+          "section_title": "Chapter 3: Copper RJ-45 & Electrical Interface Specifications",
+          "rationale": "Explicitly details copper 1000BASE-T RJ-45 ports, Cat6 distance limits, and MDI/MDI-X diagnostics, which the text explicitly notes do not apply to optical Carrier Ethernet circuits."
+        },
+        {
+          "page_number": 4,
+          "classification": "RELEVANT_EXTRACTED",
+          "section_title": "Chapter 4: Optical SFP+/XFP Transceiver Operating Parameters",
+          "rationale": "Provides normative optical calibration envelopes for NOK-7210-SAS-Mxp (and peer platforms), defining normal Rx power range, soft degradation / DDM recalibration window (-25.0 to -27.5 dBm), and critical LOS cutoff (< -27.5 dBm)."
+        },
+        {
+          "page_number": 5,
+          "classification": "RELEVANT_EXTRACTED",
+          "section_title": "Chapter 5: Transceiver Diagnostics, DDM Polling & Field Fiber Cleaning Procedures",
+          "rationale": "Specifies synchronous singleton gNMI DDM polling constraints (bypass_cache=true) prior to TMF640 automated recalibration and field dispatch requirements when Rx power falls below -27.5 dBm."
+        }
+      ],
+      "extracted_triples": [
+        {
+          "subject_iri": "urn:telco:spec:resource:NOK-7210-SAS-Mxp",
+          "predicate_qname": "rdf:type",
+          "object_value": "tmf:PhysicalResourceSpec",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "Chapter 4: Optical SFP+/XFP Transceiver Operating Parameters... Nokia 7210 SAS-Mxp (SKU: NOK-7210-SAS-Mxp)"
+        },
+        {
+          "subject_iri": "urn:telco:spec:resource:NOK-7210-SAS-Mxp",
+          "predicate_qname": "telco:hasOpticalCalibrationProfile",
+          "object_value": "urn:telco:spec:optical:NOK-7210-SAS-Mxp-profile",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "For physical CPE model SKU NOK-7210-SAS-Mxp equipped with 10GBASE-LR 1310nm optics, the authoritative optical power thresholds are"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:NOK-7210-SAS-Mxp-profile",
+          "predicate_qname": "rdf:type",
+          "object_value": "telco:OpticalCalibrationProfile",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "Optical Operating Envelope & DDM Recalibration Rules: For physical CPE model SKU NOK-7210-SAS-Mxp"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:NOK-7210-SAS-Mxp-profile",
+          "predicate_qname": "rdfs:label",
+          "object_value": "Nokia 7210 SAS-Mxp Optical DDM Calibration Profile",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:string",
+          "source_page_number": 4,
+          "evidence_snippet": "Nokia 7210 SAS-Mxp (SKU: NOK-7210-SAS-Mxp) Optical Operating Envelope & DDM Recalibration Rules"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:NOK-7210-SAS-Mxp-profile",
+          "predicate_qname": "telco:rxOpticalPowerMinDbm",
+          "object_value": "-25.0",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:double",
+          "source_page_number": 4,
+          "evidence_snippet": "Soft Degradation / DDM Recalibration Window: -25.0 dBm to -27.5 dBm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:NOK-7210-SAS-Mxp-profile",
+          "predicate_qname": "telco:rxLosCutThresholdDbm",
+          "object_value": "-27.5",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:double",
+          "source_page_number": 4,
+          "evidence_snippet": "Critical Loss-of-Signal (LOS) / Hard Attenuation Cutoff: < -27.5 dBm (physical macro-bend, dirty splice, or fiber cut)"
+        },
+        {
+          "subject_iri": "urn:telco:spec:resource:CISCO-ASR-920-10G",
+          "predicate_qname": "rdf:type",
+          "object_value": "tmf:PhysicalResourceSpec",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "Hardware Model SKU: CISCO-ASR-920-10G | Optical Standard: 10GBASE-LR 1310nm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:CISCO-ASR-920-10G-profile",
+          "predicate_qname": "rdf:type",
+          "object_value": "telco:OpticalCalibrationProfile",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "CISCO-ASR-920-10G | 10GBASE-LR 1310nm | -0.5 dBm | -0.5 dBm | -12.0 to -22.9 dBm | -23.0 to -25.5 dBm | < -25.5 dBm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:resource:CISCO-ASR-920-10G",
+          "predicate_qname": "telco:hasOpticalCalibrationProfile",
+          "object_value": "urn:telco:spec:optical:CISCO-ASR-920-10G-profile",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "CISCO-ASR-920-10G | 10GBASE-LR 1310nm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:CISCO-ASR-920-10G-profile",
+          "predicate_qname": "telco:rxOpticalPowerMinDbm",
+          "object_value": "-23.0",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:double",
+          "source_page_number": 4,
+          "evidence_snippet": "CISCO-ASR-920-10G DDM Recalibration Window: -23.0 to -25.5 dBm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:CISCO-ASR-920-10G-profile",
+          "predicate_qname": "telco:rxLosCutThresholdDbm",
+          "object_value": "-25.5",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:double",
+          "source_page_number": 4,
+          "evidence_snippet": "CISCO-ASR-920-10G Critical LOS Cutoff (Min Rx): < -25.5 dBm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:resource:JUNIPER-ACX-10G",
+          "predicate_qname": "rdf:type",
+          "object_value": "tmf:PhysicalResourceSpec",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "Hardware Model SKU: JUNIPER-ACX-10G | Optical Standard: 10GBASE-LR 1310nm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:JUNIPER-ACX-10G-profile",
+          "predicate_qname": "rdf:type",
+          "object_value": "telco:OpticalCalibrationProfile",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "JUNIPER-ACX-10G | 10GBASE-LR 1310nm | -1.0 dBm | -0.5 dBm | -13.0 to -23.9 dBm | -24.0 to -26.5 dBm | < -26.5 dBm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:resource:JUNIPER-ACX-10G",
+          "predicate_qname": "telco:hasOpticalCalibrationProfile",
+          "object_value": "urn:telco:spec:optical:JUNIPER-ACX-10G-profile",
+          "object_kind": "IRI",
+          "datatype_qname": null,
+          "source_page_number": 4,
+          "evidence_snippet": "JUNIPER-ACX-10G | 10GBASE-LR 1310nm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:JUNIPER-ACX-10G-profile",
+          "predicate_qname": "telco:rxOpticalPowerMinDbm",
+          "object_value": "-24.0",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:double",
+          "source_page_number": 4,
+          "evidence_snippet": "JUNIPER-ACX-10G DDM Recalibration Window: -24.0 to -26.5 dBm"
+        },
+        {
+          "subject_iri": "urn:telco:spec:optical:JUNIPER-ACX-10G-profile",
+          "predicate_qname": "telco:rxLosCutThresholdDbm",
+          "object_value": "-26.5",
+          "object_kind": "LITERAL",
+          "datatype_qname": "xsd:double",
+          "source_page_number": 4,
+          "evidence_snippet": "JUNIPER-ACX-10G Critical LOS Cutoff (Min Rx): < -26.5 dBm"
+        }
+      ],
+      "customer_mentions": []
+    }
+  ],
+  "fuzzy_er_matches": [
+    {
+      "source_pdf_filename": "MSA_Contract_A_Corporate_Enterprise_2026.pdf",
+      "mention_text": "A Corporate Enterprise B.V.",
+      "mention_subject_iri": "urn:telco:bites:mention:customer-corp-ent-409",
+      "registration_number": "NL-8841209",
+      "canonical_customer_id": "CUST-ENT-409",
+      "canonical_customer_name": "A Corporate Enterprise",
+      "canonical_subject_iri": "urn:telco:party:customer:CUST-ENT-409",
+      "raw_similarity": 0.898,
+      "normalized_similarity": 1.0,
+      "composite_confidence": 0.9235,
+      "curation_status": "CURATION_PENDING",
+      "proposed_bridge_predicates": [
+        "owl:sameAs",
+        "skos:exactMatch",
+        "telco:resolvedToCanonicalCustomer"
+      ]
+    },
+    {
+      "source_pdf_filename": "MSA_Contract_A_Corporate_Enterprise_2026.pdf",
+      "mention_text": "A Corporate Enterprise B.V.",
+      "mention_subject_iri": "urn:telco:bites:mention:customer-corp-ent-409",
+      "registration_number": "NL-8841209",
+      "canonical_customer_id": "CUST-ENT-409",
+      "canonical_customer_name": "A Corporate Enterprise",
+      "canonical_subject_iri": "urn:telco:party:customer:CUST-ENT-409",
+      "raw_similarity": 0.898,
+      "normalized_similarity": 1.0,
+      "composite_confidence": 0.9235,
+      "curation_status": "CURATION_PENDING",
+      "proposed_bridge_predicates": [
+        "owl:sameAs",
+        "skos:exactMatch",
+        "telco:resolvedToCanonicalCustomer"
+      ]
+    },
+    {
+      "source_pdf_filename": "MSA_Contract_A_Corporate_Enterprise_2026.pdf",
+      "mention_text": "A Corporate Enterprise B.V.",
+      "mention_subject_iri": "urn:telco:bites:mention:customer-corp-ent-409",
+      "registration_number": null,
+      "canonical_customer_id": "CUST-ENT-409",
+      "canonical_customer_name": "A Corporate Enterprise",
+      "canonical_subject_iri": "urn:telco:party:customer:CUST-ENT-409",
+      "raw_similarity": 0.898,
+      "normalized_similarity": 1.0,
+      "composite_confidence": 0.9235,
+      "curation_status": "CURATION_PENDING",
+      "proposed_bridge_predicates": [
+        "owl:sameAs",
+        "skos:exactMatch",
+        "telco:resolvedToCanonicalCustomer"
+      ]
+    }
+  ],
+  "quarantined_excel_rows_count": 2,
+  "architect_verification_questions": [
+    "Does the Steward confirm the exclusion or re-mapping of any pySHACL-quarantined catalog product rows from Prong 2 prior to establishing downstream joins with customer contract SLA clauses?",
+    "Does the Architect approve the scope partitioning assigning Vendor_Optical_Hardware_Manual_v4.pdf to GLOBAL_SCOPE (graph: <urn:telco:graph:bites:doc-hw-v4>) and MSA_Contract_A_Corporate_Enterprise_2026.pdf to DOCUMENT_SCOPE (graph: <urn:telco:graph:bites:doc-msa-v1>), along with the distractor exclusions of electrical, thermal, and liability pages?",
+    "Does the Data Steward validate the fuzzy Entity Resolution linking proposal bridging extracted customer mention 'A Corporate Enterprise B.V.' (registration NL-8841209) to canonical CMDB subject <urn:telco:party:customer:CUST-ENT-409> ('A Corporate Enterprise')?",
+    "Does the Telecom Architect sign off on the automated closed-loop DDM recalibration window boundary (-25.0 dBm to -27.5 dBm) and the requirement for synchronous un-cached gNMI probing and maintenance_lock verification before autonomous TMF640 execution on circuit CIR-994821?"
+  ]
+}

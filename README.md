@@ -180,6 +180,25 @@ Generates:
 - Populated `<urn:telco:graph:ref:catalog>` inside `data/semantic_store/knowledge_graph.trig` (`18` valid B2B SKUs / `198` triples, preserving `<urn:telco:graph:tbox:sid-etom>` and keeping `<urn:telco:graph:virtual:ib>` at `0` triples)
 - `reports/shacl_quarantine_report.html`, `reports/shacl_quarantine_report.md`, and `reports/shacl_quarantine_summary.json` (`2` quarantined dirty rows)
 
+### Execute Scenario `DT-01c` (Prong 3 PDF BITES Extractor, Fuzzy ER & Two-Phase HITL Gate 2)
+Requires Step 2 (`DT-01a`) to be `LOCKED_APPROVED` (fails fast otherwise):
+```powershell
+# Phase 1 (DEFAULT — --mode candidate):
+# Dynamically introspects PDFs via pypdf + CMDB customers via cmdb_r2rml.ttl,
+# invokes Gemini via src/llm_client.py (track_b_pdf_bites) and rapidfuzz ER scoring,
+# writes gate2_candidate_proposal.json & hitl_gate2_ingestion_er_curation.html/.md,
+# and pauses SYS-01 Element 4 at CURATION_PENDING (Awaiting HITL Gate 2):
+.\.venv\Scripts\python.exe scripts\run_dt01c_pdf_bites_gate2.py --mode candidate
+
+# Phase 2 (--mode approve):
+# Compiles and promotes <urn:telco:graph:bites:doc-hw-v4>, <urn:telco:graph:bites:doc-msa-v1>,
+# <urn:telco:graph:meta:doc-lifecycle>, and <urn:telco:graph:bridge:er> into knowledge_graph.trig:
+.\.venv\Scripts\python.exe scripts\run_dt01c_pdf_bites_gate2.py --mode approve
+
+# Optional: Promote complete 3-prong knowledge_graph.trig & excel_catalog_rml.yaml to data/golden_reference/:
+.\.venv\Scripts\python.exe scripts\run_dt01c_pdf_bites_gate2.py --mode approve --update-golden-ref
+```
+
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell
 .\.venv\Scripts\pytest.exe -v -W error::DeprecationWarning -W error::FutureWarning

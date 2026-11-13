@@ -126,6 +126,10 @@ track_b_ingestion_and_er:
   gate1_candidate_proposal_path: "data/semantic_store/gate1_candidate_proposal.json"
   profiler_prompt_template_path: "prompts/s1_cmdb_schema_profiler_prompt.md"
   excel_profiler_prompt_template_path: "prompts/s2_excel_catalog_profiler_prompt.md"
+  pdf_bites_prompt_template_path: "prompts/s3_pdf_bites_extractor_prompt.md"
+  gate2_candidate_proposal_path: "data/semantic_store/gate2_candidate_proposal.json"
+  er_review_band_min: 0.85
+  er_review_band_max: 0.95
   hitl_gate1_report_path: "reports/hitl_gate1_ontology_mapping_review.html"
   hitl_gate2_report_path: "reports/hitl_gate2_ingestion_er_curation.html"
   shacl_quarantine_report_path: "reports/shacl_quarantine_report.html"

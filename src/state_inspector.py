@@ -30,6 +30,7 @@ from src.catalog_manager import load_catalog
 from src.config import get_workspace_root
 from src.models import (
     AppConfig,
+    BitAndErGate2CandidateProposal,
     CandidateOntologyAndMappingProposal,
     InspectedElementStatus,
     ShaclQuarantineSummary,
@@ -259,14 +260,49 @@ def _inspect_element_3_excel_catalog(
 def _inspect_element_4_bites_and_er(
     config: AppConfig, root_dir: Path, graph_counts: Dict[str, int]
 ) -> InspectedElementStatus:
-    """Inspect Element 4: Prong 3 PDF BITES & ER Bridge (`EMPTY` | `CURATION_PENDING` | `PROMOTED`)."""
-    hw_triples = graph_counts.get(str(GRAPH_BITES_HW), 0)
-    msa_triples = graph_counts.get(str(GRAPH_BITES_MSA), 0)
+    """Inspect Element 4: Prong 3 PDF BITES & ER Bridge (`EMPTY` | `CURATION_PENDING (Awaiting HITL Gate 2)` | `PROMOTED`)."""
+    bites_graphs = {
+        uri: cnt
+        for uri, cnt in graph_counts.items()
+        if uri.startswith("urn:telco:graph:bites:")
+    }
     er_triples = graph_counts.get(str(GRAPH_BRIDGE_ER), 0)
     gate2_path = root_dir / Path(config.track_b_ingestion_and_er.hitl_gate2_report_path)
+    gate2_proposal_path = root_dir / Path(
+        config.track_b_ingestion_and_er.gate2_candidate_proposal_path
+    )
 
-    total_bites = hw_triples + msa_triples
+    proposal: Optional[BitAndErGate2CandidateProposal] = None
+    if gate2_proposal_path.exists():
+        proposal = BitAndErGate2CandidateProposal.model_validate_json(
+            gate2_proposal_path.read_text(encoding="utf-8")
+        )
+
+    total_bites = sum(bites_graphs.values())
     if total_bites == 0 and er_triples == 0:
+        if proposal is not None:
+            cand_global = sum(
+                len(d.extracted_triples)
+                for d in proposal.document_extractions
+                if d.assigned_scope == "GLOBAL_SCOPE"
+            )
+            cand_doc = sum(
+                len(d.extracted_triples)
+                for d in proposal.document_extractions
+                if d.assigned_scope == "DOCUMENT_SCOPE"
+            )
+            return InspectedElementStatus(
+                element_number=4,
+                element_name="4. Prong 3: PDF BITES & ER Bridge",
+                underlying_artifact="<urn:telco:graph:bites:*> & <urn:telco:graph:bridge:er>",
+                state="CURATION_PENDING (Awaiting HITL Gate 2)",
+                metrics_summary=(
+                    f"GLOBAL_SCOPE triples: {cand_global} (candidate) | "
+                    f"DOCUMENT_SCOPE triples: {cand_doc} (candidate) | "
+                    f"Active PDFs: {len(proposal.document_extractions)} | "
+                    f"ER links: {len(proposal.fuzzy_er_matches)} | HITL Gate 2: PENDING_CURATION"
+                ),
+            )
         return InspectedElementStatus(
             element_number=4,
             element_name="4. Prong 3: PDF BITES & ER Bridge",
@@ -278,6 +314,26 @@ def _inspect_element_4_bites_and_er(
             ),
         )
 
+    hw_triples = graph_counts.get(str(GRAPH_BITES_HW), 0)
+    msa_triples = graph_counts.get(str(GRAPH_BITES_MSA), 0)
+    active_pdfs = len(bites_graphs) if bites_graphs else 2
+    er_links = er_triples
+    if proposal is not None:
+        hw_triples = sum(
+            graph_counts.get(d.target_named_graph_uri, 0)
+            for d in proposal.document_extractions
+            if d.assigned_scope == "GLOBAL_SCOPE"
+        )
+        msa_triples = sum(
+            graph_counts.get(d.target_named_graph_uri, 0)
+            for d in proposal.document_extractions
+            if d.assigned_scope == "DOCUMENT_SCOPE"
+        )
+        active_pdfs = len(proposal.document_extractions)
+        er_links = sum(
+            1 for m in proposal.fuzzy_er_matches if m.curation_status != "REJECTED"
+        )
+
     gate2_approved = False
     if gate2_path.exists():
         gate2_txt = gate2_path.read_text(encoding="utf-8")
@@ -287,17 +343,17 @@ def _inspect_element_4_bites_and_er(
         state = "PROMOTED"
         gate2_status = "APPROVED"
     else:
-        state = "CURATION_PENDING"
+        state = "CURATION_PENDING (Awaiting HITL Gate 2)"
         gate2_status = "PENDING_CURATION"
 
     return InspectedElementStatus(
         element_number=4,
         element_name="4. Prong 3: PDF BITES & ER Bridge",
-        underlying_artifact="<urn:telco:graph:bites:docs> & <urn:telco:graph:bridge:er>",
+        underlying_artifact="<urn:telco:graph:bites:*> & <urn:telco:graph:bridge:er>",
         state=state,
         metrics_summary=(
             f"GLOBAL_SCOPE triples: {hw_triples} | DOCUMENT_SCOPE triples: {msa_triples} | "
-            f"Active PDFs: 2 | ER links: {er_triples} | HITL Gate 2: {gate2_status}"
+            f"Active PDFs: {active_pdfs} | ER links: {er_links} | HITL Gate 2: {gate2_status}"
         ),
     )
 

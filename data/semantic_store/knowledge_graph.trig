@@ -9,6 +9,26 @@
 @prefix unit: <http://qudt.org/vocab/unit/> .
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 
+<urn:telco:graph:meta:doc-lifecycle> {
+    <urn:telco:doc:MSA_Contract_A_Corporate_Enterprise_2026.pdf> a telco:SourceDocument ;
+        rdfs:label "MSA_Contract_A_Corporate_Enterprise_2026.pdf" ;
+        telco:assignedScope "DOCUMENT_SCOPE" ;
+        telco:documentVersion "MSA-2026-NL-409" ;
+        telco:extractedAtUtc "2026-11-13T07:56:43Z" ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:sha256Hash "d29a054c385fd1c2fe1e8cb3820f1cd5f85c2fbe607c1847e3a3e1a963296217" ;
+        telco:targetNamedGraph <urn:telco:graph:bites:doc-msa-v1> .
+
+    <urn:telco:doc:Vendor_Optical_Hardware_Manual_v4.pdf> a telco:SourceDocument ;
+        rdfs:label "Vendor_Optical_Hardware_Manual_v4.pdf" ;
+        telco:assignedScope "GLOBAL_SCOPE" ;
+        telco:documentVersion "REV 4.0" ;
+        telco:extractedAtUtc "2026-11-13T07:56:43Z" ;
+        telco:lifecycleStatus "ACTIVE" ;
+        telco:sha256Hash "57b8d5fe3a3d219147b5f150130d9dd7196df77e124d1d34db6db12aa4b15efa" ;
+        telco:targetNamedGraph <urn:telco:graph:bites:doc-hw-v4> .
+}
+
 <urn:telco:graph:tbox:sid-etom> {
     telco:accountManagerCode a owl:DatatypeProperty ;
         rdfs:label "account manager code"@en ;
@@ -450,6 +470,43 @@
             "SLA Service Specification"@en .
 }
 
+<urn:telco:graph:bites:doc-msa-v1> {
+    <urn:telco:service:cfs:CIR-994821> a tmf:CustomerFacingService ;
+        telco:bandwidthGbps 1e+01 ;
+        tmf:serviceId "CIR-994821" .
+
+    <urn:telco:spec:service:ETH-10G-GOLD> telco:autoRemediationAllowed true ;
+        telco:hasSlaClause <urn:telco:sla:clause:CIR-994821-loss-recal> .
+
+    <urn:telco:sla:clause:CIR-994821-loss-recal> a telco:SlaClause ;
+        rdfs:label "CIR-994821 Bespoke SLA & Optical Recalibration Policy" ;
+        telco:maxPacketLossPct 1e-01 .
+}
+
+<urn:telco:graph:bites:doc-hw-v4> {
+    <urn:telco:spec:resource:CISCO-ASR-920-10G> a tmf:PhysicalResourceSpec ;
+        telco:hasOpticalCalibrationProfile <urn:telco:spec:optical:CISCO-ASR-920-10G-profile> .
+
+    <urn:telco:spec:resource:JUNIPER-ACX-10G> a tmf:PhysicalResourceSpec ;
+        telco:hasOpticalCalibrationProfile <urn:telco:spec:optical:JUNIPER-ACX-10G-profile> .
+
+    <urn:telco:spec:resource:NOK-7210-SAS-Mxp> a tmf:PhysicalResourceSpec ;
+        telco:hasOpticalCalibrationProfile <urn:telco:spec:optical:NOK-7210-SAS-Mxp-profile> .
+
+    <urn:telco:spec:optical:CISCO-ASR-920-10G-profile> a telco:OpticalCalibrationProfile ;
+        telco:rxLosCutThresholdDbm -2.55e+01 ;
+        telco:rxOpticalPowerMinDbm -2.3e+01 .
+
+    <urn:telco:spec:optical:JUNIPER-ACX-10G-profile> a telco:OpticalCalibrationProfile ;
+        telco:rxLosCutThresholdDbm -2.65e+01 ;
+        telco:rxOpticalPowerMinDbm -2.4e+01 .
+
+    <urn:telco:spec:optical:NOK-7210-SAS-Mxp-profile> a telco:OpticalCalibrationProfile ;
+        rdfs:label "Nokia 7210 SAS-Mxp Optical DDM Calibration Profile" ;
+        telco:rxLosCutThresholdDbm -2.75e+01 ;
+        telco:rxOpticalPowerMinDbm -2.5e+01 .
+}
+
 <urn:telco:graph:ref:catalog> {
     <urn:telco:catalog:spec:5G-SLICE-EMBB> a tmf:ServiceSpecification ;
         telco:autoRemediationAllowed true ;
@@ -666,5 +723,13 @@
         telco:slaCreditCapPct 2.5e+01 ;
         tmf:skuCode "ETH-100G-PLATINUM" ;
         tmf:specName "Enterprise Carrier Ethernet 100G Platinum" .
+}
+
+<urn:telco:graph:bridge:er> {
+    <urn:telco:bites:mention:customer-corp-ent-409> telco:erConfidenceScore 9.235e-01 ;
+        telco:erCurationStatus "APPROVED" ;
+        telco:resolvedToCanonicalCustomer <urn:telco:party:customer:CUST-ENT-409> ;
+        owl:sameAs <urn:telco:party:customer:CUST-ENT-409> ;
+        skos:exactMatch <urn:telco:party:customer:CUST-ENT-409> .
 }
 

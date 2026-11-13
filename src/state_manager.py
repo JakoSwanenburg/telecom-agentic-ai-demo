@@ -101,6 +101,7 @@ def reset_to_clean_slate(
         Path(config.layer4_compiler_federation.dataset_trig_path),
         Path(config.layer4_compiler_federation.tbox_path),
         Path(config.track_b_ingestion_and_er.gate1_candidate_proposal_path),
+        Path(config.track_b_ingestion_and_er.gate2_candidate_proposal_path),
         Path(config.layer4_compiler_federation.r2rml_path),
         Path(config.layer4_compiler_federation.excel_rml_path),
         Path(config.layer2_worker_and_sop.active_skill_path),

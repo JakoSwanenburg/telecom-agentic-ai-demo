@@ -15,10 +15,10 @@
 <body>
   <h1>Scenario RT-05: Layer 3 NL2Semantics Dual Shadow Comparison</h1>
   <div class="card">
-    <p><strong>Execution Mode:</strong> dual_comparison |
+    <p><strong>Execution Mode:</strong> voicebox_hybrid |
        <strong>Model:</strong> gemini-3.8-flash |
        <strong>Circuit:</strong> CIR-994821</p>
-    <p><strong>Intent:</strong> Retrieve the complete federated service assurance context for circuit CIR-994821, including customer identity, ER legal entity match, catalog packet loss SLA and auto-remediation flag, hardware optical Rx/LOS thresholds, and MSA SLA policy.</p>
+    <p><strong>Intent:</strong> Triage L2 enterprise fiber packet loss on circuit CIR-994821 and execute closed-loop optical DDM recalibration if within SLA/optical guardrails.</p>
     <p><strong>On-Disk virtual:ib Triples After:</strong> 0</p>
   </div>
   <table>
@@ -26,64 +26,17 @@
       <tr><th>Dimension</th><th>Voicebox Hybrid (Option 3C)</th><th>Zero-Shot LLM (Shadow)</th></tr>
     </thead>
     <tbody>
-      <tr><td>AST Gatekeeper Passed</td><td>True</td><td>True</td></tr>
-      <tr><td>Latency (ms)</td><td>9681.15</td><td>91785.43</td></tr>
-      <tr><td>Rows Returned</td><td>1</td><td>3</td></tr>
-      <tr><td>Unknown Vocabulary URIs</td><td>[]</td><td>[]</td></tr>
-      <tr><td>Missing Context Fields</td><td>[]</td><td>[&#x27;circuitId&#x27;, &#x27;customerId&#x27;, &#x27;customerName&#x27;, &#x27;skuCode&#x27;, &#x27;operStatus&#x27;, &#x27;bandwidthGbps&#x27;, &#x27;rfsId&#x27;, &#x27;cpeModelSku&#x27;, &#x27;maxPacketLossPct&#x27;, &#x27;autoRemediationAllowed&#x27;, &#x27;slaPolicyLabel&#x27;]</td></tr>
-      <tr><td>Execution Error</td><td>None</td><td>None</td></tr>
+      <tr><td>AST Gatekeeper Passed</td><td>True</td><td>N/A</td></tr>
+      <tr><td>Latency (ms)</td><td>9123.14</td><td>N/A</td></tr>
+      <tr><td>Rows Returned</td><td>1</td><td>N/A</td></tr>
+      <tr><td>Unknown Vocabulary URIs</td><td>[]</td><td>N/A</td></tr>
+      <tr><td>Missing Context Fields</td><td>[]</td><td>N/A</td></tr>
+      <tr><td>Execution Error</td><td>None</td><td>N/A</td></tr>
     </tbody>
   </table>
   <h2>Voicebox Hybrid Compiled SPARQL</h2>
   <pre>PREFIX rdf: &lt;http://www.w3.org/1999/02/22-rdf-syntax-ns#&gt; PREFIX rdfs: &lt;http://www.w3.org/2000/01/rdf-schema#&gt; PREFIX owl: &lt;http://www.w3.org/2002/07/owl#&gt; PREFIX tmf: &lt;http://tmforum.org/sid/&gt; PREFIX telco: &lt;http://telco.enterprise.org/ontology/&gt; SELECT ?circuitId ?customerId ?customerName ?customerIri ?erScore ?erStatus ?skuCode ?operStatus ?bandwidthGbps ?rfsId ?peRouterIri ?oltPortIri ?cpeAssetIri ?cpeModelSku ?maxPacketLossPct ?autoRemediationAllowed ?eligibleUpgradeSpec ?catalogLifecycleStatus ?rxOpticalPowerMinDbm ?rxLosCutThresholdDbm ?slaPolicyLabel WHERE { GRAPH &lt;urn:telco:graph:virtual:ib&gt; { ?cfsIri a tmf:CustomerFacingService ; tmf:serviceId ?circuitId ; tmf:hasCustomer ?customerIri ; tmf:isDescribedBy ?specIri ; tmf:operationalStatus ?operStatus ; telco:bandwidthGbps ?bandwidthGbps . ?customerIri a tmf:Customer ; tmf:customerId ?customerId ; tmf:partyLegalName ?customerName . ?rfsIri a tmf:ResourceFacingService ; tmf:supportsService ?cfsIri ; tmf:rfsId ?rfsId ; telco:terminatesOnRouter ?peRouterIri ; telco:usesOltPort ?oltPortIri ; telco:demarcatesAtCpe ?cpeAssetIri ; telco:cpeModelSku ?cpeModelSku . FILTER(STR(?circuitId) = &quot;CIR-994821&quot;) } BIND(STRAFTER(STR(?specIri), &quot;urn:telco:spec:service:&quot;) AS ?skuCode) GRAPH &lt;urn:telco:graph:ref:catalog&gt; { ?catalogSpec a tmf:ServiceSpecification ; tmf:skuCode ?skuCode ; telco:maxPacketLossPct ?maxPacketLossPct ; telco:autoRemediationAllowed ?autoRemediationAllowed ; telco:eligibleUpgradeSpec ?eligibleUpgradeSpec ; telco:lifecycleStatus ?catalogLifecycleStatus . } BIND(IRI(CONCAT(&quot;urn:telco:spec:resource:&quot;, STR(?cpeModelSku))) AS ?hwSpecIri) GRAPH &lt;urn:telco:graph:bites:doc-hw-v4&gt; { ?hwSpecIri telco:hasOpticalCalibrationProfile ?optProfile . ?optProfile telco:rxOpticalPowerMinDbm ?rxOpticalPowerMinDbm ; telco:rxLosCutThresholdDbm ?rxLosCutThresholdDbm . } GRAPH &lt;urn:telco:graph:bites:doc-msa-v1&gt; { ?specIri telco:hasSlaClause ?slaClause . ?slaClause rdfs:label ?slaPolicyLabel . } OPTIONAL { GRAPH &lt;urn:telco:graph:bridge:er&gt; { ?erMention telco:resolvedToCanonicalCustomer ?customerIri ; telco:erConfidenceScore ?erScore ; telco:erCurationStatus ?erStatus . } } }</pre>
   <h2>Zero-Shot LLM Generated SPARQL</h2>
-  <pre>PREFIX tmf: &lt;http://tmforum.org/sid/&gt;
-PREFIX telco: &lt;http://telco.enterprise.org/ontology/&gt;
-PREFIX owl: &lt;http://www.w3.org/2002/07/owl#&gt;
-
-SELECT DISTINCT ?circuit ?serviceId ?customer ?partyLegalName ?erMatch ?serviceSpec ?maxPacketLossPct ?autoRemediationAllowed ?opticalProfile ?rxOpticalPowerMinDbm ?rxLosCutThresholdDbm ?slaClause WHERE {
-  GRAPH &lt;urn:telco:graph:virtual:ib&gt; {
-    ?circuit a tmf:CustomerFacingService ;
-             tmf:serviceId &quot;CIR-994821&quot; ;
-             tmf:hasCustomer ?customer ;
-             tmf:isDescribedBy ?serviceSpec .
-    
-    OPTIONAL { ?circuit tmf:serviceId ?serviceId . }
-    OPTIONAL { ?customer tmf:partyLegalName ?partyLegalName . }
-
-    OPTIONAL {
-      ?rfs tmf:supportsService ?circuit ;
-           telco:demarcatesAtCpe ?cpe .
-      ?cpe tmf:hasResourceSpecification ?resSpec .
-    }
-  }
-
-  OPTIONAL {
-    GRAPH &lt;urn:telco:graph:bridge:er&gt; {
-      ?customer ?erPred ?erMatch .
-    }
-  }
-
-  OPTIONAL {
-    GRAPH &lt;urn:telco:graph:ref:catalog&gt; {
-      ?serviceSpec telco:maxPacketLossPct ?maxPacketLossPct ;
-                   telco:autoRemediationAllowed ?autoRemediationAllowed .
-    }
-  }
-
-  OPTIONAL {
-    GRAPH &lt;urn:telco:graph:bites:doc-hw-v4&gt; {
-      ?resSpec telco:hasOpticalCalibrationProfile ?opticalProfile .
-      ?opticalProfile telco:rxOpticalPowerMinDbm ?rxOpticalPowerMinDbm ;
-                      telco:rxLosCutThresholdDbm ?rxLosCutThresholdDbm .
-    }
-  }
-
-  OPTIONAL {
-    GRAPH &lt;urn:telco:graph:bites:doc-msa-v1&gt; {
-      ?serviceSpec telco:hasSlaClause ?slaClause .
-    }
-  }
-}</pre>
+  <pre>Not executed</pre>
 </body>
 </html>

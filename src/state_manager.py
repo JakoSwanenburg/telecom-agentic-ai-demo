@@ -125,6 +125,8 @@ def reset_to_clean_slate(
         Path(config.cqrs_action_plane.ticket_journal_path),
         Path(config.cqrs_action_plane.step8_verification_report_path),
         Path(config.cqrs_action_plane.step8_verification_report_path).with_suffix(".md"),
+        Path(config.layer2_worker_and_sop.runtime_branches_report_path),
+        Path(config.layer2_worker_and_sop.runtime_branches_report_path).with_suffix(".md"),
         Path(config.layer1_orchestrator.export_ai_studio_schema_path),
     ]
 

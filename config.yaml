@@ -61,6 +61,7 @@ ai:
     track_b_excel_profiler: "gemini-3.8-flash"
     track_b_pdf_bites: "gemini-3.8-flash"
     layer1_orchestrator: "gemini-3.8-flash"
+    layer2_assurance_agent: "gemini-3.8-flash"
     layer3_nl2semantics: "gemini-3.8-flash"
   location: "global"
   temperature: 0.0
@@ -104,8 +105,10 @@ layer2_worker_and_sop:
   active_guardrails_path: "skills/guardrails_sop_402.json"
   gate3_candidate_proposal_path: "skills/gate3_candidate_sop_402.json"
   sop_compiler_prompt_template_path: "prompts/track_a_sop_compiler_prompt.md"
+  agent_prompt_template_path: "prompts/layer2_assurance_agent_prompt.md"
   missing_primitive_spec_path: "reports/missing_primitive_spec.json"
   hitl_sop_review_report_path: "reports/hitl_sop_skill_review.html"
+  runtime_branches_report_path: "reports/rt01_rt03_layer2_execution_report.html"
   mcp_catalog_path: "config/mcp_primitives_catalog.json"
 
 layer3_nl2semantics:

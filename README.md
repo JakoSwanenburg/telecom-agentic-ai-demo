@@ -247,6 +247,13 @@ Verifies `src/mcp_servers/gnmi_telemetry_mcp.py`, `src/mcp_servers/tmf640_activa
 ```
 Generates `reports/step8_mcp_cqrs_verification_report.html` (`.md`) and resets `data/cqrs_state/` back to clean `branch_a_soft_degradation` state unless `--keep-state` is passed.
 
+### Execute Step 9 (Layer 2 Skill-Governed Assurance Specialist Agent — `RT-01`, `RT-02`, `RT-03`)
+Requires Track B, Layer 3/4, and Track A (`VERIFIED_LOCKED`) prerequisites:
+```powershell
+.\.venv\Scripts\python.exe scripts\run_rt01_rt03_layer2_branches.py --scenario all
+```
+Executes `RT-01` (Branch A autonomous DDM recalibration + `GR-POST-01` + `RESOLVED_AUTO`), `RT-02` (Branch B `GR-INV-01` block + `OPEN_DISPATCHED`), and `RT-03` (Branch C `GR-INV-02` block + `DEFERRED_MAINTENANCE`), writing `reports/rt01_rt03_layer2_execution_report.html` (`.md`).
+
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell
 .\.venv\Scripts\pytest.exe -v -W error::DeprecationWarning -W error::FutureWarning

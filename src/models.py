@@ -159,11 +159,17 @@ class Layer2WorkerAndSopSettings(BaseModel):
     sop_compiler_prompt_template_path: str = Field(
         default="prompts/track_a_sop_compiler_prompt.md", min_length=1
     )
+    agent_prompt_template_path: str = Field(
+        default="prompts/layer2_assurance_agent_prompt.md", min_length=1
+    )
     missing_primitive_spec_path: str = Field(
         default="reports/missing_primitive_spec.json", min_length=1
     )
     hitl_sop_review_report_path: str = Field(
         default="reports/hitl_sop_skill_review.html", min_length=1
+    )
+    runtime_branches_report_path: str = Field(
+        default="reports/rt01_rt03_layer2_execution_report.html", min_length=1
     )
     mcp_catalog_path: str = Field(default="config/mcp_primitives_catalog.json", min_length=1)
 
@@ -1742,6 +1748,131 @@ class Step8VerificationSummary(BaseModel):
     report_html_path: Path
     report_markdown_path: Path
     checks: List[Step8VerificationCheck] = Field(default_factory=list)
+
+
+# ============================================================================
+# Step 9 (IMP-011): Layer 2 Skill-Governed Assurance Specialist Agent Models
+# ============================================================================
+class GuardrailRuleEvaluationTrace(BaseModel):
+    """Single deterministic guardrail evaluation result."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    guardrail_id: str = Field(..., min_length=1)
+    phase: str = Field(..., min_length=1)
+    parameter: str = Field(..., min_length=1)
+    actual_value: Any
+    operator: str = Field(..., min_length=1)
+    threshold_value: Any
+    passed: bool
+    blocking_action: str = Field(..., min_length=1)
+
+
+class PreExecutionGuardrailDecision(BaseModel):
+    """Deterministic Python decision gating Step 3 southbound write tools."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    remediation_allowed: bool
+    selected_branch: Literal[
+        "BRANCH_A_SOFT_OPTICAL_DEGRADATION",
+        "BRANCH_B_HARD_FIBER_CUT",
+        "BRANCH_C_MAINTENANCE_LOCK",
+    ]
+    blocking_guardrail_ids: List[str] = Field(default_factory=list)
+    evaluation_trace: List[GuardrailRuleEvaluationTrace] = Field(default_factory=list)
+    canonical_context: Dict[str, Any] = Field(default_factory=dict)
+
+
+class PostExecutionGuardrailDecision(BaseModel):
+    """Deterministic Python decision gating Step 4 post-recalibration verification."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    passed: bool
+    blocking_guardrail_ids: List[str] = Field(default_factory=list)
+    evaluation_trace: List[GuardrailRuleEvaluationTrace] = Field(default_factory=list)
+    post_rx_power_dbm: float
+    post_packet_loss_pct: float
+    post_recalibration_verified: bool
+
+
+class Layer2OrchestrationAndNarrativeProposal(BaseModel):
+    """Structured Gemini NL orchestration & grounded engineering narrative output."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ordered_step_ids: List[str] = Field(..., min_length=1)
+    proposed_branch: Literal[
+        "BRANCH_A_SOFT_OPTICAL_DEGRADATION",
+        "BRANCH_B_HARD_FIBER_CUT",
+        "BRANCH_C_MAINTENANCE_LOCK",
+    ]
+    proposed_recalibration: bool
+    olt_port_id: str = Field(..., min_length=1)
+    cpe_device_id: str = Field(..., min_length=1)
+    customer_id: str = Field(..., min_length=1)
+    affected_resource_id: str = Field(..., min_length=1)
+    recommended_ticket_severity: Literal["CRITICAL", "MAJOR", "MINOR", "WARNING"]
+    recommended_ticket_status: str = Field(..., min_length=1)
+    recommended_resolution_action: str = Field(..., min_length=1)
+    engineering_root_cause_summary: str = Field(..., min_length=1)
+
+
+class Layer2ToolCallTrace(BaseModel):
+    """Execution trace entry for a validated MCP tool invocation."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    step_number: int = Field(..., ge=1)
+    step_id: str = Field(..., min_length=1)
+    catalog_primitive_uri: str = Field(..., min_length=1)
+    concrete_mcp_tool: str = Field(..., min_length=1)
+    status: str = Field(..., min_length=1)
+    detail: str = Field(..., min_length=1)
+
+
+class Layer2ExecutionResult(BaseModel):
+    """Complete execution result for a Layer 2 Assurance Specialist run (`RT-01..RT-03`)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    scenario_id: Literal["RT-01", "RT-02", "RT-03"]
+    telemetry_preset: Literal[
+        "branch_a_soft_degradation",
+        "branch_b_hard_fiber_cut",
+        "branch_c_maintenance_lock",
+    ]
+    circuit_id: str = Field(..., min_length=1)
+    model_used: str = Field(..., min_length=1)
+    selected_branch: Literal[
+        "BRANCH_A_SOFT_OPTICAL_DEGRADATION",
+        "BRANCH_B_HARD_FIBER_CUT",
+        "BRANCH_C_MAINTENANCE_LOCK",
+    ]
+    llm_proposal: Layer2OrchestrationAndNarrativeProposal
+    pre_guardrail_decision: PreExecutionGuardrailDecision
+    post_guardrail_decision: Optional[PostExecutionGuardrailDecision] = None
+    tmf640_invocations_count: int = Field(..., ge=0)
+    tmf640_response: Optional[Tmf640ActivationResponse] = None
+    tmf621_response: Tmf621TicketResponse
+    pre_telemetry: GnmiOpticalTelemetryResponse
+    post_telemetry: Optional[GnmiOpticalTelemetryResponse] = None
+    step_traces: List[Layer2ToolCallTrace] = Field(default_factory=list)
+    executed_at_utc: str = Field(..., min_length=1)
+
+
+class Step9BranchReportSummary(BaseModel):
+    """Summary written by `scripts/run_rt01_rt03_layer2_branches.py`."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    generated_at_utc: str = Field(..., min_length=1)
+    scenarios_executed: List[str] = Field(default_factory=list)
+    state_reset_at_end: bool
+    report_html_path: Path
+    report_markdown_path: Path
+    results: List[Layer2ExecutionResult] = Field(default_factory=list)
 
 
 

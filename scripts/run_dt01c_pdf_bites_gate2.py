@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+import shutil
 import sys
 
 from rich.console import Console
@@ -24,6 +25,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.config_loader import load_config
+from src.layer3.template_compiler import compile_stored_sparql_templates
 from src.logger import setup_logger
 from src.models import Dt01cExecutionResult
 from src.track_b.s3_pdf_bites_er_ingestor import run_dt01c_pdf_bites_gate2
@@ -79,6 +81,30 @@ def _print_result(console: Console, result: Dt01cExecutionResult) -> None:
         console.print(f"  {idx}. {question}")
 
 
+def _compile_layer3_templates_after_approve(
+    console: Console,
+    config,
+    logger,
+    update_golden_ref: bool,
+) -> None:
+    """Compile Layer 3 stored SPARQL templates once Gate 2 graphs are promoted."""
+    compile_res = compile_stored_sparql_templates(
+        config=config,
+        logger=logger,
+        root_dir=PROJECT_ROOT,
+    )
+    console.print(
+        f"[green]Compiled {len(compile_res.template_ids)} Layer 3 SPARQL templates[/green] -> "
+        f"{compile_res.output_path}"
+    )
+    if update_golden_ref:
+        golden_dir = PROJECT_ROOT / Path(config.track_b_ingestion_and_er.golden_reference_dir)
+        golden_dir.mkdir(parents=True, exist_ok=True)
+        golden_dest = golden_dir / compile_res.output_path.name
+        shutil.copy2(compile_res.output_path, golden_dest)
+        console.print(f"[green]Updated Golden Reference[/green] -> {golden_dest}")
+
+
 def main() -> int:
     """Execute Scenario `DT-01c`."""
     args = parse_args()
@@ -107,6 +133,9 @@ def main() -> int:
             update_golden_ref=args.update_golden_ref,
         )
         _print_result(console, res_app)
+        _compile_layer3_templates_after_approve(
+            console, config, logger, args.update_golden_ref
+        )
         return 0
 
     result = run_dt01c_pdf_bites_gate2(
@@ -116,6 +145,10 @@ def main() -> int:
         update_golden_ref=args.update_golden_ref,
     )
     _print_result(console, result)
+    if args.mode == "approve":
+        _compile_layer3_templates_after_approve(
+            console, config, logger, args.update_golden_ref
+        )
     return 0
 
 

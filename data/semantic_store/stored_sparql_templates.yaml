@@ -1,0 +1,66 @@
+templates:
+- template_id: tpl_uc001_circuit_assurance_context
+  description: Federated cross-graph assurance context query for circuit triage, hardware
+    calibration, SLA entitlement, and customer resolution.
+  required_parameters:
+  - circuit_id
+  tbox_classes:
+  - http://tmforum.org/sid/CustomerFacingService
+  - http://tmforum.org/sid/Customer
+  - http://tmforum.org/sid/ResourceFacingService
+  - http://tmforum.org/sid/ServiceSpecification
+  - http://telco.enterprise.org/ontology/OpticalCalibrationProfile
+  - http://telco.enterprise.org/ontology/SlaClause
+  sparql: 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX rdfs:
+    <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX tmf: <http://tmforum.org/sid/> PREFIX telco: <http://telco.enterprise.org/ontology/>
+    SELECT ?circuitId ?customerId ?customerName ?customerIri ?erScore ?erStatus ?skuCode
+    ?operStatus ?bandwidthGbps ?rfsId ?peRouterIri ?oltPortIri ?cpeAssetIri ?cpeModelSku
+    ?maxPacketLossPct ?autoRemediationAllowed ?eligibleUpgradeSpec ?catalogLifecycleStatus
+    ?rxOpticalPowerMinDbm ?rxLosCutThresholdDbm ?slaPolicyLabel WHERE { GRAPH <urn:telco:graph:virtual:ib>
+    { ?cfsIri a tmf:CustomerFacingService ; tmf:serviceId ?circuitId ; tmf:hasCustomer
+    ?customerIri ; tmf:isDescribedBy ?specIri ; tmf:operationalStatus ?operStatus
+    ; telco:bandwidthGbps ?bandwidthGbps . ?customerIri a tmf:Customer ; tmf:customerId
+    ?customerId ; tmf:partyLegalName ?customerName . ?rfsIri a tmf:ResourceFacingService
+    ; tmf:supportsService ?cfsIri ; tmf:rfsId ?rfsId ; telco:terminatesOnRouter ?peRouterIri
+    ; telco:usesOltPort ?oltPortIri ; telco:demarcatesAtCpe ?cpeAssetIri ; telco:cpeModelSku
+    ?cpeModelSku . FILTER(STR(?circuitId) = "{circuit_id}") } BIND(STRAFTER(STR(?specIri),
+    "urn:telco:spec:service:") AS ?skuCode) GRAPH <urn:telco:graph:ref:catalog> {
+    ?catalogSpec a tmf:ServiceSpecification ; tmf:skuCode ?skuCode ; telco:maxPacketLossPct
+    ?maxPacketLossPct ; telco:autoRemediationAllowed ?autoRemediationAllowed ; telco:eligibleUpgradeSpec
+    ?eligibleUpgradeSpec ; telco:lifecycleStatus ?catalogLifecycleStatus . } BIND(IRI(CONCAT("urn:telco:spec:resource:",
+    STR(?cpeModelSku))) AS ?hwSpecIri) GRAPH <urn:telco:graph:bites:doc-hw-v4> { ?hwSpecIri
+    telco:hasOpticalCalibrationProfile ?optProfile . ?optProfile telco:rxOpticalPowerMinDbm
+    ?rxOpticalPowerMinDbm ; telco:rxLosCutThresholdDbm ?rxLosCutThresholdDbm . } GRAPH
+    <urn:telco:graph:bites:doc-msa-v1> { ?specIri telco:hasSlaClause ?slaClause .
+    ?slaClause rdfs:label ?slaPolicyLabel . } OPTIONAL { GRAPH <urn:telco:graph:bridge:er>
+    { ?erMention telco:resolvedToCanonicalCustomer ?customerIri ; telco:erConfidenceScore
+    ?erScore ; telco:erCurationStatus ?erStatus . } } }'
+- template_id: tpl_uc002_catalog_sku_lookup
+  description: Lookup service specification attributes and remediation policies from
+    the B2B commercial catalog graph by SKU code.
+  required_parameters:
+  - sku_code
+  tbox_classes:
+  - http://tmforum.org/sid/ServiceSpecification
+  sparql: 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX rdfs:
+    <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX tmf: <http://tmforum.org/sid/> PREFIX telco: <http://telco.enterprise.org/ontology/>
+    SELECT ?catalogSpec ?skuCode ?maxPacketLossPct ?autoRemediationAllowed ?eligibleUpgradeSpec
+    ?lifecycleStatus WHERE { GRAPH <urn:telco:graph:ref:catalog> { ?catalogSpec a
+    tmf:ServiceSpecification ; tmf:skuCode ?skuCode ; telco:maxPacketLossPct ?maxPacketLossPct
+    ; telco:autoRemediationAllowed ?autoRemediationAllowed ; telco:eligibleUpgradeSpec
+    ?eligibleUpgradeSpec ; telco:lifecycleStatus ?lifecycleStatus . FILTER(STR(?skuCode)
+    = "{sku_code}") } }'
+- template_id: tpl_uc003_doc_lifecycle_audit
+  description: Audit documentation lifecycle status, extraction records, and target
+    graph metadata across ingested bites.
+  required_parameters: []
+  tbox_classes:
+  - http://telco.enterprise.org/ontology/SourceDocument
+  sparql: 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> PREFIX rdfs:
+    <http://www.w3.org/2000/01/rdf-schema#> PREFIX owl: <http://www.w3.org/2002/07/owl#>
+    PREFIX tmf: <http://tmforum.org/sid/> PREFIX telco: <http://telco.enterprise.org/ontology/>
+    SELECT ?doc ?docLabel ?lifecycleStatus WHERE { GRAPH <urn:telco:graph:meta:doc-lifecycle>
+    { ?doc a telco:SourceDocument ; rdfs:label ?docLabel ; telco:lifecycleStatus ?lifecycleStatus
+    . } }'

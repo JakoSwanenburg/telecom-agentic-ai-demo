@@ -208,6 +208,23 @@ Generates:
 - Ephemeral in-memory `<urn:telco:graph:virtual:ib>` projection (`535` triples; `0` triples persisted to disk)
 - `reports/layer4_federation_proof_report.html` & `.md` (compiled SQL pushdown queries, unified 6-graph context, and 5-Challenge Resolution Proof Table)
 
+### Execute Scenario `RT-05` (Step 6 — Layer 3 `NL2Semantics` Dual Shadow Comparison & `semantic-read-mcp`)
+Requires Track B + Layer 4 prerequisites (`DT-01a..c`) and compiled `data/semantic_store/stored_sparql_templates.yaml` (automatically compiled by `scripts/run_dt01c_pdf_bites_gate2.py --mode approve`, or via `--compile-templates` below):
+```powershell
+# Compile stored_sparql_templates.yaml standalone and run Dual Shadow Comparison for CIR-994821:
+.\.venv\Scripts\python.exe scripts\run_rt05_layer3_modes.py --compile-templates --mode dual_comparison --circuit-id CIR-994821
+
+# Run Dual Shadow Comparison (Voicebox Hybrid vs. Zero-Shot LLM) using existing compiled templates:
+.\.venv\Scripts\python.exe scripts\run_rt05_layer3_modes.py --mode dual_comparison --circuit-id CIR-994821
+
+# Run only Voicebox Hybrid or Zero-Shot LLM:
+.\.venv\Scripts\python.exe scripts\run_rt05_layer3_modes.py --mode voicebox_hybrid --circuit-id CIR-994821
+.\.venv\Scripts\python.exe scripts\run_rt05_layer3_modes.py --mode zero_shot_llm --circuit-id CIR-994821
+```
+Generates:
+- `reports/rt05_layer3_nl2semantics_comparison.html` & `.md` (side-by-side latency, AST Gatekeeper audit, row counts, missing fields, and compiled/generated SPARQL)
+- Southbound MCP Server: `src/mcp_servers/semantic_read_mcp.py` (`MCPServer("semantic-read-mcp")` exposing `query_knowledge_fabric` with configurable `obo_jwt` scope verification via `layer3_nl2semantics.require_obo_jwt`)
+
 ### Run Unit Tests (Zero Deprecation / Future Warnings Enforced)
 ```powershell
 .\.venv\Scripts\pytest.exe -v -W error::DeprecationWarning -W error::FutureWarning

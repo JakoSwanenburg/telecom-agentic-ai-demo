@@ -218,6 +218,7 @@ def test_dt00_clean_slate_wipe_and_sys01_inspection(tmp_path: Path) -> None:
     seeded_rel_paths = [
         Path(config.layer4_compiler_federation.dataset_trig_path),
         Path(config.layer4_compiler_federation.tbox_path),
+        Path(config.layer3_nl2semantics.stored_sparql_templates_path),
         Path(config.layer4_compiler_federation.r2rml_path),
         Path(config.layer4_compiler_federation.excel_rml_path),
         Path(config.layer2_worker_and_sop.active_skill_path),

@@ -109,6 +109,13 @@ layer2_worker_and_sop:
 layer3_nl2semantics:
   option_id: "3C-Dual"
   execution_mode: "dual_comparison"
+  stored_sparql_templates_path: "data/semantic_store/stored_sparql_templates.yaml"
+  template_compiler_prompt_path: "prompts/layer3_template_compiler_prompt.md"
+  voicebox_prompt_template_path: "prompts/layer3_voicebox_hybrid_prompt.md"
+  zero_shot_prompt_template_path: "prompts/layer3_zero_shot_sparql_prompt.md"
+  rt05_comparison_report_path: "reports/rt05_layer3_nl2semantics_comparison.html"
+  require_obo_jwt: false
+  required_obo_scope: "semantic:read"
 
 layer4_compiler_federation:
   option_id: "4A"

@@ -171,6 +171,23 @@ class Layer3Nl2SemanticsSettings(BaseModel):
     execution_mode: Literal["dual_comparison", "voicebox_hybrid", "zero_shot_llm"] = Field(
         default="dual_comparison"
     )
+    stored_sparql_templates_path: Path = Field(
+        default=Path("data/semantic_store/stored_sparql_templates.yaml")
+    )
+    template_compiler_prompt_path: Path = Field(
+        default=Path("prompts/layer3_template_compiler_prompt.md")
+    )
+    voicebox_prompt_template_path: Path = Field(
+        default=Path("prompts/layer3_voicebox_hybrid_prompt.md")
+    )
+    zero_shot_prompt_template_path: Path = Field(
+        default=Path("prompts/layer3_zero_shot_sparql_prompt.md")
+    )
+    rt05_comparison_report_path: Path = Field(
+        default=Path("reports/rt05_layer3_nl2semantics_comparison.html")
+    )
+    require_obo_jwt: bool = False
+    required_obo_scope: str = Field(default="semantic:read", min_length=1)
 
 
 class Layer4CompilerFederationSettings(BaseModel):
@@ -1214,6 +1231,130 @@ class Layer4FederationExecutionResult(BaseModel):
     federated_graphs_queried: List[str] = Field(..., min_length=1)
     report_html_path: Path
     report_markdown_path: Path
+
+
+# =============================================================================
+# Step 6 (Layer 3): NL2Semantics Dual Shadow Comparison & AST Gatekeeper
+# =============================================================================
+
+
+class SparqlAstAuditResult(BaseModel):
+    """Result of static rdflib AST + closed-vocabulary security validation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    passed: bool
+    query_type: Optional[str] = None
+    blocked_mutations: List[str] = Field(default_factory=list)
+    sql_leakage_matches: List[str] = Field(default_factory=list)
+    unknown_uris: List[str] = Field(default_factory=list)
+    syntax_error: Optional[str] = None
+    checked_uris_count: int = Field(default=0, ge=0)
+
+
+class VoiceboxHybridSelectionProposal(BaseModel):
+    """Structured LLM output for Voicebox Hybrid TBox pruning and template selection."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    template_id: str = Field(..., min_length=1)
+    pruned_tbox_classes: List[str] = Field(default_factory=list)
+    pruned_tbox_properties: List[str] = Field(default_factory=list)
+    parameters: Dict[str, str] = Field(default_factory=dict)
+    reasoning: str = Field(..., min_length=1)
+
+
+class ZeroShotSparqlProposal(BaseModel):
+    """Structured LLM output for Zero-Shot SPARQL generation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sparql_query: str = Field(..., min_length=1)
+    reasoning: str = Field(..., min_length=1)
+
+
+class VoiceboxExecutionResult(BaseModel):
+    """Execution telemetry and result for the Voicebox Hybrid path."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    template_id: str = Field(..., min_length=1)
+    compiled_sparql: str = Field(..., min_length=1)
+    pruned_tbox_classes: List[str] = Field(default_factory=list)
+    pruned_tbox_properties: List[str] = Field(default_factory=list)
+    parameters: Dict[str, str] = Field(default_factory=dict)
+    ast_audit: SparqlAstAuditResult
+    latency_ms: float = Field(..., ge=0.0)
+    row_count: int = Field(..., ge=0)
+    federated_context: Optional[FederatedCircuitContext] = None
+    five_challenge_proof: Optional[FiveChallengeProofTable] = None
+    sql_pushdown_queries: List[CompiledR2rmlQueryRecord] = Field(default_factory=list)
+
+
+class ZeroShotExecutionResult(BaseModel):
+    """Execution telemetry and diagnostics for the Zero-Shot LLM shadow path."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    generated_sparql: str = Field(..., min_length=1)
+    ast_audit: SparqlAstAuditResult
+    latency_ms: float = Field(..., ge=0.0)
+    row_count: int = Field(..., ge=0)
+    execution_error: Optional[str] = None
+    missing_fields: List[str] = Field(default_factory=list)
+    raw_rows: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class Layer3DualComparisonResult(BaseModel):
+    """Top-level Layer 3 NL2Semantics result for Scenario RT-05."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    execution_mode: Literal["dual_comparison", "voicebox_hybrid", "zero_shot_llm"]
+    natural_language_intent: str = Field(..., min_length=1)
+    target_circuit_id: Optional[str] = None
+    model_used: str = Field(..., min_length=1)
+    voicebox_result: Optional[VoiceboxExecutionResult] = None
+    zero_shot_result: Optional[ZeroShotExecutionResult] = None
+    authoritative_context: Optional[FederatedCircuitContext] = None
+    five_challenge_proof: Optional[FiveChallengeProofTable] = None
+    disk_virtual_ib_triples_after: int = Field(..., ge=0)
+    report_html_path: Path
+    report_markdown_path: Path
+
+
+class StoredSparqlTemplate(BaseModel):
+    """Single parameterized read-only SPARQL template compiled for Layer 3 Voicebox."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    template_id: str = Field(..., min_length=1)
+    description: str = Field(..., min_length=1)
+    required_parameters: List[str] = Field(default_factory=list)
+    tbox_classes: List[str] = Field(default_factory=list)
+    sparql: str = Field(..., min_length=1)
+
+
+class StoredSparqlTemplateCatalog(BaseModel):
+    """Structured LLM output for the compiled Stored SPARQL Template Catalog."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    templates: List[StoredSparqlTemplate] = Field(..., min_length=3)
+
+
+class TemplateCompileResult(BaseModel):
+    """Audit result of dynamic Stored SPARQL Template compilation and verification."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    compiled_at_utc: str = Field(..., min_length=1)
+    model_used: str = Field(..., min_length=1)
+    output_path: Path
+    template_ids: List[str] = Field(..., min_length=1)
+    ast_passed_count: int = Field(..., ge=0)
+    layer4_verified_circuit_id: str = Field(..., min_length=1)
+    layer4_verified_rows: int = Field(..., ge=1)
 
 
 
